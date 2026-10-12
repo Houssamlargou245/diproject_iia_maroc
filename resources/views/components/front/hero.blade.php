@@ -82,12 +82,12 @@
                  `brightness(0) invert(1)` maps every pixel to white without
                  touching the file on disk. --}}
             <div class="h-hero__logos">
-                <img src="{{ \App\Support\Brand::logoUrl() }}"
+                <!-- <img src="{{ \App\Support\Brand::logoUrl() }}"
                      width="{{ $lockup['width'] }}"
                      height="{{ $lockup['height'] }}"
                      alt="{{ __('site.site_name') }}"
                      fetchpriority="high"
-                     decoding="async">
+                     decoding="async"> -->
 
                 <img src="{{ asset('assets/brand/arabic_itihad_logo.png') }}"
                      width="{{ $lockup['width'] }}"

@@ -2867,7 +2867,7 @@ html[dir="rtl"] .h-hero {
 .h-hero__logos img {
     filter: brightness(0) invert(1);
     height: auto;
-    max-height: 59px;
+    max-height: 80px;
     width: auto;
 }
 
