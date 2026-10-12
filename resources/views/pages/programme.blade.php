@@ -235,8 +235,11 @@
                             </div>
                         @endif
                     </article>
+                    
                 @endforeach
+                
             </div>
+            
 
             <p class="pg-note">
                 <i class="fas fa-info-circle" aria-hidden="true"></i>
