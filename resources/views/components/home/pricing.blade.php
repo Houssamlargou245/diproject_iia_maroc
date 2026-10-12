@@ -201,7 +201,7 @@
                     <p class="reg-member__text">{{ __('pricing.membership.text') }}<br>{{ __('pricing.membership.text_2') }}</p>
                 </div>
 
-                <a href="{{ route('contact') }}" class="reg-member__cta">
+                <a href="https://www.iiamaroc.org/adherez-a-iia-maroc" target="_blank" class="reg-member__cta">
                     <span>{{ __('pricing.membership.cta') }}</span>
                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </a>
