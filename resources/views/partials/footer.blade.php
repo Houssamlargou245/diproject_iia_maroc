@@ -119,13 +119,13 @@
 
                 <address class="d-footer__address">
                     @if ($edition?->venue_name)
-                        <strong>{{ $edition->venue_name }}</strong>
+                        <strong>{{ $edition->venueLine() }}</strong>
                     @endif
                     @if ($edition?->venue_address)
-                        <span dir="auto">{{ $edition->venue_address }}</span>
+                        <span dir="auto">{{ $edition->venueAddressLine() }}</span>
                     @endif
                     @if ($showCity)
-                        <span dir="auto">{{ $edition->city }}</span>
+                        <span dir="auto">{{ $edition->cityLine() }}</span>
                     @endif
                 </address>
 

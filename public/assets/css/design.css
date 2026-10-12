@@ -3287,8 +3287,8 @@ html[dir="rtl"] .h-hero {
 
 .h-why__eyebrow {
     color: var(--h-amber);
-    font-size: var(--t-xs);
-    font-weight: 800;
+    font-size: 1.2rem;
+    font-weight: 900;
     letter-spacing: .16em;
     margin: 0 0 var(--sp-3);
     text-transform: uppercase;

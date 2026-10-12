@@ -14,8 +14,8 @@
         :title="__('venue.title')"
         :eyebrow="$edition->identityLabel()"
         :lede="__('venue.venue_lede', [
-            'venue' => $edition->venue_name,
-            'city' => $edition->city,
+            'venue' => $edition->venueLine($locale),
+            'city' => $edition->cityLine($locale),
         ])"
         :crumbs="[__('nav.venue') => null]"
         :facts="[
@@ -38,7 +38,7 @@
                     <x-design.section-head
                         id="venue-heading"
                         :eyebrow="__('venue.venue_name')"
-                        :title="$edition->venue_name"
+                        :title="$edition->venueLine($locale)"
                         :lede="$edition->venueLine($locale)" />
 
                     {{-- An <address> element, so a screen reader announces this as a
@@ -46,7 +46,7 @@
                          attribution it implies is correct: this is the venue's own
                          postal address. --}}
                     @if ($edition->venue_address)
-                        <address class="d-address">{!! nl2br(e($edition->venue_address)) !!}</address>
+                        <address class="d-address">{!! nl2br(e($edition->venueAddressLine($locale))) !!}</address>
                     @endif
 
                     <ul class="d-facts">
@@ -58,7 +58,7 @@
                         <li>
                             <span class="d-facts__label">@lang('venue.city')</span>
                             <span class="d-facts__value">
-                                {{ $edition->city }}
+                                {{ $edition->cityLine($locale) }}
                                 <span class="d-facts__sub">{{ $edition->country_iso2 }}</span>
                             </span>
                         </li>

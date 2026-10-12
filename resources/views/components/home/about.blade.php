@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="h-why__body">
-                    <p class="h-why__eyebrow">@lang('home.landing.why.eyebrow')</p>
+                    <h2 class="h-why__eyebrow">@lang('home.landing.why.eyebrow')</h2>
 
                     <h2 id="why-title" class="h-why__title">
                         @lang('home.landing.why.title')

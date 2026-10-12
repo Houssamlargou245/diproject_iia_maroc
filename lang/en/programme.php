@@ -30,6 +30,9 @@ return [
         'lab_title' => 'The Innovation Lab',
         'day' => 'Day :day',
         'notice' => 'The programme is provisional. Times, rooms and speakers may still change, so please treat this page as a guide rather than as a final timetable.',
+        'qr_title' => 'The programme as a PDF',
+        'qr_text' => 'Scan this code with your phone to download the full programme.',
+        'qr_download' => 'Download the programme',
 
         's' => [
             'welcome1' => ['title' => 'Welcome, registration and networking'],
@@ -97,34 +100,34 @@ return [
         'ws' => [
             'd1' => [
                 [
-                    'ai'  => 'Generative AI applied to Internal Audit: opportunities and limits',
+                    'ai' => 'Generative AI applied to Internal Audit: opportunities and limits',
                     'res' => 'Cyber-resilience: beyond cybersecurity',
                     'aud' => 'The essential skills of tomorrow\'s internal auditor',
                 ],
                 [
-                    'ai'  => 'AI governance and auditing responsible AI frameworks',
+                    'ai' => 'AI governance and auditing responsible AI frameworks',
                     'res' => 'Operational resilience and critical processes',
                     'aud' => 'Leadership and influence in an environment of continuous disruption',
                 ],
                 [
-                    'ai'  => 'Auditing algorithms and artificial intelligence models',
+                    'ai' => 'Auditing algorithms and artificial intelligence models',
                     'res' => 'Organizational culture and resilience: what should Internal Audit assess?',
                     'aud' => 'Strategic thinking and understanding of business challenges',
                 ],
             ],
             'd2' => [
                 [
-                    'ai'  => 'Auditing digital transformation programmes',
+                    'ai' => 'Auditing digital transformation programmes',
                     'res' => 'Geopolitical risks: what role for Internal Audit?',
                     'aud' => 'Attracting, retaining and developing Internal Audit talent',
                 ],
                 [
-                    'ai'  => 'Data governance and data quality',
+                    'ai' => 'Data governance and data quality',
                     'res' => 'Public sector resilience',
                     'aud' => 'Storytelling and data visualization to strengthen the impact of Internal Audit',
                 ],
                 [
-                    'ai'  => 'Auditing emerging technologies: cloud, blockchain, automation and agentic AI',
+                    'ai' => 'Auditing emerging technologies: cloud, blockchain, automation and agentic AI',
                     'res' => 'Digital trust and the resilience of digital ecosystems',
                     'aud' => 'Agility and adaptability in a continuously evolving environment',
                 ],

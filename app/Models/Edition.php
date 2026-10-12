@@ -178,12 +178,13 @@ class Edition extends Model
      * because the 2024 site carried the literal string "juin 2024 - Casablanca"
      * in the language files.
      *
-     * The default is the site's default language rather than a literal, so a
-     * caller that forgets to pass one gets the same language the page is in.
+     * The default is the page's active locale rather than a literal, so a
+     * caller that forgets to pass one still speaks the language of the page it
+     * is rendered on.
      */
     public function dateLine(Locale|string|null $locale = null): string
     {
-        $locale = $locale instanceof Locale ? $locale : Locale::parse($locale);
+        $locale = $this->resolveLocale($locale);
 
         $format = 'j F Y';
 
@@ -198,22 +199,83 @@ class Edition extends Model
         // month, and matches how the brief writes the dates.
         if ($this->starts_on->month === $this->ends_on->month) {
             $conjunction = match ($locale) {
-    Locale::English => 'And',
-    Locale::Arabic => 'و',
-    default => 'et',
-};
+                Locale::English => 'And',
+                Locale::Arabic => 'و',
+                default => 'et',
+            };
 
-return $this->starts_on->format('j').' '.$conjunction.' '.$end;
+            return $this->starts_on->format('j').' '.$conjunction.' '.$end;
         }
 
         return "{$start} & {$end}";
     }
 
+    /**
+     * The venue's name, in the requested locale.
+     *
+     * The database keeps one locale-neutral spelling; the translated name lives
+     * in `venue.venue_full`. When that key is absent the stored value is used,
+     * so a caller never renders a raw translation key.
+     */
     public function venueLine(Locale|string|null $locale = null): string
     {
-        $locale = $locale instanceof Locale ? $locale : Locale::parse($locale);
+        $locale = $this->resolveLocale($locale);
 
-        return "{$this->venue_name}";
+        return $this->localisedValue('venue.venue_full', (string) $this->venue_name, $locale);
+    }
+
+    /**
+     * The venue's postal address, in the requested locale.
+     *
+     * Same rule as the name: a translated address under `venue.address_full`,
+     * falling back to the stored value.
+     */
+    public function venueAddressLine(Locale|string|null $locale = null): string
+    {
+        $locale = $this->resolveLocale($locale);
+
+        return $this->localisedValue('venue.address_full', (string) $this->venue_address, $locale);
+    }
+
+    /**
+     * The host city, in the requested locale.
+     *
+     * "Rabat" reads as "الرباط" on the Arabic pages while the database keeps a
+     * single, locale-neutral spelling.
+     */
+    public function cityLine(Locale|string|null $locale = null): string
+    {
+        $locale = $this->resolveLocale($locale);
+
+        return $this->localisedValue('venue.city_full', (string) $this->city, $locale);
+    }
+
+    /**
+     * Resolve a locale a caller asked for, defaulting to the page's active
+     * locale rather than the configured site default. A helper called with no
+     * argument must speak the language of the page it is rendered on, or an
+     * Arabic default leaks onto the French and English pages.
+     */
+    private function resolveLocale(Locale|string|null $locale): Locale
+    {
+        return $locale === null
+            ? Locale::parse(app()->getLocale())
+            : Locale::parse($locale);
+    }
+
+    /**
+     * Resolve a translated value for the given key, returning the stored
+     * fallback when the translation is missing so no raw key is ever shown.
+     */
+    private function localisedValue(string $key, string $fallback, Locale $locale): string
+    {
+        if ($fallback === '') {
+            return $fallback;
+        }
+
+        $translated = trans($key, [], $locale->value);
+
+        return $translated === $key ? $fallback : (string) $translated;
     }
 
     /**

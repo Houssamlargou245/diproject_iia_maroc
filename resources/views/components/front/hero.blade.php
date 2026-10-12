@@ -47,6 +47,26 @@
        the lockup dimensions; reading them from it here means a brand refresh
        changes both in one place. */
     $lockup = \App\Support\Brand::logo();
+
+    /* The landing page closes its three facts with the host city. Pages that use
+       this component pass when and where only, so the city is appended here —
+       once — to keep the two hero bands telling the same story. */
+    $facts = (array) $facts;
+
+    if (filled($edition?->city)) {
+        $hasCity = false;
+
+        foreach ($facts as $fact) {
+            if (($fact['icon'] ?? null) === 'fa-city') {
+                $hasCity = true;
+                break;
+            }
+        }
+
+        if (! $hasCity) {
+            $facts[] = ['icon' => 'fa-city', 'label' => $edition->cityLine()];
+        }
+    }
 @endphp
 
 <section class="h-hero f-hero">
@@ -126,6 +146,7 @@
             @if ($facts !== [])
                 <ul class="h-hero__meta">
                     @foreach ($facts as $fact)
+               
                         <li>
                             <span class="h-hero__fact-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -163,6 +184,11 @@
                                         @case('fa-envelope')
                                             <rect x="3" y="5.5" width="18" height="13" rx="2.5"></rect>
                                             <path d="m3.8 7.4 7.1 5.3a2 2 0 0 0 2.2 0l7.1-5.3"></path>
+                                            @break
+
+                                        @case('fa-city')
+                                            <path d="M3.5 21h17M5.5 21V6.5L12 3l6.5 3.5V21"></path>
+                                            <path d="M9.5 10H11M13 10h1.5M9.5 13.5H11M13 13.5h1.5M10 21v-3.5h4V21"></path>
                                             @break
 
                                         @default

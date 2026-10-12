@@ -205,7 +205,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
                     <p class="reg-member__text">{{ __('pricing.membership.text') }}<br>{{ __('pricing.membership.text_2') }}</p>
                 </div>
 
-                <a href="{{ route('contact') }}" class="reg-member__cta">
+                <a href="https://www.iiamaroc.org/adherez-a-iia-maroc" target="_blank" class="reg-member__cta">
                     <span>{{ __('pricing.membership.cta') }}</span>
                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </a>

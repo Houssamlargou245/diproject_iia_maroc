@@ -31,6 +31,10 @@ return [
         'day' => 'Jour :day',
         'notice' => 'Le programme est provisoire : les horaires, les salles et les intervenants peuvent encore changer. Considérez cette page comme un guide, pas comme un horaire définitif.',
 
+        'qr_title' => 'Le programme en PDF',
+        'qr_text' => 'Scannez ce code avec votre téléphone pour télécharger le programme complet.',
+        'qr_download' => 'Télécharger le programme',
+
         's' => [
             'welcome1' => ['title' => 'Accueil, inscription et networking'],
             'welcome2' => ['title' => 'Accueil des participants'],
@@ -86,34 +90,34 @@ return [
         'ws' => [
             'd1' => [
                 [
-                    'ai'  => 'IA générative appliquée à l\'Audit Interne : opportunités et limites',
+                    'ai' => 'IA générative appliquée à l\'Audit Interne : opportunités et limites',
                     'res' => 'Cyber-résilience : au-delà de la cybersécurité',
                     'aud' => 'Les compétences essentielles de l\'auditeur interne de demain',
                 ],
                 [
-                    'ai'  => 'Gouvernance de l\'IA et audit des cadres d\'IA responsable',
+                    'ai' => 'Gouvernance de l\'IA et audit des cadres d\'IA responsable',
                     'res' => 'Résilience opérationnelle et processus critiques',
                     'aud' => 'Leadership et influence dans un environnement de disruption continue',
                 ],
                 [
-                    'ai'  => 'Audit des algorithmes et modèles d\'intelligence artificielle',
+                    'ai' => 'Audit des algorithmes et modèles d\'intelligence artificielle',
                     'res' => 'Culture organisationnelle et résilience : que doit évaluer l\'Audit Interne ?',
                     'aud' => 'Pensée stratégique et compréhension des enjeux métiers',
                 ],
             ],
             'd2' => [
                 [
-                    'ai'  => 'Audit des programmes de transformation digitale',
+                    'ai' => 'Audit des programmes de transformation digitale',
                     'res' => 'Risques géopolitiques : quel rôle pour l\'Audit Interne ?',
                     'aud' => 'Attirer, fidéliser et développer les talents de l\'Audit Interne',
                 ],
                 [
-                    'ai'  => 'Gouvernance des données et qualité des données',
+                    'ai' => 'Gouvernance des données et qualité des données',
                     'res' => 'Résilience du secteur public',
                     'aud' => 'Storytelling et visualisation des données au service de l\'impact de l\'Audit Interne',
                 ],
                 [
-                    'ai'  => 'Audit des technologies émergentes : cloud, blockchain, automatisation et IA agentique',
+                    'ai' => 'Audit des technologies émergentes : cloud, blockchain, automatisation et IA agentique',
                     'res' => 'Confiance numérique et résilience des écosystèmes digitaux',
                     'aud' => 'Agilité et adaptabilité dans un environnement en évolution continue',
                 ],

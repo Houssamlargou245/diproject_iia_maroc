@@ -137,7 +137,7 @@ Facing the rise of artificial intelligence, cyber threats and economic and socia
 
                 'city' => 'Rabat',
                 'country_iso2' => 'MA',
-                'venue_name' => 'Four Seasons Hotel  at Kasr Al Bahr',
+                'venue_name' => 'Four Seasons Hotel at Kasr Al Bahr',
                 // The hotel's own published address. The map link is derived
                 // from the coordinates below, so the pin is exact.
                 'venue_address' => 'Ancien Hôpital Marie Feuillet, Avenue Brahim Roudani, Quartier de l’Océan, Rabat 10000',

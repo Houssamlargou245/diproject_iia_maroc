@@ -97,7 +97,7 @@
                             <path d="M9.5 10H11M13 10h1.5M9.5 13.5H11M13 13.5h1.5M10 21v-3.5h4V21"></path>
                         </svg>
                     </span>
-                    <span>{{ $edition->city }}</span>
+                    <span>{{ $edition->cityLine($locale) }}</span>
                 </li>
             </ul>
 

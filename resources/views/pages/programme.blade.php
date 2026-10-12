@@ -16,6 +16,13 @@
 
     $programmePdfUrl = $edition->programmePdfUrl($locale);
 
+    // Inline QR for the day-2 card: scanning it opens the programme PDF in the
+    // language the reader is on. Generated server-side so no JS or third party
+    // is needed and the code never breaks when the assets are blocked.
+    $programmeQr = $programmePdfUrl
+        ? \App\Support\QrCode::svg($programmePdfUrl, 240)
+        : null;
+
     // Row icon by type.
     $icons = [
         'welcome'   => 'fa-users',
@@ -209,6 +216,24 @@
                                 </li>
                             @endforeach
                         </ol>
+
+                        @if ($n === 2 && $programmeQr)
+                            <div class="pg-qr">
+                                <div class="pg-qr__code" role="img" aria-label="@lang('programme.page.qr_text')">
+                                    {!! $programmeQr !!}
+                                </div>
+
+                                <div class="pg-qr__body">
+                                    <p class="pg-qr__title">@lang('programme.page.qr_title')</p>
+                                    <p class="pg-qr__text">@lang('programme.page.qr_text')</p>
+
+                                    <a href="{{ $programmePdfUrl }}" class="pg-qr__link" download>
+                                        <i class="fas fa-download" aria-hidden="true"></i>
+                                        <span>@lang('programme.page.qr_download')</span>
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </article>
                 @endforeach
             </div>
@@ -401,6 +426,56 @@
     .pg-day__date { font-size: .82rem; opacity: .88; }
 
     .pg-list { padding: 6px 22px 14px; }
+
+    /* ---------- Day 2 — programme PDF QR ---------- */
+    .pg-qr {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin: -13px 22px 22px;
+        padding: 16px;
+        border: 1px dashed var(--pg-line);
+        border-radius: 12px;
+        background: var(--pg-tint);
+    }
+
+    .pg-qr__code {
+        flex: 0 0 auto;
+        width: 138px;
+        padding: 8px;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 10px 24px -18px rgba(43, 29, 154, .55);
+    }
+
+    .pg-qr__code svg { display: block; width: 100%; height: auto; }
+
+    .pg-qr__title {
+        margin-block-end: 4px;
+        font-size: .95rem;
+        font-weight: 700;
+        color: #2b1d9a;
+    }
+
+    .pg-qr__text {
+        margin-block-end: 10px;
+        font-size: .82rem;
+        line-height: 1.45;
+        color: #4a4666;
+    }
+
+    .pg-qr__link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .82rem;
+        font-weight: 600;
+        color: #2b1d9a;
+        text-decoration: none;
+    }
+
+    .pg-qr__link:hover,
+    .pg-qr__link:focus-visible { text-decoration: underline; }
 
     .pg-row {
         display: grid;
@@ -766,6 +841,9 @@
 
     @media (max-width: 575.98px) {
         .pg-list { padding-inline: 16px; }
+
+        .pg-qr { flex-direction: column; align-items: center; margin-inline: 16px; text-align: center; }
+        .pg-qr__code { width: 160px; }
 
         .pg-row { grid-template-columns: 30px minmax(0, 1fr); row-gap: 4px; }
         .pg-time { grid-column: 1 / -1; min-width: 0; justify-self: start; padding-inline: 12px; }
