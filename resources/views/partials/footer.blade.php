@@ -1,30 +1,23 @@
 {{--
-    Site footer — ARABCIA 2026 / IIA Morocco
+    Site footer.
 
-    v3
-    - Brand intro: short text + a popover showing the FULL text on hover (desktop),
-      on tap (touch) or via the "read more" button (keyboard). Esc / outside click closes it.
-    - Newsletter now posts to its OWN route (newsletter.store) — no more
-      "Le champ name / message est obligatoire". Works with or without JS
-      (fetch when JS is on, classic POST + flash message when it is off).
-    - Mobile: quick links become pills, contact items get round icon badges,
-      newsletter sits in a card, bigger touch targets, safe-area padding.
-    - Design tokens shared with the Programme page (ink / deep / surface / line),
-      zellige line-art on the end side, logical properties everywhere (RTL ready).
+    Columns, in order:
+
+      1. Brand — the locale's ARABCIA lockup, plus the social channels.
+      2. Quick links — every navigable rubrique (guarded by Route::has so a
+         removed route can never break the footer).
+      3. Contact — host hotel, address, phone, e-mail and a map link.
+      4. Host hotel map — an API-key-free Google Maps embed driven by the
+         edition's stored coordinates, so there is one source of truth for the
+         venue's location. Falls back to a plain map link when there are no
+         coordinates.
+
+    Design tokens are shared with the Programme page (ink / deep / surface /
+    line), the zellige line-art sits on the end side, and logical properties
+    are used throughout so the whole footer mirrors correctly in RTL.
 --}}
 @php
     $edition = $currentEdition ?? null;
-
-    /* ---- Brand intro: clean ellipsis, cut by words, keep the full text for the popover ---- */
-    $introFull = trim(strip_tags((string) ($edition?->introduction ?: __('site.organiser'))));
-    $introFull = preg_replace('/(\.{2,}|…)+\s*$/u', '…', $introFull);
-
-    $introLimit     = 28;
-    $introWords     = count(preg_split('/\s+/u', $introFull, -1, PREG_SPLIT_NO_EMPTY));
-    $introTruncated = $introWords > $introLimit;
-    $intro          = $introTruncated
-        ? \Illuminate\Support\Str::words(rtrim($introFull, ' .…'), $introLimit, '…')
-        : $introFull;
 
     /* ---- City only if it isn't already inside the address ---- */
     $showCity = $edition?->city
@@ -33,9 +26,13 @@
             mb_strtolower($edition->city)
         );
 
-    /* ---- Newsletter feedback (no-JS fallback) ---- */
-    $nlOk    = session('newsletter_status');
-    $nlError = $errors->newsletter->first('email');
+    /* Embedded map of the host hotel: an API-key-free Google Maps embed driven
+       by the same coordinates the rest of the site links to, so there is one
+       source of truth for where the venue is. */
+    $mapEmbed = ($edition?->venue_lat && $edition?->venue_lng)
+        ? 'https://maps.google.com/maps?q='.$edition->venue_lat.','.$edition->venue_lng
+            .'&z=16&hl='.app()->getLocale().'&output=embed'
+        : null;
 @endphp
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,32 +50,13 @@
             {{-- Column 1 — brand ------------------------------------------ --}}
             <div class="d-footer__brand">
                 <a href="{{ route('home') }}" class="d-footer__logo" aria-label="{{ __('site.site_name') }}">
-                    <img src="{{ \App\Support\Brand::logoUrl() }}"
-                         width="{{ \App\Support\Brand::logo()['width'] }}"
-                         height="{{ \App\Support\Brand::logo()['height'] }}"
+                    <img src="{{asset('assets/brand/logo-iia-maroc.png')}}"
+                         width=""
+                         height=""
                          alt="{{ __('site.site_name') }}"
                          loading="lazy"
                          decoding="async">
                 </a>
-
-                <div class="d-intro" data-footer-intro>
-                    <p class="d-footer__desc" id="footer-intro-text">{{ $intro }}</p>
-
-                    @if ($introTruncated)
-                        <button type="button"
-                                class="d-intro__btn"
-                                aria-expanded="false"
-                                aria-controls="footer-intro-pop">
-                            <span>@lang('footer.read_more')</span>
-                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                        </button>
-
-                        <div class="d-pop" id="footer-intro-pop" role="region" aria-label="@lang('footer.about_full')">
-                            <p>{{ $introFull }}</p>
-                            <button type="button" class="d-pop__close">@lang('footer.close')</button>
-                        </div>
-                    @endif
-                </div>
 
                 <ul class="d-social">
                     <li>
@@ -103,9 +81,13 @@
                 <ul class="d-footer__list">
                     @foreach ([
                         ['home', __('nav.home')],
+                        ['presentation', __('nav.presentation')],
                         ['programme', __('nav.programme')],
-                        ['pricing', __('nav.pricing')],
+                        ['venue', __('nav.venue')],
+                        ['speakers', __('nav.speakers')],
                         ['sponsors', __('nav.sponsors')],
+                        ['pricing', __('nav.pricing')],
+                        ['contact', __('nav.contact')],
                     ] as [$route, $label])
                         @continue(! Route::has($route))
                         <li><a href="{{ route($route) }}">{{ $label }}</a></li>
@@ -160,57 +142,27 @@
                 </ul>
             </div>
 
-            {{-- Column 4 — newsletter ------------------------------------- --}}
-            <div class="d-footer__newsletter" id="newsletter">
-                <h2 class="d-footer__title">@lang('footer.newsletter')</h2>
+            {{-- Column 4 — host hotel map --------------------------------- --}}
+            <div class="d-footer__map">
+                <h2 class="d-footer__title">@lang('nav.venue')</h2>
 
-                <p class="d-footer__desc">@lang('footer.newsletter_lede')</p>
-
-                <form method="POST"
-                      action="{{ route('newsletter.store') }}"
-                      class="d-news"
-                      id="footer-newsletter-form"
-                      data-error="{{ __('footer.newsletter_err_generic') }}">
-                    @csrf
-
-                    {{-- Honeypot --}}
-                    <div class="visually-hidden" aria-hidden="true">
-                        <label for="footer-newsletter-company">@lang('misc.leave_blank')</label>
-                        <input type="text" id="footer-newsletter-company" name="company"
-                               tabindex="-1" autocomplete="off">
-                    </div>
-
-                    <label class="visually-hidden" for="footer-newsletter">
-                        @lang('footer.newsletter_email')
-                    </label>
-
-                    <div class="d-news__row">
-                        <input type="email"
-                               id="footer-newsletter"
-                               name="email"
-                               required
-                               maxlength="190"
-                               autocomplete="email"
-                               autocapitalize="off"
-                               spellcheck="false"
-                               inputmode="email"
-                               dir="ltr"
-                               aria-describedby="footer-newsletter-msg"
-                               placeholder="{{ __('footer.newsletter_email') }}">
-
-                        <button type="submit" class="d-news__btn" title="{{ __('footer.subscribe') }}">
-                            <span class="visually-hidden">@lang('footer.subscribe')</span>
-                            <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                        </button>
-                    </div>
-
-                    <p class="d-news__msg {{ $nlOk ? 'is-ok' : ($nlError ? 'is-err' : '') }}"
-                       id="footer-newsletter-msg"
-                       role="status"
-                       aria-live="polite">{{ $nlOk ?: $nlError }}</p>
-
-                    <p class="d-news__note">@lang('footer.newsletter_note')</p>
-                </form>
+                @if ($mapEmbed)
+                    <iframe
+                        class="d-footer__map-frame"
+                        src="{{ $mapEmbed }}"
+                        title="{{ $edition?->venueLine() }}"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen></iframe>
+                @elseif ($edition?->mapUrl())
+                    <a class="d-footer__map-link"
+                       href="{{ $edition->mapUrl() }}"
+                       rel="noopener noreferrer"
+                       target="_blank">
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                        <span>@lang('contact.open_map')</span>
+                    </a>
+                @endif
             </div>
 
         </div>
@@ -350,7 +302,7 @@
 /* ---------- Grid ---------- */
 .d-footer__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, .8fr) minmax(0, 1.3fr) minmax(0, 1.35fr);
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .7fr) minmax(0, 1.15fr) minmax(0, 1.4fr);
     gap: 48px 56px;
     padding-bottom: 64px;
 }
@@ -394,127 +346,7 @@
     display: block;
     height: auto;
     width: auto;
-    max-width: 160px;
-}
-
-.d-footer__desc {
-    margin: 0 0 24px;
-    max-width: 48ch;
-    line-height: 1.75;
-    color: var(--f-text);
-}
-
-/* ---------- Intro + popover ---------- */
-.d-intro {
-    position: relative;
-    margin-bottom: 24px;
-}
-
-.d-intro .d-footer__desc {
-    margin-bottom: 12px;
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    cursor: default;
-}
-
-.d-intro__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 36px;
-    padding: 0 16px;
-    font: inherit;
-    font-size: .8rem;
-    font-weight: 600;
-    color: #fff;
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid var(--f-line);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background .2s ease, border-color .2s ease;
-}
-
-.d-intro__btn:hover {
-    background: rgba(255, 255, 255, .12);
-    border-color: rgba(255, 255, 255, .3);
-}
-
-.d-intro__btn i {
-    font-size: .65rem;
-    color: var(--f-orange);
-    transition: transform .25s ease;
-}
-
-.d-intro.is-open .d-intro__btn i {
-    transform: rotate(180deg);
-}
-
-.d-pop {
-    position: absolute;
-    z-index: 30;
-    inset-inline: -16px;
-    top: -14px;
-    max-height: min(360px, 70vh);
-    overflow-y: auto;
-    padding: 18px 20px;
-    color: var(--f-ink);
-    background: var(--f-surface);
-    border: 1px solid var(--f-pop-line);
-    border-radius: 14px;
-    box-shadow: 0 24px 60px -16px rgba(10, 5, 60, .65), 0 2px 0 var(--f-orange) inset;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(8px) scale(.98);
-    transform-origin: top;
-    transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
-}
-
-.d-pop p {
-    margin: 0;
-    font-size: .92rem;
-    line-height: 1.75;
-}
-
-.d-pop__close {
-    display: none;
-    margin-top: 14px;
-    min-height: 40px;
-    padding: 0 20px;
-    font: inherit;
-    font-size: .8rem;
-    font-weight: 700;
-    color: #fff;
-    background: var(--f-deep);
-    border: 0;
-    border-radius: 999px;
-    cursor: pointer;
-}
-
-.d-intro.is-open .d-pop {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    transition-delay: 0s;
-}
-
-.d-intro.is-open .d-pop__close {
-    display: inline-flex;
-    align-items: center;
-}
-
-@media (hover: hover) {
-    .d-intro:hover .d-pop {
-        opacity: 1;
-        visibility: visible;
-        transform: none;
-        transition-delay: 0s;
-    }
-
-    .d-intro:hover .d-intro__btn i {
-        transform: rotate(180deg);
-    }
+    max-width: 290px;
 }
 
 /* ---------- Social ---------- */
@@ -607,144 +439,40 @@
     background: var(--f-orange);
 }
 
-/* ---------- Newsletter ---------- */
-.d-news {
-    max-width: 440px;
-}
-
-.d-news__row {
-    display: flex;
-    align-items: stretch;
-    gap: 8px;
-}
-
-.d-news input[type="email"] {
-    flex: 1;
+/* ---------- Map ---------- */
+.d-footer__map {
+    scroll-margin-top: 96px;
     min-width: 0;
-    height: 48px;
-    padding: 0 16px;
-    font: inherit;
+}
+
+.d-footer__map-frame {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--f-line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .05);
+    box-shadow: 0 18px 40px -24px rgba(10, 5, 60, .8);
+}
+
+.d-footer__map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 20px;
+    font-weight: 600;
     color: #fff;
-    background: rgba(255, 255, 255, .08);
+    background: rgba(255, 255, 255, .06);
     border: 1px solid var(--f-line);
     border-radius: 999px;
-    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
-.d-news input[type="email"]::placeholder {
-    color: rgba(255, 255, 255, .62);
-}
-
-.d-news input[type="email"]:focus,
-.d-news input[type="email"]:focus-visible {
-    outline: none;
-    border-color: var(--f-orange);
-    background: rgba(255, 255, 255, .12);
-    box-shadow: 0 0 0 3px rgba(227, 147, 116, .25);
-}
-
-.d-news__btn {
-    position: relative;
-    flex: 0 0 48px;
-    height: 48px;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    color: var(--f-mauve);
-    background: var(--f-orange);
-    cursor: pointer;
-    transition: background .2s ease, transform .2s ease;
-}
-
-.d-news__btn:hover {
-    background: #eda78c;
-    transform: translateY(-2px);
-}
-
-.d-news__btn:active {
-    transform: translateY(0);
-}
-
-.d-news__btn:disabled {
-    cursor: progress;
-    opacity: .85;
-}
-
-[dir="rtl"] .d-news__btn i {
-    transform: scaleX(-1);
-}
-
-/* loading spinner */
-.d-news.is-loading .d-news__btn i {
-    opacity: 0;
-}
-
-.d-news.is-loading .d-news__btn::after {
-    content: "";
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(42, 31, 110, .25);
-    border-top-color: var(--f-mauve);
-    border-radius: 50%;
-    animation: d-spin .7s linear infinite;
-}
-
-@keyframes d-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* status message */
-.d-news__msg {
-    position: relative;
-    margin: 12px 0 0;
-    padding-inline-start: 26px;
-    font-size: .86rem;
-    font-weight: 500;
-    line-height: 1.5;
-}
-
-.d-news__msg:empty {
-    display: none;
-}
-
-.d-news__msg::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0;
-    top: .2em;
-    width: 18px;
-    height: 18px;
-    background: center / contain no-repeat;
-}
-
-.d-news__msg.is-ok {
-    color: #9be7b5;
-}
-
-.d-news__msg.is-ok::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239be7b5' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
-}
-
-.d-news__msg.is-err {
-    color: #ffb4a8;
-}
-
-.d-news__msg.is-err::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffb4a8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6v8M12 18h.01'/%3E%3C/svg%3E");
-}
-
-.d-news__note {
-    margin: 12px 0 0;
-    font-size: .82rem;
-    line-height: 1.5;
-    color: var(--f-muted);
-}
-
-.d-footer__newsletter {
-    scroll-margin-top: 96px;
+.d-footer__map-link:hover,
+.d-footer__map-link:focus-visible {
+    color: #fff;
+    background: var(--f-blue);
+    border-color: var(--f-blue);
 }
 
 /* ---------- Bottom bar ---------- */
@@ -790,29 +518,8 @@
     }
 
     .d-footer__brand,
-    .d-footer__newsletter {
+    .d-footer__map {
         grid-column: 1 / -1;
-    }
-
-    .d-footer__desc {
-        max-width: 60ch;
-    }
-
-    /* newsletter becomes a card */
-    .d-footer__newsletter {
-        padding: 28px;
-        border: 1px solid var(--f-line);
-        border-radius: 18px;
-        background: linear-gradient(160deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .03));
-        box-shadow: 0 18px 40px -24px rgba(10, 5, 60, .8);
-    }
-
-    .d-footer__newsletter .d-footer__desc {
-        margin-bottom: 18px;
-    }
-
-    .d-news {
-        max-width: 520px;
     }
 }
 
@@ -843,12 +550,6 @@
 
     .d-footer__title {
         margin-bottom: 18px;
-    }
-
-    /* popover = full-width bottom-sheet-like card, tap to open */
-    .d-pop {
-        inset-inline: -8px;
-        max-height: 60vh;
     }
 
     /* quick links -> pills */
@@ -883,24 +584,8 @@
         min-height: 48px;
     }
 
-    .d-footer__newsletter {
-        padding: 22px 18px;
-        border-radius: 16px;
-    }
-
-    .d-news {
-        max-width: none;
-    }
-
-    /* 16px+ prevents iOS Safari from zooming on focus */
-    .d-news input[type="email"] {
-        height: 52px;
-        font-size: 1rem;
-    }
-
-    .d-news__btn {
-        flex-basis: 52px;
-        height: 52px;
+    .d-footer__map-frame {
+        aspect-ratio: 3 / 2;
     }
 
     .d-footer__bottom {
@@ -937,120 +622,3 @@
     }
 }
 </style>
-
-<script>
-(function () {
-    'use strict';
-
-    /* ------------------------------------------------------------------
-       1) Intro popover — hover is pure CSS; this handles tap / keyboard
-       ------------------------------------------------------------------ */
-    var intro = document.querySelector('[data-footer-intro]');
-
-    if (intro) {
-        var btn   = intro.querySelector('.d-intro__btn');
-        var text  = intro.querySelector('.d-footer__desc');
-        var close = intro.querySelector('.d-pop__close');
-
-        var setOpen = function (open) {
-            intro.classList.toggle('is-open', open);
-            if (btn) { btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-        };
-
-        if (btn) {
-            btn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                setOpen(!intro.classList.contains('is-open'));
-            });
-
-            if (text) {
-                text.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    setOpen(!intro.classList.contains('is-open'));
-                });
-            }
-
-            if (close) {
-                close.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    setOpen(false);
-                    btn.focus();
-                });
-            }
-
-            document.addEventListener('click', function (e) {
-                if (!intro.contains(e.target)) { setOpen(false); }
-            });
-
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && intro.classList.contains('is-open')) {
-                    setOpen(false);
-                    btn.focus();
-                }
-            });
-        }
-    }
-
-    /* ------------------------------------------------------------------
-       2) Newsletter — fetch when JS is available, classic POST otherwise
-       ------------------------------------------------------------------ */
-    var form = document.getElementById('footer-newsletter-form');
-
-    if (form && window.fetch && window.FormData) {
-        var msg    = document.getElementById('footer-newsletter-msg');
-        var submit = form.querySelector('.d-news__btn');
-
-        var show = function (text, type) {
-            msg.textContent = text || '';
-            msg.className = 'd-news__msg' + (type ? ' is-' + type : '');
-        };
-
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            var generic = form.getAttribute('data-error') || '';
-
-            show('', '');
-            submit.disabled = true;
-            form.classList.add('is-loading');
-
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: new FormData(form),
-                credentials: 'same-origin'
-            })
-            .then(function (res) {
-                return res.json().catch(function () { return {}; }).then(function (data) {
-                    return { status: res.status, ok: res.ok, data: data };
-                });
-            })
-            .then(function (r) {
-                if (r.ok && r.data && r.data.ok) {
-                    show(r.data.message, 'ok');
-                    form.reset();
-                } else if (r.status === 422 && r.data && r.data.errors && r.data.errors.email) {
-                    show(r.data.errors.email[0], 'err');
-                } else {
-                    show(generic, 'err');
-                }
-            })
-            .catch(function () {
-                show(generic, 'err');
-            })
-            .then(function () {
-                submit.disabled = false;
-                form.classList.remove('is-loading');
-            });
-        });
-    }
-})();
-</script>

@@ -19,6 +19,7 @@ return [
             'kicker' => 'CONFÉRENCE INTERNATIONALE',
             'logos_alt' => 'ARABCIA 2026 et ses organisateurs',
             'cta_programme' => 'Programme',
+            'cta_register' => 'INSCRIVEZ-VOUS',
             'cta_sponsor' => 'Devenir sponsor',
         ],
 

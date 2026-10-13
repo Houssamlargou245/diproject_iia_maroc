@@ -19,6 +19,7 @@ return [
             'kicker' => 'INTERNATIONAL CONFERENCE',
             'logos_alt' => 'ARABCIA 2026 and its organisers',
             'cta_programme' => 'Programme',
+            'cta_register' => 'REGISTER NOW',
             'cta_sponsor' => 'Become a sponsor',
         ],
 

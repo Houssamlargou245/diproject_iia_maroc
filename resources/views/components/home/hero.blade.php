@@ -107,9 +107,22 @@
             </ul>
 
             <div class="h-hero__actions">
-                <a href="{{ route('programme') }}" class="h-btn h-btn--solid">
+                @php
+                    $registerUrl = $edition->registration_open
+                        ? (auth()->check() ? route('pricing') : route('register'))
+                        : null;
+                @endphp
+
+            
+
+                <a href="{{ route('programme') }}" class="h-btn h-btn--ghost">
                     @lang('home.landing.hero.cta_programme')
                 </a>
+                    @if ($registerUrl)
+                    <a href="{{ $registerUrl }}" class="h-btn h-btn--solid">
+                        @lang('home.landing.hero.cta_register')
+                    </a>
+                @endif
                 <a href="{{ route('sponsors') }}" class="h-btn h-btn--ghost">
                     @lang('home.landing.hero.cta_sponsor')
                 </a>

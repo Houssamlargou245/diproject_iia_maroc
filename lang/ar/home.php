@@ -19,6 +19,7 @@ return [
             'kicker' => 'المؤتمر الدولي',
             'logos_alt' => 'ARABCIA 2026 ومنظموه',
             'cta_programme' => 'البرنامج',
+            'cta_register' => 'سجّل الآن',
             'cta_sponsor' => 'كن شريكاً',
         ],
 
