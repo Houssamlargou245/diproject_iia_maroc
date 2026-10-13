@@ -19,8 +19,7 @@
     /* ---- Office address (shown in the footer and used by the map) ---- */
     $addressLines = [
         'Bd Sidi Mohamed Ben Abdellah',
-        'Résidence Belle vue, Imm. B, Etage 2 Bureau 1',
-        'Casablanca',
+        'Résidence Belle vue, Imm. B, Etage 2 Bureau 1 , Casablanca',
     ];
 
     /* Exact position of IIA MAROC on Google Maps (guarantees the red pin). */
@@ -345,8 +344,6 @@
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    font-size: clamp(1rem, 1.05vw, 1.3rem);
-    font-weight: 500;
     color: #fff;
 }
 
@@ -425,8 +422,6 @@
     margin: 32px 0 0;
     font-family: "Aptos", "Inter", "Segoe UI", system-ui, sans-serif;
     font-style: normal;
-    font-size: 1.05rem;
-    font-weight: 400;
     line-height: 22px;
     color: #fff;
 }
