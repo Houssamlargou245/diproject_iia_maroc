@@ -286,15 +286,22 @@ $allies = [
             </header>
 
            @php
-               $allyItems = collect($allies)->map(static fn (array $ally): array => [
-                   'src'  => asset($ally['logo']),
-                   'name' => $ally['name'],
-                   'url'  => $ally['url'] ?? null,
-               ])->values();
+               $allyItems = collect($allies)->map(static function (array $ally): array {
+                   /* Banque Populaire's crest is squarer than the wordmarks, so it
+                      gets a hook the stylesheet can scale up on its own. */
+                   $isBanquePopulaire = str_contains(mb_strtolower($ally['name']), 'banque populaire');
+
+                   return [
+                       'src'   => asset($ally['logo']),
+                       'name'  => $ally['name'],
+                       'url'   => $ally['url'] ?? null,
+                       'class' => $isBanquePopulaire ? 'sponsor-banque-populaire' : null,
+                   ];
+               })->values();
            @endphp
 
            <div class="sp-allies__marquee">
-               <x-logo-marquee :items="$allyItems" :label="__('sponsoring.allies.eyebrow')" :speed="52" />
+               <x-logo-marquee :items="$allyItems" :label="__('sponsoring.allies.eyebrow')" :speed="3200" />
            </div>
         </div>
     </section>

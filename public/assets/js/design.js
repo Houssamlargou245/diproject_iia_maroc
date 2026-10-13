@@ -957,6 +957,110 @@
             });
         });
     });
+
+    /* =====================================================================
+       Partner logo slider
+
+       Swiper drives the partner wall: infinite loop, arrows, drag. The `.is-ready`
+       hook is only set once Swiper has taken over, so the CSS fallback (a
+       scrollable row) stays in force if Swiper is absent or throws.
+
+       Reduced motion drops the autoplay but keeps the arrows and drag — the user
+       still moves the slider, it just never moves on its own.
+       ===================================================================== */
+
+    safely('logo slider', function () {
+        if (!window.Swiper) {
+            return;
+        }
+
+        each('[data-logo-marquee]', function (root) {
+            var viewport = root.querySelector('.swiper');
+
+            if (!viewport) {
+                return;
+            }
+
+            /* The gap is a plain px custom property (not a clamp) precisely so it
+               can be read here and handed to Swiper, which needs a number. */
+            var gap = parseFloat(window.getComputedStyle(root).getPropertyValue('--lm-gap')) || 20;
+
+            var options = {
+                loop: true,
+                slidesPerView: 'auto',
+                spaceBetween: gap,
+                speed: parseInt(root.getAttribute('data-logo-speed'), 10) || 3200,
+                grabCursor: true,
+                /* A transition is always running on the gliding wall, and Swiper
+                   refuses `slideNext`/`slidePrev` mid-transition unless this is
+                   off — which is exactly why the arrows did nothing. */
+                loopPreventsSlide: false
+            };
+
+            if (!prefersReducedMotion()) {
+                /* `delay: 0` keeps a transition running at all times, so with the
+                   linear timing in CSS the wall glides continuously rather than
+                   stepping and waiting — an endless marquee that can still be
+                   dragged or advanced with the arrows. */
+                options.autoplay = {
+                    delay: 0,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true
+                };
+            }
+
+            var swiper = new window.Swiper(viewport, options);
+
+            root.classList.add('is-ready');
+
+            /* The arrows run their own fast step instead of Swiper's `navigation`,
+               which would reuse the slow glide `speed` — on an always-moving wall
+               that reads as "nothing happened". The glide is paused while the user
+               steps, then resumed shortly after they stop clicking, so the arrows
+               advance a full card each time instead of being dragged back to the
+               same snap by the ongoing glide. */
+            var hasAutoplay = !!options.autoplay;
+            var STEP = 300;
+            var RESUME_AFTER = 1600;
+            var resumeTimer = null;
+
+            function step(direction) {
+                if (hasAutoplay && swiper.autoplay.running) {
+                    swiper.autoplay.stop();
+                }
+
+                if (direction > 0) {
+                    swiper.slideNext(STEP, true);
+                } else {
+                    swiper.slidePrev(STEP, true);
+                }
+
+                if (!hasAutoplay) {
+                    return;
+                }
+
+                window.clearTimeout(resumeTimer);
+                resumeTimer = window.setTimeout(function () {
+                    resumeTimer = null;
+
+                    if (!swiper.el.matches(':hover')) {
+                        swiper.autoplay.start();
+                    }
+                }, RESUME_AFTER);
+            }
+
+            var prev = root.querySelector('[data-logo-prev]');
+            var next = root.querySelector('[data-logo-next]');
+
+            if (prev) {
+                prev.addEventListener('click', function () { step(-1); });
+            }
+
+            if (next) {
+                next.addEventListener('click', function () { step(1); });
+            }
+        });
+    });
 }());
 
 /* =====================================================================

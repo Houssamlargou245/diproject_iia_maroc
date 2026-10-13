@@ -22,6 +22,6 @@ return [
     'rooms_lede' => 'Les salles où se déroulent les ateliers et les sessions parallèles, avec leur capacité et leur étage.',
     'title' => 'Lieu et dates',
     'venue_name' => 'Lieu',
-    'venue_full' => 'Four Seasons Hotel  à Kasr Al Bahr',
+    'venue_full' => 'Four Seasons Hotel Kasr Al Bahr',
     'venue_lede' => 'ARABCIA 2026 se tient à :venue, à :city. Tout ce qu’il faut pour y arriver est indiqué sur cette page.',
 ];

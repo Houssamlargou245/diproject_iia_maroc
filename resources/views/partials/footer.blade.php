@@ -1,62 +1,114 @@
 {{--
     Site footer.
 
-    Columns, in order:
+    Layout (desktop) — matches the approved design:
 
-      1. Brand — the locale's ARABCIA lockup, plus the social channels.
-      2. Quick links — every navigable rubrique (guarded by Route::has so a
-         removed route can never break the footer).
-      3. Contact — host hotel, address, phone, e-mail and a map link.
-      4. Host hotel map — an API-key-free Google Maps embed driven by the
-         edition's stored coordinates, so there is one source of truth for the
-         venue's location. Falls back to a plain map link when there are no
-         coordinates.
+      [ logo ]   [ quick links (one row)      ]   [ office map ]
+                 [ phone · e-mail · map link  ]
+                 [ social icons               ]
+                 [ office address             ]
+      ----------------------------------------------------------------
+      © year organiser · rights                  privacy · legal · a11y
 
-    Design tokens are shared with the Programme page (ink / deep / surface /
-    line), the zellige line-art sits on the end side, and logical properties
-    are used throughout so the whole footer mirrors correctly in RTL.
+    Column titles are kept in the markup for accessibility but visually
+    hidden. Logical properties are used throughout so RTL mirrors correctly.
 --}}
 @php
     $edition = $currentEdition ?? null;
 
-    /* ---- City only if it isn't already inside the address ---- */
-    $showCity = $edition?->city
-        && ! \Illuminate\Support\Str::contains(
-            mb_strtolower((string) $edition->venue_address),
-            mb_strtolower($edition->city)
-        );
+    /* ---- Office address (shown in the footer and used by the map) ---- */
+    $addressLines = [
+        'Bd Sidi Mohamed Ben Abdellah',
+        'Résidence Belle vue, Imm. B, Etage 2 Bureau 1 , Casablanca',
+    ];
 
-    /* Embedded map of the host hotel: an API-key-free Google Maps embed driven
-       by the same coordinates the rest of the site links to, so there is one
-       source of truth for where the venue is. */
-    $mapEmbed = ($edition?->venue_lat && $edition?->venue_lng)
-        ? 'https://maps.google.com/maps?q='.$edition->venue_lat.','.$edition->venue_lng
-            .'&z=16&hl='.app()->getLocale().'&output=embed'
-        : null;
+    /* Query sent to Google Maps (street + residence + city is enough to geocode). */
+    $mapQuery = 'Bd Sidi Mohamed Ben Abdellah, Résidence Belle vue, Casablanca, Maroc';
+
+    /* API-key-free Google Maps embed driven by the address. */
+    $mapEmbed = 'https://maps.google.com/maps?q='.rawurlencode($mapQuery)
+        .'&z=16&hl='.app()->getLocale().'&output=embed';
+
+    /* Link that opens the address in Google Maps. */
+    $mapLink = 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($mapQuery);
 @endphp
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@700&family=Inter:wght@400;500;600&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 
 <footer class="d-footer" role="contentinfo">
     <span class="d-footer__zellige" aria-hidden="true"></span>
 
-    <div class="container">
+    {{-- Wide top row ---------------------------------------------------------- --}}
+    <div class="d-footer__inner">
 
         <div class="d-footer__grid">
 
-            {{-- Column 1 — brand ------------------------------------------ --}}
+            {{-- Column 1 — logo ------------------------------------------- --}}
             <div class="d-footer__brand">
                 <a href="{{ route('home') }}" class="d-footer__logo" aria-label="{{ __('site.site_name') }}">
-                    <img src="{{asset('assets/brand/logo-iia-maroc.png')}}"
-                         width=""
-                         height=""
+                    <img src="{{ asset('assets/brand/logo-iia-maroc.png') }}"
                          alt="{{ __('site.site_name') }}"
                          loading="lazy"
                          decoding="async">
                 </a>
+            </div>
+
+            {{-- Column 2 — links, contact, social, address ---------------- --}}
+            <div class="d-footer__center">
+
+                <nav class="d-footer__links" aria-labelledby="footer-links-title">
+                    <h2 id="footer-links-title" class="visually-hidden">@lang('footer.quick_links')</h2>
+
+                    <ul class="d-footer__list d-footer__list--row">
+                        @foreach ([
+                            ['presentation', __('nav.presentation')],
+                            ['programme', __('nav.programme')],
+                            ['sponsors', __('nav.sponsors')],
+                            ['pricing', __('nav.pricing')],
+                            ['contact', __('nav.contact')],
+                        ] as [$route, $label])
+                            @continue(! Route::has($route))
+                            <li><a href="{{ route($route) }}">{{ $label }}</a></li>
+                        @endforeach
+                    </ul>
+                </nav>
+
+                <div class="d-footer__contact">
+                    <h2 class="visually-hidden">@lang('nav.contact')</h2>
+
+                    {{-- dir="ltr" only on the value so the icon still sits at the start in Arabic --}}
+                    <ul class="d-footer__list d-footer__list--row d-footer__list--icons">
+                        @if ($edition?->contact_phone)
+                            <li>
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $edition->contact_phone) }}">
+                                    <i class="fas fa-phone" aria-hidden="true"></i>
+                                    <span dir="ltr">{{ $edition->contact_phone }}</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if ($edition?->contact_email)
+                            <li>
+                                <a href="mailto:{{ $edition->contact_email }}">
+                                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                                    <span dir="ltr">{{ $edition->contact_email }}</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        {{-- Map link (disabled, uncomment to show it)
+                        <li>
+                            <a href="{{ $mapLink }}" rel="noopener noreferrer" target="_blank">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                <span>@lang('contact.open_map')</span>
+                            </a>
+                        </li>
+                        --}}
+                    </ul>
+                </div>
 
                 <ul class="d-social">
                     <li>
@@ -72,195 +124,108 @@
                         </a>
                     </li>
                 </ul>
-            </div>
-
-            {{-- Column 2 — quick links ------------------------------------ --}}
-            <nav class="d-footer__links" aria-labelledby="footer-links-title">
-                <h2 id="footer-links-title" class="d-footer__title">@lang('footer.quick_links')</h2>
-
-                <ul class="d-footer__list">
-                    @foreach ([
-                        ['home', __('nav.home')],
-                        ['presentation', __('nav.presentation')],
-                        ['programme', __('nav.programme')],
-                     
-
-                        ['sponsors', __('nav.sponsors')],
-                        ['pricing', __('nav.pricing')],
-                        ['contact', __('nav.contact')],
-                    ] as [$route, $label])
-                        @continue(! Route::has($route))
-                        <li><a href="{{ route($route) }}">{{ $label }}</a></li>
-                    @endforeach
-                </ul>
-            </nav>
-
-            {{-- Column 3 — contact ---------------------------------------- --}}
-            <div class="d-footer__contact">
-                <h2 class="d-footer__title">@lang('nav.contact')</h2>
 
                 <address class="d-footer__address">
-                    @if ($edition?->venue_name)
-                        <strong>{{ $edition->venueLine() }}</strong>
-                    @endif
-                    @if ($edition?->venue_address)
-                        <span dir="auto">{{ $edition->venueAddressLine() }}</span>
-                    @endif
-                    @if ($showCity)
-                        <span dir="auto">{{ $edition->cityLine() }}</span>
-                    @endif
+                    @foreach ($addressLines as $line)
+                        <span dir="auto">{{ $line }}</span>
+                    @endforeach
                 </address>
-
-                {{-- dir="ltr" only on the value (phone / e-mail) so the icon still sits at the start in Arabic --}}
-                <ul class="d-footer__list d-footer__list--icons">
-                    @if ($edition?->contact_phone)
-                        <li>
-                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $edition->contact_phone) }}">
-                                <i class="fas fa-phone" aria-hidden="true"></i>
-                                <span dir="ltr">{{ $edition->contact_phone }}</span>
-                            </a>
-                        </li>
-                    @endif
-
-                    @if ($edition?->contact_email)
-                        <li>
-                            <a href="mailto:{{ $edition->contact_email }}">
-                                <i class="fas fa-envelope" aria-hidden="true"></i>
-                                <span dir="ltr">{{ $edition->contact_email }}</span>
-                            </a>
-                        </li>
-                    @endif
-
-                    @if ($edition?->mapUrl())
-                        <li>
-                            <a href="{{ $edition->mapUrl() }}" rel="noopener noreferrer" target="_blank">
-                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                                <span>@lang('contact.open_map')</span>
-                            </a>
-                        </li>
-                    @endif
-                </ul>
             </div>
 
-            {{-- Column 4 — host hotel map --------------------------------- --}}
+            {{-- Column 3 — office map ------------------------------------- --}}
             <div class="d-footer__map">
-                <h2 class="d-footer__title">@lang('nav.venue')</h2>
+                <h2 class="visually-hidden">@lang('nav.venue')</h2>
 
-                @if ($mapEmbed)
-                    <iframe
-                        class="d-footer__map-frame"
-                        src="{{ $mapEmbed }}"
-                        title="{{ $edition?->venueLine() }}"
-                        loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"
-                        allowfullscreen></iframe>
-                @elseif ($edition?->mapUrl())
-                    <a class="d-footer__map-link"
-                       href="{{ $edition->mapUrl() }}"
-                       rel="noopener noreferrer"
-                       target="_blank">
-                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                        <span>@lang('contact.open_map')</span>
-                    </a>
-                @endif
+                <iframe
+                    class="d-footer__map-frame"
+                    src="{{ $mapEmbed }}"
+                    title="{{ implode(', ', $addressLines) }}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    allowfullscreen></iframe>
             </div>
 
         </div>
+    </div>
 
-        <div class="d-footer__bottom">
-            <p>
-                &copy; {{ $edition?->year ?? date('Y') }}
-                {{ $edition?->organiser ?? __('site.organiser') }}
-                &middot; @lang('footer.rights')
-            </p>
+    {{-- Bottom bar: own width (1275px), independent from the site's .container -- --}}
+    <div class="d-footer__bottom">
+        <p>
+            &copy; {{ $edition?->year ?? date('Y') }}
+            {{ $edition?->organiser ?? __('site.organiser') }}
+            &middot; @lang('footer.rights')
+        </p>
 
-            <ul class="d-footer__legal">
-                <li><a href="{{ route('contact') }}">@lang('footer.privacy')</a></li>
-                <li><a href="{{ route('contact') }}">@lang('footer.legal')</a></li>
-                <li><a href="{{ route('contact') }}">@lang('footer.accessibility')</a></li>
-            </ul>
-        </div>
-
+        <ul class="d-footer__legal">
+            <li><a href="{{ route('contact') }}">@lang('footer.privacy')</a></li>
+            <li><a href="{{ route('contact') }}">@lang('footer.legal')</a></li>
+        </ul>
     </div>
 </footer>
 
 <style>
 /* ==========================================================================
-   ARABCIA footer
-   Fonts  : Archivo Bold (titles) · Aptos → Inter (content)
-   Tokens : ink #1b1464 · deep #2f1f9c · brand #4f3cc9 · line #e4e1f4 · surface #f6f5fd
-            orange #e39374 (accent) · blue #7384ff (hover)
+   ARABCIA footer — measured from the reference screenshot (2000px wide)
+
+   x : logo 147 → 627 · centre column ~697 → 1427 · map 1497 → 1852
+   y : map 157 → 372 (355 × 215) · links 157 → 201 · contact 217 → 259
+       social 278 → 345 · address 377 → 421 · divider 467 · bottom text 510
    ========================================================================== */
 
 .d-footer {
-    --f-grad-a: #2c1181;
-    --f-grad-b: #201062;
-    --f-ink: #1b1464;
-    --f-deep: #2f1f9c;
-    --f-surface: #f6f5fd;
-    --f-pop-line: #e4e1f4;
-    --f-mauve: #2a1f6e;
+    --f-base: #261072;
     --f-blue: #7384ff;
     --f-orange: #e39374;
-    --f-text: rgba(255, 255, 255, .84);
-    --f-muted: rgba(255, 255, 255, .72);
+    --f-mauve: #2a1f6e;
+    --f-muted: rgba(255, 255, 255, .78);
     --f-line: rgba(255, 255, 255, .14);
+    --f-panel: rgba(110, 80, 255, .06);
 
     position: relative;
     isolation: isolate;
     margin: 0;
-    padding-block: 88px 0;
-    color: var(--f-text);
-    font-family: "Aptos", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-    font-size: .95rem;
-    line-height: 1.65;
-    background: linear-gradient(160deg, var(--f-grad-a) 0%, var(--f-grad-b) 100%);
+    padding-block: 156px 0;
+    color: #fff;
+    font-family: "Inter", "Roboto", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    background: var(--f-base);
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
 }
 
-/* top accent rule */
-.d-footer::before {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--f-orange), var(--f-blue));
-}
-
-/* soft glow for depth */
+/* soft glow, bottom-end corner (lighter blue on the right like the design) */
 .d-footer::after {
     content: "";
     position: absolute;
     z-index: -1;
-    inset-inline-end: -160px;
-    top: -200px;
-    width: 520px;
-    height: 520px;
+    inset-inline-end: -200px;
+    bottom: -260px;
+    width: 700px;
+    height: 700px;
     border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(115, 132, 255, .22), transparent);
+    background: radial-gradient(closest-side, rgba(90, 80, 230, .30), transparent);
     pointer-events: none;
 }
 
-/* zellige line-art on the end side (SVG data-URI, no icon font) */
+/* zellige line-art on the end side (full height, fades towards the centre) */
 .d-footer__zellige {
     position: absolute;
     z-index: -1;
     inset-block: 0;
     inset-inline-end: 0;
-    width: min(46%, 560px);
+    width: min(24%, 480px);
     opacity: .09;
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='none' stroke='white' stroke-width='1'%3E%3Crect x='20' y='20' width='40' height='40'/%3E%3Crect x='20' y='20' width='40' height='40' transform='rotate(45 40 40)'/%3E%3Ccircle cx='40' cy='40' r='9'/%3E%3Cpath d='M0 0l8 8M80 0l-8 8M0 80l8-8M80 80l-8-8'/%3E%3C/svg%3E");
-    background-size: 80px 80px;
-    -webkit-mask-image: linear-gradient(to left, #000 10%, transparent 100%);
-            mask-image: linear-gradient(to left, #000 10%, transparent 100%);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='86' height='86' viewBox='0 0 80 80' fill='none' stroke='white' stroke-width='1'%3E%3Crect x='20' y='20' width='40' height='40'/%3E%3Crect x='20' y='20' width='40' height='40' transform='rotate(45 40 40)'/%3E%3Ccircle cx='40' cy='40' r='9'/%3E%3Cpath d='M0 0l8 8M80 0l-8 8M0 80l8-8M80 80l-8-8'/%3E%3C/svg%3E");
+    background-size: 86px 86px;
+    -webkit-mask-image: linear-gradient(to left, #000 15%, transparent 100%);
+            mask-image: linear-gradient(to left, #000 15%, transparent 100%);
 }
 
 [dir="rtl"] .d-footer__zellige {
-    -webkit-mask-image: linear-gradient(to right, #000 10%, transparent 100%);
-            mask-image: linear-gradient(to right, #000 10%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 15%, transparent 100%);
+            mask-image: linear-gradient(to right, #000 15%, transparent 100%);
 }
 
 .d-footer a {
@@ -274,8 +239,7 @@
     color: var(--f-blue);
 }
 
-.d-footer a:focus-visible,
-.d-footer button:focus-visible {
+.d-footer a:focus-visible {
     outline: 2px solid var(--f-orange);
     outline-offset: 3px;
     border-radius: 8px;
@@ -283,7 +247,6 @@
 
 .d-footer ul {
     list-style: none;
-    margin: 0;
     padding: 0;
 }
 
@@ -299,69 +262,141 @@
     border: 0;
 }
 
-/* ---------- Grid ---------- */
+/* ==========================================================================
+   Top row : logo | centre column | map
+   ========================================================================== */
+.d-footer__inner {
+    width: min(1705px, 100% - 2 * clamp(20px, 7.35vw, 147px));
+    margin-inline: auto;
+}
+
 .d-footer__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, .7fr) minmax(0, 1.15fr) minmax(0, 1.4fr);
-    gap: 48px 56px;
-    padding-bottom: 64px;
+    grid-template-columns:
+        clamp(200px, 24vw, 480px)        /* logo   */
+        minmax(0, 1fr)                   /* centre */
+        clamp(260px, 17.75vw, 355px);    /* map    */
+    column-gap: clamp(32px, 3.5vw, 70px);
+    align-items: start;
+    padding-bottom: 46px;
 }
 
-/* ---------- Titles ---------- */
-.d-footer__title {
-    position: relative;
-    margin: 0 0 26px;
-    padding-bottom: 14px;
-    font-family: "Archivo", "Aptos", "Inter", sans-serif;
-    font-weight: 700;
-    font-size: 1.15rem;
-    line-height: 1.3;
-    letter-spacing: .02em;
-    color: #fff;
+/* ---------- Logo — vertically centred on the map (215px tall) ---------- */
+.d-footer__brand {
+    display: flex;
+    align-items: center;
+    min-height: clamp(160px, 10.75vw, 215px);
 }
 
-.d-footer__title::after {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0;
-    bottom: 0;
-    width: 28px;
-    height: 3px;
-    border-radius: 3px;
-    background: var(--f-orange);
-}
-
-[dir="rtl"] .d-footer__title,
-:lang(ar) .d-footer__title {
-    letter-spacing: 0;
-}
-
-/* ---------- Brand ---------- */
 .d-footer__logo {
-    display: inline-block;
-    margin-bottom: 22px;
+    display: block;
+    width: 100%;
 }
 
 .d-footer__logo img {
     display: block;
+    width: 100%;
+    max-width: 480px;
     height: auto;
-    width: auto;
-    max-width: 290px;
 }
 
-/* ---------- Social ---------- */
+/* ---------- Centre column ---------- */
+.d-footer__center {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    min-width: 0;
+}
+
+.d-footer__links,
+.d-footer__contact {
+    width: 100%;
+    max-width: 695px;
+    margin-inline: auto;
+}
+
+.d-footer__list--row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+/* quick links panel (157 → 201) */
+.d-footer__links .d-footer__list--row {
+    min-height: 44px;
+    gap: 0 clamp(20px, 1.7vw, 34px);
+    padding-inline: 24px;
+}
+
+.d-footer__links .d-footer__list a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: clamp(1rem, 1.05vw, 1.3rem);
+    font-weight: 500;
+    color: #fff;
+}
+
+/* contact panel (217 → 259) */
+.d-footer__contact {
+    margin-top: 16px;
+}
+
+.d-footer__list--icons {
+    min-height: 42px;
+    gap: 0 clamp(24px, 2vw, 40px);
+    padding-inline: 24px;
+}
+
+.d-footer__list--icons a {
+    display: inline-flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 42px;
+    font-size: clamp(.95rem, .86vw, 1.05rem);
+    font-weight: 400;
+    color: #fff;
+    overflow-wrap: anywhere;
+}
+
+.d-footer__list--icons i {
+    flex: 0 0 37px;
+    display: grid;
+    place-items: center;
+    width: 37px;
+    height: 37px;
+    border-radius: 50%;
+    font-size: .8rem;
+    color: var(--f-orange);
+    background: rgba(227, 147, 116, .16);
+    transition: background .2s ease, color .2s ease;
+}
+
+.d-footer__list--icons a:hover i,
+.d-footer__list--icons a:focus-visible i {
+    color: var(--f-mauve);
+    background: var(--f-orange);
+}
+
+/* ---------- Social (small tinted panel 278 → 345) ---------- */
 .d-social {
     display: flex;
-    gap: 12px;
+    align-self: center;
+    gap: 13px;
+    margin-top: 39px;
+    padding: 7px 10px 13px;
 }
 
 .d-social a {
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: 47px;
+    height: 47px;
     border: 1px solid var(--f-line);
     border-radius: 50%;
+    font-size: .95rem;
     color: #fff;
     background: rgba(255, 255, 255, .06);
 }
@@ -374,117 +409,51 @@
     transform: translateY(-2px);
 }
 
-/* ---------- Lists ---------- */
-.d-footer__list li + li {
-    margin-top: 6px;
-}
-
-.d-footer__list a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 36px;
-}
-
-.d-footer__list:not(.d-footer__list--icons) a:hover {
-    transform: translateX(4px);
-}
-
-[dir="rtl"] .d-footer__list:not(.d-footer__list--icons) a:hover {
-    transform: translateX(-4px);
-}
-
-/* ---------- Contact ---------- */
+/* ---------- Address (3 lines, 22px pitch) ---------- */
 .d-footer__address {
-    margin: 0 0 16px;
+    margin: 32px 0 0;
+    font-family: "Aptos", "Inter", "Segoe UI", system-ui, sans-serif;
     font-style: normal;
-    line-height: 1.6;
-}
-
-.d-footer__address strong {
-    display: block;
-    margin-bottom: 4px;
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 22px;
     color: #fff;
-    font-weight: 600;
 }
 
 .d-footer__address span {
     display: block;
 }
 
-.d-footer__list--icons li + li {
-    margin-top: 8px;
-}
-
-.d-footer__list--icons a {
-    gap: 12px;
-    overflow-wrap: anywhere;
-}
-
-.d-footer__list--icons i {
-    flex: 0 0 34px;
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    font-size: .8rem;
-    color: var(--f-orange);
-    background: rgba(227, 147, 116, .14);
-    transition: background .2s ease, color .2s ease;
-}
-
-.d-footer__list--icons a:hover i,
-.d-footer__list--icons a:focus-visible i {
-    color: var(--f-mauve);
-    background: var(--f-orange);
-}
-
-/* ---------- Map ---------- */
+/* ---------- Map (355 × 215) ---------- */
 .d-footer__map {
-    scroll-margin-top: 96px;
     min-width: 0;
 }
 
 .d-footer__map-frame {
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 3;
-    border: 1px solid var(--f-line);
-    border-radius: 16px;
+    aspect-ratio: 355 / 215;
+    border: 0;
+    border-radius: 28px;
     background: rgba(255, 255, 255, .05);
-    box-shadow: 0 18px 40px -24px rgba(10, 5, 60, .8);
 }
 
-.d-footer__map-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 44px;
-    padding: 0 20px;
-    font-weight: 600;
-    color: #fff;
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid var(--f-line);
-    border-radius: 999px;
-}
-
-.d-footer__map-link:hover,
-.d-footer__map-link:focus-visible {
-    color: #fff;
-    background: var(--f-blue);
-    border-color: var(--f-blue);
-}
-
-/* ---------- Bottom bar ---------- */
+/* ==========================================================================
+   Bottom bar : 1275px wide, divider at its top (y = 467), text at y ≈ 510
+   ========================================================================== */
 .d-footer__bottom {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 8px 32px;
-    padding-block: 22px;
-    border-top: 1px solid var(--f-line);
-    font-size: .85rem;
+    width: min(1275px, 100% - 2 * clamp(20px, 5vw, 40px));
+    margin-inline: auto;
+    padding-block: 33px 34px;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+    font-size: .95rem;
+    font-weight: 500;
+    line-height: 20px;
     color: var(--f-muted);
 }
 
@@ -495,41 +464,57 @@
 .d-footer__legal {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 24px;
+    gap: 4px 26px;
 }
 
 .d-footer__legal a {
     display: inline-block;
-    padding-block: 6px;
+    color: var(--f-muted);
+}
+
+.d-footer__legal a:hover,
+.d-footer__legal a:focus-visible {
+    color: var(--f-blue);
 }
 
 /* ==========================================================================
-   Tablet
+   Below 1100px — stack: logo, centre column, map
    ========================================================================== */
 @media (max-width: 1100px) {
     .d-footer {
         padding-top: 72px;
     }
 
+    .d-footer__inner {
+        width: min(100% - 40px, 720px);
+    }
+
     .d-footer__grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 44px 40px;
-        padding-bottom: 48px;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        row-gap: 32px;
     }
 
-    .d-footer__brand,
-    .d-footer__map {
-        grid-column: 1 / -1;
+    .d-footer__brand {
+        min-height: 0;
+        justify-content: center;
     }
-}
 
-/* make sure the site's own .container never leaves a huge side gutter on small screens */
-@media (max-width: 991.98px) {
-    .d-footer .container {
-        width: 100%;
-        max-width: none;
+    .d-footer__logo img {
+        max-width: min(420px, 100%);
         margin-inline: auto;
-        padding-inline: clamp(20px, 5vw, 40px);
+    }
+
+    .d-footer__center {
+        width: 100%;
+    }
+
+    .d-footer__map {
+        width: min(100%, 420px);
+    }
+
+    .d-footer__zellige {
+        width: 40%;
     }
 }
 
@@ -539,53 +524,31 @@
 @media (max-width: 640px) {
     .d-footer {
         padding-top: 52px;
-        font-size: 1rem;
     }
 
     .d-footer__grid {
-        grid-template-columns: 1fr;
-        gap: 36px;
-        padding-bottom: 36px;
+        row-gap: 26px;
+        padding-bottom: 32px;
     }
 
-    .d-footer__title {
-        margin-bottom: 18px;
-    }
-
-    /* quick links -> pills */
-    .d-footer__links .d-footer__list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .d-footer__links .d-footer__list li + li {
-        margin-top: 0;
+    .d-footer__links .d-footer__list--row {
+        padding-inline: 8px;
+        gap: 2px 16px;
     }
 
     .d-footer__links .d-footer__list a {
-        min-height: 44px;
-        padding-inline: 20px;
-        border: 1px solid var(--f-line);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .06);
-        color: #fff;
+        font-size: 1.05rem;
     }
 
-    .d-footer__links .d-footer__list a:hover,
-    .d-footer__links .d-footer__list a:focus-visible {
-        transform: none;
-        color: #fff;
-        background: var(--f-blue);
-        border-color: var(--f-blue);
+    .d-footer__list--icons {
+        flex-direction: column;
+        align-items: flex-start;
+        padding-inline: 16px;
+        gap: 2px;
     }
 
     .d-footer__list--icons a {
-        min-height: 48px;
-    }
-
-    .d-footer__map-frame {
-        aspect-ratio: 3 / 2;
+        font-size: 1rem;
     }
 
     .d-footer__bottom {
@@ -607,7 +570,7 @@
     }
 
     .d-footer__zellige {
-        width: 70%;
+        width: 60%;
         opacity: .07;
     }
 }

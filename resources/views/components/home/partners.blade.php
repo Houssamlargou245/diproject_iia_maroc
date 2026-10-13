@@ -48,7 +48,7 @@
         <h2 id="sponsors-title" class="h-sponsors__title">@lang('home.partners_title')</h2>
 
         @if ($realSponsors->isNotEmpty())
-            <x-logo-marquee :items="$realSponsors" :label="__('home.partners_title')" :speed="46" />
+            <x-logo-marquee :items="$realSponsors" :label="__('home.partners_title')" :speed="3200" />
 
             <p class="h-sponsors__cta">
                 <a href="{{ route('sponsors') }}" class="h-btn h-btn--outline h-btn--sm">
@@ -56,7 +56,7 @@
                 </a>
             </p>
         @else
-            <x-logo-marquee :items="$fallbackItems" :speed="50" />
+            <x-logo-marquee :items="$fallbackItems" :label="__('home.partners_title')" :speed="3400" />
         @endif
 
     </div>

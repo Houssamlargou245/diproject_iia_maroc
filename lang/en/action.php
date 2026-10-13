@@ -21,4 +21,6 @@ return [
     'remove' => 'Remove',
     'verify' => 'Verify code',
     'view' => 'View',
+    'previous' => 'Previous',
+    'next' => 'Next',
 ];
