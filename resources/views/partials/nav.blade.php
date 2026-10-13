@@ -49,7 +49,7 @@
 
         <li>
             <a href="{{ route($item['route']) }}"
-                   style="color:wheat"
+                   style="color:#2a1f6es"
                class="{{ $isBar ? 'd-nav__link' : '' }}"
                @if ($isCurrent) aria-current="page" @endif>
                 {{ $item['label'] }}

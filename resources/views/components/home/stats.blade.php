@@ -19,7 +19,6 @@
 
 @php
     $figures = [
-        ['value' => $stats['attendees'], 'label' => __('home.stats.attendees')],
         ['value' => $stats['workshops'], 'label' => __('home.stats.workshops')],
         ['value' => $stats['labs'], 'label' => __('home.stats.labs')],
         ['value' => $stats['days'], 'label' => __('home.stats.days')],

@@ -39,13 +39,21 @@
                  without touching the file on disk. --}}
             <div class="h-hero__logos">
 
-                <img src="{{ asset('assets/brand/arabic_itihad_logo.png') }}"
+               
+               
+<img src="{{ asset('assets/brand/logo-iia-maroc.png') }}"
+     alt="{{ __('site.site_name') }}"
+     style="width: 235px; height: 235px; object-fit: contain;"
+     fetchpriority="high"
+     decoding="async">
+
+ <img src="{{ asset('assets/brand/arabic_itihad_logo.png') }}"
                      width="{{ $lockup['width'] }}"
                      height="{{ $lockup['height'] }}"
                      alt="{{ __('site.site_name') }}"
                      fetchpriority="high"
                      decoding="async">
-                <img src="{{ asset('assets/brand/arabcia_logo.png') }}"
+                       <img src="{{ asset('assets/brand/arabcia_logo.png') }}"
                      width="{{ $lockup['width'] }}"
                      height="{{ $lockup['height'] }}"
                      alt="{{ __('site.site_name') }}"
@@ -77,21 +85,23 @@
                     <span>{{ $edition->dateLine($locale) }}</span>
                 </li>
                 <li>
-                    <span class="h-hero__fact-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 21.5s7-6.6 7-11.5a7 7 0 1 0-14 0c0 4.9 7 11.5 7 11.5Z"></path>
-                            <circle cx="12" cy="10" r="2.6"></circle>
-                        </svg>
-                    </span>
-                    <span>{{ $edition->venueLine($locale) }}</span>
-                </li>
-                <li>
-                    <span class="h-hero__fact-icon" aria-hidden="true">
+                        <span class="h-hero__fact-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3.5 21h17M5.5 21V6.5L12 3l6.5 3.5V21"></path>
                             <path d="M9.5 10H11M13 10h1.5M9.5 13.5H11M13 13.5h1.5M10 21v-3.5h4V21"></path>
                         </svg>
                     </span>
+                  
+                    <span>{{ $edition->venueLine($locale) }}</span>
+                </li>
+                <li>
+                      <span class="h-hero__fact-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 21.5s7-6.6 7-11.5a7 7 0 1 0-14 0c0 4.9 7 11.5 7 11.5Z"></path>
+                            <circle cx="12" cy="10" r="2.6"></circle>
+                        </svg>
+                    </span>
+                
                     <span>{{ $edition->cityLine($locale) }}</span>
                 </li>
             </ul>

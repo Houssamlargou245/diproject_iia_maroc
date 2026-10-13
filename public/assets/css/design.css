@@ -449,7 +449,7 @@ img {
 .d-btn--outline {
     background: transparent;
     border-color: currentColor;
-    color: white;
+    color: #2a1f6e;
 }
 
 .d-btn--outline:hover {
@@ -552,7 +552,7 @@ img {
     inset-inline: 0;
     position: fixed;
     z-index: 1000;
-background: linear-gradient(2deg, #4a3dac  0%, #2c1181 600%);
+background: #fff;
 }
 
 /* The bar is 72px and *not* translucent over the hero: a 72px strip of
@@ -577,7 +577,6 @@ background: linear-gradient(2deg, #4a3dac  0%, #2c1181 600%);
 
 .d-header.is-stuck .d-header__bar {
     backdrop-filter: blur(16px) saturate(180%);
-    background: linear-gradient(2deg, #4a3dac  0%, #2c1181 600%);
    
 }
 
@@ -599,7 +598,7 @@ background: linear-gradient(2deg, #4a3dac  0%, #2c1181 600%);
    Latin versions ballooning to the Arabic one's width. */
 .d-header__brand img {
     height: auto;
-    max-height: 44px;
+    height: 44px;
     max-width: min(230px, 42vw);
     transition: opacity var(--dur-1) var(--ease);
     width: auto;
@@ -655,7 +654,7 @@ background: linear-gradient(2deg, #4a3dac  0%, #2c1181 600%);
 
 .d-nav__link:hover,
 .d-nav__link[aria-current="page"] {
-    color: var(--d-indigo);
+    color: #2a1f6e ;
 }
 
 .d-nav__link:hover::after,
@@ -2867,7 +2866,7 @@ html[dir="rtl"] .h-hero {
 .h-hero__logos img {
     filter: brightness(0) invert(1);
     height: auto;
-    max-height: 80px;
+    max-height: 65px;
     width: auto;
 }
 
