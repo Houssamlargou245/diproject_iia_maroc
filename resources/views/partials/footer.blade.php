@@ -19,18 +19,20 @@
     /* ---- Office address (shown in the footer and used by the map) ---- */
     $addressLines = [
         'Bd Sidi Mohamed Ben Abdellah',
-        'Résidence Belle vue, Imm. B, Etage 2 Bureau 1 , Casablanca',
+        'Résidence Belle vue, Imm. B, Etage 2 Bureau 1',
+        'Casablanca',
     ];
 
-    /* Query sent to Google Maps (street + residence + city is enough to geocode). */
-    $mapQuery = 'Bd Sidi Mohamed Ben Abdellah, Résidence Belle vue, Casablanca, Maroc';
+    /* Exact position of IIA MAROC on Google Maps (guarantees the red pin). */
+    $mapLat = '33.60411083721038';
+    $mapLng = '-7.64255270132866';
 
-    /* API-key-free Google Maps embed driven by the address. */
-    $mapEmbed = 'https://maps.google.com/maps?q='.rawurlencode($mapQuery)
-        .'&z=16&hl='.app()->getLocale().'&output=embed';
+    /* API-key-free Google Maps embed, centred on the pin. */
+    $mapEmbed = 'https://maps.google.com/maps?q='.$mapLat.','.$mapLng
+        .'&z=17&hl='.app()->getLocale().'&output=embed';
 
-    /* Link that opens the address in Google Maps. */
-    $mapLink = 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($mapQuery);
+    /* Link that opens the pin in Google Maps. */
+    $mapLink = 'https://www.google.com/maps/search/?api=1&query='.$mapLat.','.$mapLng;
 @endphp
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -126,6 +128,10 @@
                 </ul>
 
                 <address class="d-footer__address">
+                    <a class="d-footer__pin" href="{{ $mapLink }}" rel="noopener noreferrer" target="_blank"
+                       aria-label="@lang('contact.open_map')">
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                    </a>
                     @foreach ($addressLines as $line)
                         <span dir="auto">{{ $line }}</span>
                     @endforeach
@@ -143,6 +149,11 @@
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
                     allowfullscreen></iframe>
+
+                <a class="d-footer__map-btn" href="{{ $mapLink }}" rel="noopener noreferrer" target="_blank">
+                    <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                    <span>@lang('contact.open_map')</span>
+                </a>
             </div>
 
         </div>
@@ -424,9 +435,56 @@
     display: block;
 }
 
+/* pin icon above the address */
+.d-footer__address .d-footer__pin {
+    display: grid;
+    place-items: center;
+    width: 37px;
+    height: 37px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    font-size: .9rem;
+    color: var(--f-orange);
+    background: rgba(227, 147, 116, .16);
+}
+
+.d-footer__address .d-footer__pin:hover,
+.d-footer__address .d-footer__pin:focus-visible {
+    color: var(--f-mauve);
+    background: var(--f-orange);
+}
+
 /* ---------- Map (355 × 215) ---------- */
 .d-footer__map {
+    position: relative;
     min-width: 0;
+}
+
+/* "open in Google Maps" button floating on the map */
+.d-footer__map-btn {
+    position: absolute;
+    inset-block-end: 12px;
+    inset-inline-start: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--f-mauve) !important;
+    background: #fff;
+    border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .3);
+}
+
+.d-footer__map-btn i {
+    color: #e53935;
+}
+
+.d-footer__map-btn:hover,
+.d-footer__map-btn:focus-visible {
+    background: var(--f-orange);
 }
 
 .d-footer__map-frame {
