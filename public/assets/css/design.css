@@ -2925,7 +2925,6 @@ html[dir="rtl"] .h-hero {
     font-weight: 600;
     gap: var(--sp-3);
     line-height: 1.45;
-    max-width: 15rem;
 }
 
 .h-hero__fact-icon {
@@ -4101,12 +4100,6 @@ html[dir="rtl"] .h-hero {
     justify-content: center;
 }
 
-.h-sponsors__wall img,
-.h-sponsors__item img {
-    height: auto;
-    max-height: 84px;
-    width: auto;
-}
 
 /* The single placeholder mark is shown larger than a wall member would be: one
    logo at wall size reads as a mistake rather than as a partner. */
@@ -7078,5 +7071,107 @@ textarea.comment-form-input {
        Opacity alone still reports that something is happening. */
     .d-stepper__btn.is-busy i::before {
         animation-duration: 2.4s;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Infinite logo marquee
+
+   A continuous, seamless loop for partner logos, shared by the landing page and
+   the sponsors page. The motion is one CSS keyframe on a duplicated track, so it
+   is dependency-free and costs no main-thread work once started — it cannot
+   fight the templates' jQuery/Swiper runtimes over the same element.
+
+   `overflow: hidden` plus an edge mask hides the seam and fades the ends; a mask
+   rather than an overlay gradient so it works on any background colour.
+   -------------------------------------------------------------------------- */
+
+.lm-marquee {
+    --lm-speed: 45s;
+    --lm-gap: clamp(14px, 2.2vw, 28px);
+    --lm-card-w: clamp(150px, 20vw, 210px);
+    --lm-card-h: clamp(84px, 10vw, 108px);
+
+    overflow: hidden;
+    position: relative;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+}
+
+.lm-marquee__track {
+    animation: lm-marquee-scroll var(--lm-speed) linear infinite;
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: max-content;
+    will-change: transform;
+}
+
+.lm-marquee.is-reverse .lm-marquee__track {
+    animation-direction: reverse;
+}
+
+/* Pausing on hover lets a visitor read a mark or reach a link without chasing
+   it, which a continuously moving target otherwise makes impossible. */
+.lm-marquee:hover .lm-marquee__track,
+.lm-marquee:focus-within .lm-marquee__track {
+    animation-play-state: paused;
+}
+
+.lm-marquee__item {
+    flex: 0 0 auto;
+    margin-inline-end: var(--lm-gap);
+}
+
+.lm-marquee__card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(27, 20, 100, .08);
+    border-radius: 16px;
+    box-shadow: 0 12px 30px -22px rgba(27, 20, 100, .55);
+    display: flex;
+    height: var(--lm-card-h);
+    justify-content: center;
+    padding: 16px 22px;
+    transition: transform .35s cubic-bezier(.2, .7, .3, 1), box-shadow .35s ease, border-color .35s ease;
+    width: var(--lm-card-w);
+}
+
+.lm-marquee__card:hover {
+    border-color: rgba(115, 132, 255, .45);
+    box-shadow: 0 22px 40px -20px rgba(27, 20, 100, .6);
+    transform: translateY(-5px);
+}
+
+.lm-marquee__img {
+    height: auto;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    width: auto;
+}
+
+.lm-marquee__name {
+    color: var(--d-indigo-dark, #1b1464);
+    font-size: .9rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+@keyframes lm-marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lm-marquee {
+        -webkit-mask-image: none;
+        mask-image: none;
+        overflow-x: auto;
+    }
+
+    .lm-marquee__track {
+        animation: none;
     }
 }

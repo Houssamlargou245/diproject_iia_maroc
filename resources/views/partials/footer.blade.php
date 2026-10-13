@@ -83,8 +83,8 @@
                         ['home', __('nav.home')],
                         ['presentation', __('nav.presentation')],
                         ['programme', __('nav.programme')],
-                        ['venue', __('nav.venue')],
-                        ['speakers', __('nav.speakers')],
+                     
+
                         ['sponsors', __('nav.sponsors')],
                         ['pricing', __('nav.pricing')],
                         ['contact', __('nav.contact')],

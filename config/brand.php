@@ -149,14 +149,58 @@ return [
         // Shown in the partners band when no sponsor row carries a logo yet.
         // One designed mark reads as a wall of one; an empty dark block reads
         // as a page that failed to load.
-    'partners_fallback' => [
-    ['name' => 'CIH Bank',       'src' => 'assets/images/logo/cih-logo.png'],
-    ['name' => 'Al Omrane',      'src' => 'assets/parteners/alomrane-logo.jpg'],
-    ['name' => 'Banque Populaire','src' => 'assets/parteners/banque-populaire-logo.png'],
-    ['name' => 'CaseWare',       'src' => 'assets/parteners/CaseWare-logo.jpg'],
-    ['name' => 'Marsa Maroc',    'src' => 'assets/parteners/Marsa-Maroc-logo.png'],
-    ['name' => 'Mazars',         'src' => 'assets/parteners/mazars-logo.png'],
   
+  
+'partners_fallback' => [
+    [
+        'name' => 'CIH Bank',
+        'src' => 'assets/images/logo/cih-logo.png',
+        'row' => 1,
+        'class' => 'sponsor-cih',
+        'style' => '',
+    ],
+    [
+        'name' => 'Banque Populaire',
+        'src' => 'assets/parteners/banque-populaire-logo.png',
+        'row' => 1,
+        'class' => 'sponsor-banque-populaire',
+        'style' => 'width: 200px !important; height: 90px; object-fit: contain;',
+    ],
+    [
+        'name' => 'IFACI Certification',
+        'src' => 'assets/parteners/Logo_IFACI-Certification_alixds.png',
+        'row' => 1,
+        'class' => 'sponsor-ifaci',
+        'style' => '',
+    ],
+    [
+        'name' => 'SOFAC',
+        'src' => 'assets/parteners/Sofac-logo.png',
+        'row' => 1,
+        'class' => 'sponsor-sofac',
+        'style' => '',
+    ],
+    [
+        'name' => 'Al Omrane',
+        'src' => 'assets/parteners/images.png',
+        'row' => 2,
+        'class' => 'sponsor-al-omrane',
+        'style' => '',
+    ],
+    [
+        'name' => 'Holmarcom',
+        'src' => 'assets/parteners/Logo-holmarcom-1.png',
+        'row' => 2,
+        'class' => 'sponsor-holmarcom',
+        'style' => '',
+    ],
+    [
+        'name' => 'OCP Group',
+        'src' => 'assets/parteners/OCP_Group.svg',
+        'row' => 2,
+        'class' => 'sponsor-ocp',
+        'style' => '',
+    ],
 ],
     ],
 

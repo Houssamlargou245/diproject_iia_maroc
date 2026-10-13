@@ -58,11 +58,12 @@
 // 'url' is optional; without it the logo is shown but not linked.
 $allies = [
   ['name' => 'CIH Bank',       'logo' => 'assets/images/logo/cih-logo.png' , 'url' => 'https://cihbank.ma/' ],
-    ['name' => 'Al Omrane',         'logo' => 'assets/parteners/alomrane-logo.jpg',         'url' => 'https://www.alomrane.gov.ma'],
+    ['name' => 'Al Omrane',         'logo' => 'assets/parteners/images.png',         'url' => 'https://mega.io'],
     ['name' => 'Banque Populaire',  'logo' => 'assets/parteners/banque-populaire-logo.png', 'url' => 'https://www.groupebcp.com'],
-    ['name' => 'CaseWare',          'logo' => 'assets/parteners/CaseWare-logo.jpg',         'url' => 'https://www.caseware.com'],
-    ['name' => 'Marsa Maroc',       'logo' => 'assets/parteners/Marsa-Maroc-logo.png',      'url' => 'https://www.marsamaroc.co.ma'],
-    ['name' => 'Mazars',            'logo' => 'assets/parteners/mazars-logo.png',           'url' => 'https://www.mazars.ma'],
+    ['name' => 'CaseWare',          'logo' => 'assets/parteners/Logo_IFACI-Certification_alixds.png',         'url' => 'https://www.ifaci.com/'],
+    ['name' => 'Marsa Maroc',       'logo' => 'assets/parteners/Logo-holmarcom-1.png',      'url' => 'https://www.holmarcom.ma/'],
+    ['name' => 'Mazars',            'logo' => 'assets/parteners/OCP_Group.svg',           'url' => 'https://www.ocpgroup.ma/en'],
+    ['name' => 'Mazars',            'logo' => 'assets/parteners/Sofac-logo.png',           'url' => 'https://www.ocpgroup.ma/en'],
 ];
     $allyLogo = static fn (array $a, callable $fav): string => $a['logo']
         ?? (isset($a['slug']) ? 'https://cdn.simpleicons.org/' . $a['slug'] . '/' . ($a['color'] ?? '000000') : $fav($a['domain']));
@@ -151,11 +152,11 @@ $allies = [
 
             {{-- 3a. The four formulas --}}
             <header class="sp-head">
-                <p class="sp-eyebrow">@lang('sponsoring.packages.eyebrow')</p>
-                <h2 id="sponsoring-packages-title" class="sp-title">{{ $accent(__('sponsoring.packages.title'), 1) }}</h2>
+
+                <h2 id="sponsoring-packages-title" class="sp-title">@lang('sponsoring.packages.eyebrow')</h2>
             </header>
 
-            <div class="sp-package-grid" data-ux-stagger="90">
+            <div class="sp-package-grid" data-ux-stagger="90" style="margin-top: 5%; margin-bottom:5%;">
                 @foreach ($formulas as $formula)
                     @php
                         // "100 000 MAD" -> figure "100 000" + currency "MAD" (then "HT")
@@ -281,28 +282,20 @@ $allies = [
     <section class="sp-allies" aria-labelledby="sponsoring-allies-title">
         <div class="container">
             <header class="sp-head">
-                <p class="sp-eyebrow">@lang('sponsoring.allies.eyebrow')</p>
-                <h2 id="sponsoring-allies-title" class="sp-title">@lang('sponsoring.allies.title')</h2>
+                <h2 id="sponsoring-allies-title" class="sp-title">@lang('sponsoring.allies.eyebrow')</h2>
             </header>
 
-           <ul class="sp-allies__row">
-    @foreach ($allies as $ally)
-        <li class="sp-ally">
-            @if (! empty($ally['url']))
-                <a href="{{ $ally['url'] }}" rel="noopener noreferrer sponsored" target="_blank" title="{{ $ally['name'] }}">
-                    <img src="{{ asset($ally['logo']) }}" alt="{{ $ally['name'] }}"
-                    height="100"
-                         loading="lazy" decoding="async">
-                </a>
-            @else
-                <img src="{{ asset($ally['logo']) }}" alt="{{ $ally['name'] }}"
-                     loading="lazy" decoding="async"
-                       height="100"
-                     >
-            @endif
-        </li>
-    @endforeach
-</ul>
+           @php
+               $allyItems = collect($allies)->map(static fn (array $ally): array => [
+                   'src'  => asset($ally['logo']),
+                   'name' => $ally['name'],
+                   'url'  => $ally['url'] ?? null,
+               ])->values();
+           @endphp
+
+           <div class="sp-allies__marquee">
+               <x-logo-marquee :items="$allyItems" :label="__('sponsoring.allies.eyebrow')" :speed="52" />
+           </div>
         </div>
     </section>
 
@@ -729,6 +722,8 @@ $allies = [
     .sp-allies { background: #fff; padding-block: clamp(1.75rem, 4vw, 2.5rem) clamp(2rem, 4.5vw, 2.75rem); }
     .sp-allies .sp-head { margin-block-end: 1.5rem; }
     .sp-allies .sp-title { font-size: clamp(1.25rem, 1.05rem + .9vw, 1.6rem); }
+
+    .sp-allies__marquee { margin-block: clamp(1.5rem, 4vw, 2.25rem); }
 
     .sp-allies__row { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; }
     .sp-ally { align-items: center; display: flex; flex: 1 1 5.5rem; height: 3.2rem; justify-content: center; }
