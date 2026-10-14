@@ -190,8 +190,7 @@
 
 .h-sponsors__logo {
     display: block;
-    max-width: 100%;
-    max-height: 100%;
+
     object-fit: contain;
 }
 
@@ -212,7 +211,7 @@
     max-width: 300px;
     height: 98px;
 }
-.h-sponsors__tier--gold .h-sponsors__logo { max-height: 62px; }
+.h-sponsors__tier--gold .h-sponsors__logo {  }
 
 /* Silver: five across, slightly smaller */
 .h-sponsors__tier--silver .h-sponsors__row { max-width: 1100px; }
@@ -221,7 +220,7 @@
     max-width: 230px;
     height: 92px;
 }
-.h-sponsors__tier--silver .h-sponsors__logo { max-height: 82px; }
+.h-sponsors__tier--silver .h-sponsors__logo {  }
 
 .h-sponsors__cta { margin-top: 40px; text-align: center; }
 
