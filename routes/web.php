@@ -19,6 +19,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SpeakersController;
 use App\Http\Controllers\SponsorsController;
+use App\Http\Controllers\SponsorshipRequestController;
 use App\Http\Controllers\TotpController;
 use App\Http\Controllers\VenueController;
 use Illuminate\Http\RedirectResponse;
@@ -413,15 +414,17 @@ Route::get('/{locale?}/presentations/{file}/download', [DocumentController::clas
 
 Route::post('/locale', LocaleController::class)->name('locale.switch');
 
-
-
 use App\Http\Controllers\NewsletterController;
- 
+
 Route::post('/newsletter', [NewsletterController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('newsletter.store');
- 
+
 // Signed link sent by e-mail. {subscriber} resolves to NewsletterSubscriber by id.
 Route::get('/newsletter/confirm/{subscriber}', [NewsletterController::class, 'confirm'])
     ->middleware(['signed', 'throttle:20,1'])
     ->name('newsletter.confirm');
+
+Route::post('/sponsoring/demande', [SponsorshipRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('sponsoring.request');

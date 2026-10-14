@@ -6,6 +6,7 @@ return [
     'back_to_top' => 'Retour en haut',
     'back' => 'Retour',
     'cancel' => 'Annuler',
+    'close' => 'Fermer',
     'continue' => 'Continuer',
     'decrease' => 'Une place de moins',
     'download' => 'Télécharger',

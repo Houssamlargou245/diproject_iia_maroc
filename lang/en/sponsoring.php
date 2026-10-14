@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 return [
-       'max_partners' => 'Max. :n partners',
+    'max_partners' => 'Max. :n partners',
     'max_sessions' => 'Max. :n sessions',
-    'cta_partner'  => 'Become a partner',
-    'more'         => 'Learn more',
+    'cta_partner' => 'Become a partner',
+    'more' => 'Learn more',
     'become_partner' => 'Become a partner',
     'contact' => 'Contact us',
     'from' => 'From :amount',
@@ -218,6 +218,31 @@ return [
         'next' => 'Next items',
     ],
     'tier_platinum' => 'Platinum Partner',
-'tier_gold'     => 'Gold Partners',
-'tier_silver'   => 'Silver Partners',
+    'tier_gold' => 'Gold Partners',
+    'tier_silver' => 'Silver Partners',
+
+    'hesitate' => [
+        'title' => 'Not sure which package fits?',
+        'text' => 'Our team is happy to guide you towards the partnership that best matches your visibility and business goals.',
+        'button' => 'Talk to our sponsorship team',
+    ],
+    'form' => [
+        'kicker' => 'Become a partner',
+        'banner_title' => 'Associate your brand with an international event',
+        'banner_text' => 'Join the partners of the ARABCIA :year Conference, :dates in :venue. Our team will help you choose the package that best fits your objectives.',
+        'title' => 'Your partnership request',
+        'lede' => 'Fill in this form and our sponsorship team will get back to you.',
+        'company' => 'Company / Organisation',
+        'company_ph' => 'Your organisation\'s name',
+        'name' => 'Full name',
+        'name_ph' => 'Your full name',
+        'email' => 'Email address',
+        'phone' => 'Phone',
+        'formula' => 'Preferred sponsorship package',
+        'message' => 'Your message (optional)',
+        'message_ph' => 'Tell us about your expectations or ask your questions...',
+        'consent' => 'I agree that my details may be used to respond to my partnership request.',
+        'submit' => 'Send',
+        'success' => 'Thank you for your interest. Our team will be in touch shortly.',
+    ],
 ];

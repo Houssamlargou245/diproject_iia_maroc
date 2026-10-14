@@ -6,6 +6,7 @@ return [
     'back_to_top' => 'Back to top',
     'back' => 'Back',
     'cancel' => 'Cancel',
+    'close' => 'Close',
     'continue' => 'Continue',
     'decrease' => 'One fewer',
     'download' => 'Download',

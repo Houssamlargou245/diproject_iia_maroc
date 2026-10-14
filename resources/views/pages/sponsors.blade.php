@@ -199,7 +199,7 @@
                                     @endforeach
                                 </ul>
 
-                                <a href="{{ route('contact') }}" class="sp-package__cta">
+                                <a href="#sponsor-form" data-formula="{{ $formula['key'] }}" class="sp-package__cta">
                                     <span>{{ $ctaLabel }}</span>
                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                 </a>
@@ -208,17 +208,16 @@
                     @endforeach
                 </div>
 
-                <div class="sp-offer__foot">
-                    <!-- <a href="{{ asset('assets/images/conference/sponsorship-packages-overview.png') }}"
-                        class="sp-compare"
-                        data-lightbox="sponsoring-packages"
-                        data-title="@lang('sponsoring.plate_packages')"
-                        target="_blank" rel="noopener">
-                        <i class="fas fa-scale-balanced" aria-hidden="true"></i>
-                        <span>@lang('sponsoring.packages.compare')</span>
-                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                    </a> -->
-                </div>
+              <div class="sp-hesitate">
+    <div>
+        <h3 class="sp-hesitate__title">@lang('sponsoring.hesitate.title')</h3>
+        <p class="sp-hesitate__text">@lang('sponsoring.hesitate.text')</p>
+    </div>
+    <a href="#sponsor-form" class="sp-btn sp-btn--solid">
+        <i class="fas fa-comments" aria-hidden="true"></i>
+        <span>@lang('sponsoring.hesitate.button')</span>
+    </a>
+</div>
 
                 {{-- 3b. À-la-carte activations --}}
                 <div class="sp-head">
@@ -345,6 +344,152 @@
             </div>
         </section>
     </div>
+    
+{{-- ================= FORMULAIRE DE PARTENARIAT ================= --}}
+@php
+    $selectedFormula = old('formula', request('formule', 'platinum'));
+    $openForm = session('sponsor_sent') || $errors->hasAny(['company', 'name', 'email', 'phone', 'formula', 'consent']);
+@endphp
+
+<div class="sp-modal" id="sponsor-form" data-sp-modal @if (! $openForm) hidden @endif>
+    <div class="sp-modal__overlay" data-sp-close></div>
+
+    <div class="sp-modal__dialog" role="dialog" aria-modal="true" aria-label="@lang('sponsoring.form.title')">
+        <button type="button" class="sp-modal__close" data-sp-close aria-label="@lang('action.close')">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+
+        <div class="sp-modal__scroll">
+            <div class="sp-form__banner">
+            <p class="sp-form__kicker">@lang('sponsoring.form.kicker')</p>
+            <h2 class="sp-form__banner-title">{{ $accent(__('sponsoring.form.banner_title'), 2) }}</h2>
+            <p class="sp-form__banner-text">
+                @lang('sponsoring.form.banner_text', ['year' => $year, 'dates' => $edition->dateLine($locale), 'venue' => $edition->venueLine($locale)])
+            </p>
+        </div>
+
+        <div class="sp-form__card">
+            @if (session('sponsor_sent'))
+                <div class="sp-form__success" role="status">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    <p>@lang('sponsoring.form.success')</p>
+                </div>
+            @else
+                <span class="sp-form__bar" aria-hidden="true"></span>
+                <h2 id="sponsor-form-title" class="sp-form__title">{{ $accent(__('sponsoring.form.title'), 1) }}</h2>
+                <p class="sp-form__lede">@lang('sponsoring.form.lede')</p>
+
+                <form method="POST" action="{{ route('sponsoring.request') }}" class="sp-form__form" novalidate>
+                    @csrf
+
+                    {{-- Honeypot --}}
+                    <div class="sp-form__trap" aria-hidden="true">
+                        <input type="text" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div class="sp-field sp-field--full">
+                        <label for="sf-company"><i class="far fa-building" aria-hidden="true"></i> @lang('sponsoring.form.company') *</label>
+                        <input id="sf-company" name="company" type="text" value="{{ old('company') }}" placeholder="@lang('sponsoring.form.company_ph')" required>
+                        @error('company')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field">
+                        <label for="sf-name"><i class="far fa-user" aria-hidden="true"></i> @lang('sponsoring.form.name') *</label>
+                        <input id="sf-name" name="name" type="text" value="{{ old('name') }}" placeholder="@lang('sponsoring.form.name_ph')" autocomplete="name" required>
+                        @error('name')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field">
+                        <label for="sf-email"><i class="far fa-envelope" aria-hidden="true"></i> @lang('sponsoring.form.email') *</label>
+                        <input id="sf-email" name="email" type="email" dir="ltr" value="{{ old('email') }}" placeholder="nom@entreprise.com" autocomplete="email" required>
+                        @error('email')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field">
+                        <label for="sf-phone"><span class="sp-field__glyph" aria-hidden="true"><svg viewBox="0 0 20 20" width="1em" height="1em" fill="currentColor" focusable="false"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5V5c0 1.149.15 2.263.43 3.326a13.022 13.022 0 0 0 9.244 9.244c1.063.28 2.177.43 3.326.43h1.5a1.5 1.5 0 0 0 1.5-1.5v-1.148a1.5 1.5 0 0 0-1.175-1.465l-3.223-.716a1.5 1.5 0 0 0-1.767 1.052l-.267.933c-.117.41-.555.643-.95.48a11.542 11.542 0 0 1-6.254-6.254c-.163-.395.07-.833.48-.95l.933-.267a1.5 1.5 0 0 0 1.052-1.767l-.716-3.223A1.5 1.5 0 0 0 4.648 2H3.5Zm13 2.56l-3.22 3.22a.75.75 0 1 1-1.06-1.06l3.22-3.22h-2.69a.75.75 0 0 1 0-1.5h4.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V4.56Z"/></svg></span> @lang('sponsoring.form.phone') *</label>
+                        <input id="sf-phone" name="phone" type="tel" dir="ltr" value="{{ old('phone') }}" placeholder="+212..." autocomplete="tel" required>
+                        @error('phone')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field">
+                        <label for="sf-formula"><i class="far fa-star" aria-hidden="true"></i> @lang('sponsoring.form.formula') *</label>
+                        <select id="sf-formula" name="formula" required>
+                            @foreach ($formulas as $formula)
+                                <option value="{{ $formula['key'] }}" @selected($selectedFormula === $formula['key'])>{{ $formula['name'] }}</option>
+                            @endforeach
+                        </select>
+                        @error('formula')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field sp-field--full">
+                        <label for="sf-message"><i class="far fa-comment-dots" aria-hidden="true"></i> @lang('sponsoring.form.message')</label>
+                        <textarea id="sf-message" name="message" rows="4" placeholder="@lang('sponsoring.form.message_ph')">{{ old('message') }}</textarea>
+                        @error('message')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field sp-field--full">
+                        <label class="sp-check">
+                            <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
+                            <span>@lang('sponsoring.form.consent') *</span>
+                        </label>
+                        @error('consent')<p class="sp-field__error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="sp-field--full sp-form__submit">
+                        <button type="submit" class="sp-form__btn">@lang('sponsoring.form.submit')</button>
+                    </div>
+                </form>
+            @endif
+        </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal = document.getElementById('sponsor-form');
+        if (!modal) { return; }
+
+        var select = document.getElementById('sf-formula');
+        var lastFocus = null;
+
+        function open(formula) {
+            if (formula && select) { select.value = formula; }
+            lastFocus = document.activeElement;
+            modal.hidden = false;
+            document.body.classList.add('sp-modal-open');
+
+            var first = document.getElementById('sf-company');
+            if (first) { window.setTimeout(function () { first.focus(); }, 40); }
+        }
+
+        function close() {
+            modal.hidden = true;
+            document.body.classList.remove('sp-modal-open');
+            if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
+        }
+
+        // « Devenir partenaire » (sous une formule) et « Nous contacter » ouvrent la modale.
+        document.querySelectorAll('[data-formula], a[href="#sponsor-form"]').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                open(link.getAttribute('data-formula'));
+            });
+        });
+
+        modal.querySelectorAll('[data-sp-close]').forEach(function (el) {
+            el.addEventListener('click', close);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) { close(); }
+        });
+
+        // Ouverture directe si on arrive avec le hash, ou s'il y a une erreur / une confirmation.
+        if (location.hash === '#sponsor-form') { open(null); }
+        if (!modal.hidden) { document.body.classList.add('sp-modal-open'); }
+    })();
+</script>
 
     {{-- Styles live INSIDE the section on purpose: anything after @endsection in a
         child view is printed before <!DOCTYPE>, which forces quirks mode. --}}
@@ -880,6 +1025,188 @@
     .sp-tier--gold .sp-tier__card,
     .sp-tier--silver .sp-tier__card { flex-basis: calc(50% - .45rem); max-width: none; }
 }
+/* ---------- Bandeau « Vous hésitez ? » ---------- */
+.sp-hesitate {
+    align-items: center;
+    background: rgb(255 255 255 / 80%);
+    border: 1px solid #ddd9f6;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    justify-content: space-between;
+    margin-block-start: 2rem;
+    padding: 1.25rem 1.5rem;
+}
+.sp-hesitate__title { color: var(--sp-ink); font-size: 1.05rem; font-weight: 800; margin-block-end: .25rem; }
+.sp-hesitate__text  { color: var(--sp-muted); font-size: .85rem; line-height: 1.5; margin: 0; max-width: 42rem; }
+
+/* ---------- Formulaire ---------- */
+.sp-form {
+    background:
+        radial-gradient(50% 40% at 100% 0%, rgba(124, 108, 255, .14), transparent 70%),
+        #f9f9fe;
+    padding-block: clamp(2.5rem, 5vw, 4rem);
+    scroll-margin-top: 90px; /* hauteur de votre header fixe */
+}
+.sp-form .container { max-width: 980px; }
+
+.sp-form__banner {
+    background-image: url('/assets/images/images.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    border-radius: 18px 18px 0 0;
+    color: #fff;
+    padding: clamp(1.5rem, 8vw, 3.25rem) clamp(1.25rem, 4vw, 2.5rem) ;
+}
+.sp-form__kicker { font-size: .75rem; font-weight: 600; letter-spacing: .16em; margin-block-end: .5rem; opacity: .9; text-transform: uppercase; }
+.sp-form__banner-title { color: #fff; font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.1rem); font-weight: 800; line-height: 1.2; margin-block-end: .75rem; }
+.sp-form__banner-title .sp-accent { color: #9d8cff; }
+.sp-form__banner-text { color: rgb(255 255 255 / 90%); font-size: .95rem; line-height: 1.6; margin: 0; max-width: 40rem; }
+[dir="rtl"] .sp-form__kicker { letter-spacing: .02em; }
+
+.sp-form__card {
+    background: #fff;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 18px 40px -22px rgba(42, 31, 110, .35);
+    padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 4vw, 2.5rem) 2.25rem;
+}
+.sp-form__bar { background: linear-gradient(90deg, #2f27b8, #6c3fe6); border-radius: 2px; display: block; height: 3px; margin-block-end: 1rem; width: 4.5rem; }
+.sp-form__title { color: var(--sp-ink); font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); font-weight: 800; margin-block-end: .4rem; }
+.sp-form__lede  { color: var(--sp-muted); margin-block-end: 1.5rem; }
+
+.sp-form__form { display: grid; gap: 1.1rem 1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sp-field--full { grid-column: 1 / -1; }
+@media (max-width: 640px) { .sp-form__form { grid-template-columns: 1fr; } }
+
+.sp-field label { align-items: center; color: var(--sp-ink); display: flex; font-size: .9rem; font-weight: 700; gap: .6rem; margin-block-end: .45rem; }
+.sp-field label i { color: var(--sp-brand); font-size: 1.15rem; width: 1.4rem; text-align: center; }
+.sp-field label .sp-field__glyph { color: var(--sp-brand); display: inline-flex; flex: 0 0 auto; font-size: 1.15rem; justify-content: center; width: 1.4rem; }
+.sp-field label .sp-field__glyph svg { height: 1em; width: 1em; }
+
+.sp-field input[type="text"],
+.sp-field input[type="email"],
+.sp-field input[type="tel"],
+.sp-field select,
+.sp-field textarea {
+    background: #fff;
+    border: 1px solid #d3d9f4;
+    border-radius: 999px;
+    color: var(--sp-ink);
+    font: inherit;
+    padding: .85rem 1.25rem;
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+}
+.sp-field textarea { border-radius: 20px; min-height: 7.5rem; resize: vertical; }
+.sp-field input::placeholder, .sp-field textarea::placeholder { color: #8b8fc0; }
+.sp-field input:focus, .sp-field select:focus, .sp-field textarea:focus {
+    border-color: var(--sp-accent);
+    box-shadow: 0 0 0 3px rgb(108 63 230 / 18%);
+    outline: none;
+}
+.sp-field__error { color: #c0262d; font-size: .8rem; margin: .35rem 0 0 1rem; }
+
+.sp-check { cursor: pointer; font-weight: 500 !important; gap: .75rem !important; }
+.sp-check input { accent-color: var(--sp-brand); flex: 0 0 auto; height: 1.2rem; width: 1.2rem; }
+.sp-check span { color: var(--sp-muted); font-size: .85rem; }
+
+.sp-form__trap { height: 0; left: -9999px; overflow: hidden; position: absolute; }
+
+.sp-form__submit { display: flex; justify-content: center; margin-block-start: .75rem; }
+.sp-form__btn {
+    background: linear-gradient(135deg, #2f27b8 0%, #231a9a 100%);
+    border: 0;
+    border-radius: 999px;
+    box-shadow: 0 12px 24px -14px rgba(35, 26, 154, .9);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: .95rem 3.5rem;
+    transition: transform .2s, filter .2s;
+}
+.sp-form__btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.sp-form__btn:focus-visible { outline: 3px solid rgb(115 132 255 / 55%); outline-offset: 2px; }
+
+.sp-form__success { align-items: center; display: flex; flex-direction: column; gap: .75rem; padding: 2rem 1rem; text-align: center; }
+.sp-form__success i { color: #2e9b5f; font-size: 2.5rem; }
+.sp-form__success p { color: var(--sp-ink); font-size: 1.1rem; font-weight: 600; margin: 0; }
+
+/* ---------- Modale « Devenir partenaire » ---------- */
+body.sp-modal-open { overflow: hidden; }
+
+.sp-modal {
+    --sp-ink: #14106a;
+    --sp-brand: #2f27b8;
+    --sp-accent: #6c3fe6;
+    --sp-muted: #4a4a8c;
+    --sp-tint: #ece8fe;
+    --sp-line: #d3d9f4;
+    --sp-gold: #b9822a;
+
+    align-items: center;
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: clamp(.75rem, 3vw, 2.5rem);
+    position: fixed;
+    z-index: 2000;
+}
+.sp-modal[hidden] { display: none; }
+
+.sp-modal__overlay {
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    background: rgb(20 16 66 / 62%);
+    inset: 0;
+    position: fixed;
+}
+
+.sp-modal__dialog {
+    animation: sp-modal-pop .24s ease both;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 30px 70px -30px rgba(20, 16, 66, .6);
+    display: flex;
+    max-height: min(92vh, 940px);
+    overflow: hidden;
+    position: relative;
+    width: min(980px, 100%);
+    z-index: 1;
+}
+.sp-modal__scroll { overflow-y: auto; overscroll-behavior: contain; width: 100%; }
+.sp-modal__scroll > .sp-form__banner { border-radius: 0; }
+.sp-modal__scroll > .sp-form__card   { border-radius: 0; box-shadow: none; }
+
+.sp-modal__close {
+    align-items: center;
+    background: rgb(255 255 255 / 92%);
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .4);
+    color: var(--sp-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 1.1rem;
+    height: 2.5rem;
+    inset-block-start: .85rem;
+    inset-inline-end: .85rem;
+    justify-content: center;
+    position: absolute;
+    transition: background-color .2s, transform .2s;
+    width: 2.5rem;
+    z-index: 3;
+}
+.sp-modal__close:hover { background: #fff; transform: rotate(90deg); }
+.sp-modal__close:focus-visible { outline: 3px solid rgb(115 132 255 / 55%); outline-offset: 2px; }
+
+@keyframes sp-modal-pop { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .sp-form__btn { transition: none; } .sp-modal__dialog { animation: none; } .sp-modal__close { transition: none; } }
     </style>
 
     @endsection

@@ -165,6 +165,7 @@
         <ul class="d-footer__legal">
             <li><a href="{{ route('contact') }}">@lang('footer.privacy')</a></li>
             <li><a href="{{ route('contact') }}">@lang('footer.legal')</a></li>
+            <li><a href="{{ route('contact') }}">@lang('footer.terms')</a></li>
         </ul>
     </div>
 </footer>
