@@ -7216,3 +7216,24 @@ textarea.comment-form-input {
     .lm-swiper__card { transition: none; }
     .lm-swiper__card:hover { transform: none; }
 }
+
+/* --------------------------------------------------------------------------
+   Every button is a pill
+
+   The header account button (`d-btn d-btn--outline d-btn--sm`) sets the
+   pattern; each component used to carry its own radius (6px, 5px, 4px…).
+   One rule at the end of the sheet settles them all. Declared last so it
+   wins the cascade against the component styles, and scoped to buttons so
+   it never rounds anything else.
+   -------------------------------------------------------------------------- */
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+[class*="btn"],
+[class*="__cta"],
+[class*="__more"],
+.ux-cta,
+.sp-compare {
+    border-radius: var(--r-pill) !important;
+}
