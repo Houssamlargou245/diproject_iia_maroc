@@ -119,4 +119,7 @@ return [
     'stats_title' => 'En chiffres',
     'theme_title' => 'Thème',
     'venue_title' => 'Lieu et dates',
+    'tier_platinum' => 'Partenaire Platine',
+'tier_gold'     => 'Partenaires Gold',
+'tier_silver'   => 'Partenaires Argent',
 ];

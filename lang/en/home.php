@@ -117,4 +117,7 @@ return [
     'stats_title' => 'In figures',
     'theme_title' => 'Theme',
     'venue_title' => 'Venue and dates',
+    'tier_platinum' => 'Platinum Partner',
+'tier_gold'     => 'Gold Partners',
+'tier_silver'   => 'Silver Partners',
 ];

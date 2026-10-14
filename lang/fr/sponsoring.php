@@ -226,4 +226,7 @@ return [
         'previous' => 'Éléments précédents',
         'next' => 'Éléments suivants',
     ],
+    'tier_platinum' => 'Partenaire Platine',
+'tier_gold'     => 'Partenaires Gold',
+'tier_silver'   => 'Partenaires Argent',
 ];

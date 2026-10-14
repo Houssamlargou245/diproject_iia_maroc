@@ -114,4 +114,7 @@ return [
     'stats_title' => 'في أرقام',
     'theme_title' => 'الموضوع',
     'venue_title' => 'المكان والتواريخ',
+    'tier_platinum' => 'الشريك البلاتيني',
+'tier_gold'     => 'الشركاء الذهبيون',
+'tier_silver'   => 'الشركاء الفضيون',
 ];

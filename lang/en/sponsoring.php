@@ -217,4 +217,7 @@ return [
         'previous' => 'Previous items',
         'next' => 'Next items',
     ],
+    'tier_platinum' => 'Platinum Partner',
+'tier_gold'     => 'Gold Partners',
+'tier_silver'   => 'Silver Partners',
 ];

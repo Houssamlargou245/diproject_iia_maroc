@@ -152,53 +152,80 @@ return [
   
   
 'partners_fallback' => [
+
+    // Platinum
     [
-        'name' => 'CIH Bank',
-        'src' => 'assets/images/logo/cih-logo.png',
-        'row' => 1,
+        'name'  => 'CIH Bank',
+        'src'   => 'assets/images/logo/cih-logo.png',
+        'tier'  => 'platinum',
         'class' => 'sponsor-cih',
         'style' => '',
     ],
+
+    // Gold
     [
-        'name' => 'Banque Populaire',
-        'src' => 'assets/parteners/banque-populaire-logo.png',
-        'row' => 1,
+        'name'  => 'Banque Populaire',
+        'src'   => 'assets/parteners/banque-populaire-logo.png',
+        'tier'  => 'gold',
         'class' => 'sponsor-banque-populaire',
-        'style' => 'width: 200px !important; height: 90px; object-fit: contain;',
+        'style' => '',
     ],
     [
-        'name' => 'IFACI Certification',
-        'src' => 'assets/parteners/Logo_IFACI-Certification_alixds.png',
-        'row' => 1,
+        'name'  => 'OCP Group',
+        'src'   => 'assets/parteners/OCP_Group.svg',
+        'tier'  => 'gold',
+        'class' => 'sponsor-ocp',
+        'style' => '',
+    ],
+    [
+        'name'  => 'IFACI Certification',
+        'src'   => 'assets/parteners/Logo_IFACI-Certification_alixds.png',
+        'tier'  => 'gold',
         'class' => 'sponsor-ifaci',
         'style' => '',
     ],
     [
-        'name' => 'SOFAC',
-        'src' => 'assets/parteners/Sofac-logo.png',
-        'row' => 1,
-        'class' => 'sponsor-sofac',
+        'name'  => 'MEGA',
+        'src'   => 'assets/parteners/images.png', // drop the file in assets/parteners/ and set the path; until then the name renders as text
+        'tier'  => 'gold',
+        'class' => 'sponsor-mega',
         'style' => '',
     ],
+
+    // Silver
     [
-        'name' => 'Al Omrane',
-        'src' => 'assets/parteners/images.png',
-        'row' => 2,
-        'class' => 'sponsor-al-omrane',
-        'style' => '',
-    ],
-    [
-        'name' => 'Holmarcom',
-        'src' => 'assets/parteners/Logo-holmarcom-1.png',
-        'row' => 2,
+        'name'  => 'Holmarcom',
+        'src'   => 'assets/parteners/Logo-holmarcom-1.png',
+        'tier'  => 'silver',
         'class' => 'sponsor-holmarcom',
         'style' => '',
     ],
     [
-        'name' => 'OCP Group',
-        'src' => 'assets/parteners/OCP_Group.svg',
-        'row' => 2,
-        'class' => 'sponsor-ocp',
+        'name'  => 'SOFAC',
+        'src'   => 'assets/parteners/Sofac-logo.png',
+        'tier'  => 'silver',
+        'class' => 'sponsor-sofac',
+        'style' => '',
+    ],
+    [
+        'name'  => 'Caseware',
+        'src'   => 'assets/parteners/caseware.svg',
+        'tier'  => 'silver',
+        'class' => 'sponsor-caseware',
+        'style' => '',
+    ],
+    [
+        'name'  => 'Wolters Kluwer',
+        'src'   => 'assets/parteners/Wolters_Kluwer_Logo.png',
+        'tier'  => 'silver',
+        'class' => 'sponsor-wolters-kluwer',
+        'style' => 'height:200px !important',
+    ],
+    [
+        'name'  => 'TeamMate by Wolters Kluwer',
+        'src'   => 'assets/parteners/TeamMate-Updated-Logo.png',
+        'tier'  => 'silver',
+        'class' => 'sponsor-teammate',
         'style' => '',
     ],
 ],
