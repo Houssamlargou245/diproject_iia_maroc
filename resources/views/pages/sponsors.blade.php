@@ -204,7 +204,7 @@ $allies = [
             </div>
 
             <div class="sp-offer__foot">
-                <a href="{{ asset('assets/images/conference/sponsorship-packages-overview.png') }}"
+                <!-- <a href="{{ asset('assets/images/conference/sponsorship-packages-overview.png') }}"
                     class="sp-compare"
                     data-lightbox="sponsoring-packages"
                     data-title="@lang('sponsoring.plate_packages')"
@@ -212,7 +212,7 @@ $allies = [
                     <i class="fas fa-scale-balanced" aria-hidden="true"></i>
                     <span>@lang('sponsoring.packages.compare')</span>
                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                </a>
+                </a> -->
             </div>
 
             {{-- 3b. À-la-carte activations --}}
@@ -238,7 +238,7 @@ $allies = [
                             @endforeach
                         </ul>
 
-                        <a href="{{ route('contact') }}" class="sp-activation__more">@lang('sponsoring_ui.more')</a>
+                        <!-- <a href="{{ route('contact') }}" class="sp-activation__more">@lang('sponsoring_ui.more')</a> -->
                     </article>
                 @endforeach
             </div>
