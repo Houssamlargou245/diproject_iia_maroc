@@ -127,7 +127,7 @@ $allies = [
     </section>
 
     {{-- ================= 2. WHY ================= --}}
-    <section class="sp-why sp-bgimg" style="--sp-bg:url('{{ $imgWhy }}')" aria-labelledby="sponsoring-why-title">
+    <section class="sp-why sp-bgimg"  aria-labelledby="sponsoring-why-title">
         <div class="container">
             <header class="sp-head">
                 <p class="sp-eyebrow">@lang('sponsoring.why.eyebrow')</p>
@@ -156,7 +156,7 @@ $allies = [
                 <h2 id="sponsoring-packages-title" class="sp-title">@lang('sponsoring.packages.eyebrow')</h2>
             </header>
 
-            <div class="sp-package-grid" data-ux-stagger="90" style="margin-top: 5%; margin-bottom:5%;">
+            <div class="sp-package-grid" data-ux-stagger="90" style="margin-top: 5%;">
                 @foreach ($formulas as $formula)
                     @php
                         // "100 000 MAD" -> figure "100 000" + currency "MAD" (then "HT")
@@ -183,7 +183,7 @@ $allies = [
                         <div class="sp-package__body">
                             <p class="sp-package__price">
                                 <span class="sp-package__amount" dir="ltr">{{ $figure }}</span>
-                                <span class="sp-package__unit">{{ $currency }} {{ $per }}</span>
+                                <span class="sp-package__amount">{{ $currency }} {{ $per }}</span>
                             </p>
 
                             <p class="sp-package__summary">{{ $formula['summary'] }}</p>
@@ -216,7 +216,9 @@ $allies = [
             </div>
 
             {{-- 3b. À-la-carte activations --}}
-            <h2 class="sp-title sp-title--sub" id="sponsoring-activations-title">@lang('sponsoring.activations.title')</h2>
+            <div class="sp-head">
+                 <h2 class="sp-title sp-title--sub" style="margin-bottom: 50px !important;" id="sponsoring-activations-title">@lang('sponsoring.activations.title')</h2>
+            </div>
 
             <div class="sp-activation-grid" data-ux-stagger="70" aria-labelledby="sponsoring-activations-title">
                 @foreach ($activations as $i => $activation)
@@ -347,7 +349,6 @@ $allies = [
     [dir="rtl"] .sp-page { --sp-to-start: to left; --sp-to-end: to right; }
 
     .sp-page section { overflow: hidden; position: relative; }
-    .sp-page h2, .sp-page h3, .sp-page p, .sp-page ul { margin: 0; }
     .sp-page ul { list-style: none; padding: 0; }
     .sp-page img { max-width: 100%; }
     [dir="rtl"] .sp-page .fa-chevron-right { transform: scaleX(-1); }
@@ -372,7 +373,8 @@ $allies = [
         font-size: .72rem;
         font-weight: 800;
         letter-spacing: .2em;
-        margin-block-end: .5rem;
+        margin-top: 20px;
+        margin-bottom: 20px;
         text-transform: uppercase;
     }
     .sp-eyebrow::after {
@@ -582,7 +584,7 @@ $allies = [
         letter-spacing: .04em;
         line-height: 1.25;
         max-width: 4.6rem;
-        padding: .35rem .5rem;
+        padding: .55rem .15rem;
         position: absolute;
         text-align: center;
         text-transform: uppercase;

@@ -127,10 +127,6 @@
                 </ul>
 
                 <address class="d-footer__address">
-                    <a class="d-footer__pin" href="{{ $mapLink }}" rel="noopener noreferrer" target="_blank"
-                       aria-label="@lang('contact.open_map')">
-                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                    </a>
                     @foreach ($addressLines as $line)
                         <span dir="auto">{{ $line }}</span>
                     @endforeach
@@ -194,7 +190,7 @@
     position: relative;
     isolation: isolate;
     margin: 0;
-    padding-block: 156px 0;
+    padding-block: 50px 0;
     color: #fff;
     font-family: "Inter", "Roboto", "Segoe UI", system-ui, -apple-system, sans-serif;
     font-size: 1rem;

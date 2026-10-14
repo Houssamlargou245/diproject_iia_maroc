@@ -61,7 +61,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
     </section>
 
     {{-- ================= 1. WHAT YOU GET ================= --}}
-    <section class="reg-section reg-access reg-bgimg" style="--reg-bg:url('{{ $imgAccess }}')" aria-labelledby="access-title">
+    <section class="reg-section reg-access reg-bgimg" style="background-color: #fff !important;"  aria-labelledby="access-title">
         <div class="container">
             <header class="reg-head">
                 <p class="reg-eyebrow">{{ __('pricing.access.eyebrow') }}</p>
@@ -215,7 +215,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
 
     {{-- ================= 3. TWO WAYS IN (guests only) ================= --}}
     @guest
-    <section class="reg-section reg-paths reg-bgimg" id="acces" style="--reg-bg:url('{{ $imgPaths }}')" aria-labelledby="paths-title">
+    <section class="reg-section reg-paths reg-bgimg" id="acces" style="background-color:#fff;" aria-labelledby="paths-title">
         <div class="container">
             <header class="reg-head">
                 <p class="reg-eyebrow reg-eyebrow--pink">{{ __('pricing.paths.eyebrow') }}</p>
@@ -361,9 +361,9 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
     /* Photo backgrounds, washed with lavender so they read as texture (colour shows if image fails). */
     .reg-bgimg {
         background-color: #f1efff;
-        background-image:
+        /* background-image:
             linear-gradient(180deg, rgb(248 246 255 / 90%) 0%, rgb(238 235 253 / 93%) 100%),
-            var(--reg-bg, none);
+            var(--reg-bg, none); */
         background-position: center;
         background-size: cover;
         isolation: isolate;
@@ -552,7 +552,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
         font-size: .72rem;
         font-weight: 700;
         letter-spacing: .2em;
-        margin: 0 0 var(--sp-2);
+        margin-bottom: 25px;
         text-transform: uppercase;
     }
 
@@ -587,7 +587,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
 
     /* ----------------------------------------------------------------- access */
     .reg-access {
-        background-image: linear-gradient(180deg, rgb(255 255 255 / 94%) 0%, rgb(247 245 255 / 96%) 100%), var(--reg-bg, none);
+        /* background-image: linear-gradient(180deg, rgb(255 255 255 / 94%) 0%, rgb(247 245 255 / 96%) 100%), var(--reg-bg, none); */
     }
 
     .reg-access__grid {
@@ -926,7 +926,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
     /* ------------------------------------------------------------ member band */
     .reg-member {
         align-items: center;
-        background: linear-gradient(120deg, #ebe9fd 0%, #dfe1fb 100%);
+        background-color: #fff;
         border: 1px solid #d3d6f6;
         border-radius: 8px;
         display: flex;
@@ -1271,7 +1271,6 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
 
     /* ------------------------------------------------------------------ trust */
     .reg-trust-wrap {
-        background: linear-gradient(180deg, #f8f7ff 0%, #f1efff 100%);
         padding-block: var(--sp-3) var(--sp-8);
     }
 

@@ -292,10 +292,9 @@
 
     .pg-page section { position: relative; overflow: hidden; }
 
-    .pg-page h2, .pg-page h3, .pg-page h4,
-    .pg-page p, .pg-page ul, .pg-page ol { margin: 0; }
 
-    .pg-page ul, .pg-page ol { list-style: none; padding: 30px; }
+
+    .pg-page ul, .pg-page ol { list-style: none; }
 
     /* ---------- 1. Intro ---------- */
     .pg-intro { padding-block: 64px 56px; background: #fff; }
@@ -732,7 +731,7 @@
         display: flex;
         gap: 10px;
         align-items: flex-start;
-        margin-block-start: 26px;
+        margin-block-start: 50px;
         font-size: .8rem;
         line-height: 1.6;
         color: var(--pg-muted);

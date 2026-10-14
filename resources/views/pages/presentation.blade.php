@@ -38,7 +38,7 @@
     // Organisation cards: DB rows when published, static fallback otherwise.
     $orgLogos = [
         ['src' => 'assets/images/presentation/logoarabiia.png',   'width' => 628, 'height' => 206],
-        ['src' => 'assets/images/presentation/logo-iia-maroc.png', 'width' => 628, 'height' => 206],
+        ['src' => 'assets/images/presentation/logo-iia-maroc.png', 'width' => 228, 'height' => 206],
     ];
     $orgTones = ['ARABCIA' => 'gold', 'IIA_MAROC' => 'navy'];
 $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https://www.iiamaroc.org/', ];
@@ -46,24 +46,25 @@ $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https:
 @endphp
 
 {{-- Shared front-office hero (unchanged). --}}
-<div class="presentation-hero" >
-    <x-front.hero
-        :title="__('presentation.title')"
-        :eyebrow="$edition->identityLabel()"
-        :lede="__('presentation.intro.lede')"
-        :crumbs="[__('nav.presentation') => null]"
-        :facts="[
-            ['icon' => 'fa-calendar-alt', 'label' => $edition->dateLine($locale)],
-            ['icon' => 'fa-map-marker-alt', 'label' => $edition->venueLine($locale)],
-        ]"
-        :cta-label="$edition->registration_open ? __('nav.registration') : null"
-        :cta-url="$edition->registration_open ? (auth()->check() ? route('pricing') : route('register')) : null"
-        :secondary-label="__('nav.programme')"
-        :secondary-url="route('programme')"
-    />
+<div class="presentation-hero"  >
+        <x-front.hero
+        style="margin-bottom: 10%;"
+            :title="__('presentation.title')"
+            :eyebrow="$edition->identityLabel()"
+            :lede="__('presentation.intro.lede')"
+            :crumbs="[__('nav.presentation') => null]"
+            :facts="[
+                ['icon' => 'fa-calendar-alt', 'label' => $edition->dateLine($locale)],
+                ['icon' => 'fa-map-marker-alt', 'label' => $edition->venueLine($locale)],
+            ]"
+            :cta-label="$edition->registration_open ? __('nav.registration') : null"
+            :cta-url="$edition->registration_open ? (auth()->check() ? route('pricing') : route('register')) : null"
+            :secondary-label="__('nav.programme')"
+            :secondary-url="route('programme')"
+        />
 </div>
 
-<div class="pr-page" style="margin-top: -2%;">
+<div class="pr-page" >
 
     {{-- ================= 1. BANNER ================= --}}
     <section class="pr-intro" aria-labelledby="presentation-banner-title">
@@ -114,7 +115,7 @@ $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https:
     </section>
 
     {{-- ================= 3. JOURNEY ================= --}}
-    <section class="pr-journey pr-bgimg" style="--pr-bg:url('{{ $imgSoft }}')" aria-labelledby="presentation-journey-title">
+    <section class="pr-journey pr-bgimg"  aria-labelledby="presentation-journey-title">
         <div class="container">
             <header class="pr-head">
                 <p class="pr-eyebrow">@lang('presentation.journey.eyebrow')</p>
@@ -137,7 +138,7 @@ $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https:
     </section>
 
     {{-- ================= 4. ORGANISERS ================= --}}
-    <section class="pr-orgs pr-bgimg" style="--pr-bg:url('{{ $imgSoft }}')" aria-labelledby="presentation-orgs-title">
+    <section class="pr-orgs pr-bgimg"  aria-labelledby="presentation-orgs-title">
         <div class="container">
             <header class="pr-head">
                 <p class="pr-eyebrow">@lang('presentation.organisations.eyebrow')</p>
@@ -210,7 +211,6 @@ $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https:
     [dir="rtl"] .pr-page { --pr-to-start: to left; --pr-to-end: to right; }
 
     .pr-page section { overflow: hidden; position: relative; }
-    .pr-page h2, .pr-page h3, .pr-page p, .pr-page ul, .pr-page ol, .pr-page dl, .pr-page dd { margin: 0; }
     .pr-page ul, .pr-page ol { list-style: none; padding: 0; }
     [dir="rtl"] .pr-page .fa-chevron-right { transform: scaleX(-1); }
     .pr-accent { color: var(--pr-accent); }
@@ -226,7 +226,7 @@ $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https:
 
     /* ---------- Shared headings ---------- */
     .pr-head { margin-block-end: 2.25rem; text-align: center; }
-    .pr-eyebrow { color: var(--pr-brand); font-size: .72rem; font-weight: 800; letter-spacing: .2em; margin-block-end: .5rem; text-transform: uppercase; }
+    .pr-eyebrow { margin-top: 20px; margin-bottom: 20px; color: var(--pr-brand); font-size: .72rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
     .pr-eyebrow::after { background: linear-gradient(90deg, var(--pr-brand), #c13bd8); border-radius: 2px; content: ''; display: block; height: 2px; margin: .4rem auto 0; width: 2.6rem; }
     .pr-eyebrow--start::after { margin-inline: 0 auto; }
     [dir="rtl"] .pr-eyebrow { letter-spacing: .04em; }
@@ -314,7 +314,7 @@ $orgWebsites = [ 'ARABCIA' => 'https://arabciia.org/ar/', 'IIA_MAROC' => 'https:
     .pr-org-grid { align-items: stretch; display: grid; gap: 1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .pr-org { background: #fff; border-radius: 22px; box-shadow: 0 14px 40px rgb(42 31 110 / 14%); display: flex; flex-direction: column; gap: 1.1rem; padding: 1.75rem 1.9rem; }
     .pr-org__mark { display: block; height: 4.2rem; }
-    .pr-org__mark img { height: 100%; max-width: 100%; object-fit: contain; object-position: left center; width: auto; }
+    .pr-org__mark img { height: 100%; max-width: 100%; object-fit: contain; object-position: left center;  }
     [dir="rtl"] .pr-org__mark img { object-position: right center; }
     .pr-org__text { display: grid; gap: .65rem; }
     .pr-org__text p { color: var(--pr-muted); font-size: .8rem; line-height: 1.6; }

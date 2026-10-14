@@ -240,10 +240,7 @@
 
     /* Photo backgrounds, washed with lavender so they read as texture (colour shows if image fails). */
     .reg-bgimg {
-        background-color: #f1efff;
-        background-image:
-            linear-gradient(180deg, rgb(248 246 255 / 90%) 0%, rgb(238 235 253 / 93%) 100%),
-            var(--reg-bg, none);
+ 
         background-position: center;
         background-size: cover;
         isolation: isolate;
@@ -432,7 +429,7 @@
         font-size: .72rem;
         font-weight: 700;
         letter-spacing: .2em;
-        margin: 0 0 var(--sp-2);
+        margin-bottom: 25px;
         text-transform: uppercase;
     }
 

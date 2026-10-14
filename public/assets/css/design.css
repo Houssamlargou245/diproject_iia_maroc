@@ -2805,6 +2805,7 @@ body.drawer-open {
    washes are the light, and they are what stop a two-stop mauve from looking
    like a flat rectangle of colour. */
 .h-hero {
+    margin-top: 4%;
     background-color: var(--h-deep);
     background-image: url('../brand/ban_hero_home.png');
     background-position: center;
@@ -2823,9 +2824,9 @@ body.drawer-open {
 
 /* Tablet and desktop: stretch the image to the full width and height */
 @media (min-width: 768px) {
-    .h-hero {
+    /* .h-hero {
         background-size: 100% 100%;
-    }
+    } */
 }
 
 
