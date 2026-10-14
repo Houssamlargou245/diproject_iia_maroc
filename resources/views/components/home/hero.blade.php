@@ -43,7 +43,7 @@
                
 <img src="{{ asset('assets/brand/logo-iia-maroc.png') }}"
      alt="{{ __('site.site_name') }}"
-     style="width: 235px; height: 235px; object-fit: contain;"
+     style="width: 300px; height: 300px; object-fit: contain;"
      fetchpriority="high"
      decoding="async">
 

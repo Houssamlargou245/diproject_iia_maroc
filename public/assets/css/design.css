@@ -2845,7 +2845,7 @@ html[dir="rtl"] .h-hero {
    positioned on the inline-end. `margin-inline-start: auto` is the whole of the
    RTL story — no `order`, no physical offset to undo later. */
 .h-hero__inner {
-    max-width: 42rem;
+    max-width: 76rem;
     position: relative;
     width: 100%;
     z-index: 3;
