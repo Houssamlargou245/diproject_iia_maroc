@@ -7237,3 +7237,366 @@ input[type="reset"],
 .sp-compare {
     border-radius: var(--r-pill) !important;
 }
+
+/* --------------------------------------------------------------------------
+   Site-wide modal
+
+   The shell the sponsorship form introduced, lifted out of that one page and
+   named so any page can open a dialog with the same weight, the same motion
+   and the same close affordance. Triggers carry `data-d-modal-open="<id>"`;
+   the `modals` block in design.js does the opening, the focus handling, the
+   scroll lock and Escape.
+
+   Its colours are declared here rather than read from `:root` because a
+   dialog is often mounted at the very end of the body, outside the scope of
+   the page that owns it — the same reason the form duplicated them.
+   -------------------------------------------------------------------------- */
+html.d-modal-lock { overflow: hidden; }
+
+/* The scrollbar is removed while the dialog is open; reserve its width so the
+   page behind does not jump sideways as it disappears. */
+html.d-modal-lock body { padding-inline-end: var(--d-scrollbar, 0px); }
+
+.d-modal {
+    --dm-ink: #14106a;
+    --dm-brand: #2f27b8;
+    --dm-accent: #6c3fe6;
+    --dm-muted: #4a4a8c;
+    --dm-tint: #ece8fe;
+    --dm-line: #e2e5f5;
+
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(.75rem, 3vw, 2.5rem);
+}
+
+.d-modal[hidden] { display: none; }
+
+.d-modal__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(20 16 66 / 62%);
+    -webkit-backdrop-filter: blur(3px);
+            backdrop-filter: blur(3px);
+}
+
+.d-modal__dialog {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: min(900px, 100%);
+    max-height: min(92vh, 940px);
+    overflow: hidden;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 30px 70px -30px rgb(20 16 66 / 60%);
+    animation: d-modal-pop .24s ease both;
+}
+
+.d-modal__dialog:focus { outline: none; }
+
+.d-modal__scroll {
+    width: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(115 132 255 / 55%) transparent;
+}
+
+.d-modal__scroll::-webkit-scrollbar { width: 10px; }
+.d-modal__scroll::-webkit-scrollbar-thumb {
+    background: rgb(115 132 255 / 45%);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+.d-modal__scroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(115 132 255 / 75%);
+    background-clip: padding-box;
+}
+
+.d-modal__close {
+    position: absolute;
+    z-index: 3;
+    inset-block-start: .85rem;
+    inset-inline-end: .85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 0;
+    border-radius: 50%;
+    color: var(--dm-ink);
+    background: rgb(255 255 255 / 92%);
+    box-shadow: 0 6px 16px -6px rgb(0 0 0 / 40%);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color .2s, transform .2s;
+}
+.d-modal__close:hover { background: #fff; transform: rotate(90deg); }
+.d-modal__close:focus-visible { outline: 3px solid rgb(115 132 255 / 55%); outline-offset: 2px; }
+
+@keyframes d-modal-pop {
+    from { opacity: 0; transform: translateY(14px) scale(.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Dialog banner ---------- */
+.d-modal__banner {
+    position: relative;
+    padding: clamp(1.6rem, 4vw, 2.75rem) clamp(1.25rem, 4vw, 2.75rem) clamp(2.7rem, 7vw, 3.5rem);
+    color: #fff;
+    background-color: #1a1280;
+    background-image:
+        linear-gradient(115deg, rgb(20 16 66 / 94%) 0%, rgb(47 39 184 / 70%) 62%, rgb(108 63 230 / 56%) 100%),
+        url('/assets/images/images.png');
+    background-size: cover, cover;
+    background-position: center, center;
+    background-repeat: no-repeat;
+}
+
+.d-modal__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-block-end: .95rem;
+    padding: .35rem .85rem;
+    border: 1px solid rgb(255 255 255 / 28%);
+    border-radius: 999px;
+    color: rgb(255 255 255 / 92%);
+    background: rgb(255 255 255 / 10%);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.d-modal__eyebrow i { color: #c3b8ff; }
+
+.d-modal__title {
+    margin: 0 0 .6rem;
+    font-family: var(--f-title);
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.2rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+}
+
+.d-modal__lede {
+    margin: 0;
+    max-width: 46rem;
+    font-size: .98rem;
+    line-height: 1.65;
+    color: rgb(255 255 255 / 88%);
+}
+
+.d-modal__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-block-start: 1.15rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: rgb(255 255 255 / 85%);
+}
+.d-modal__meta i { color: #c3b8ff; }
+
+/* ---------- Sticky action bar ---------- */
+.d-modal__toolbar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .85rem clamp(1.25rem, 4vw, 2.75rem);
+    border-block-end: 1px solid var(--dm-line);
+    background: rgb(255 255 255 / 90%);
+    -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+}
+
+.d-modal__hint { font-size: .8rem; color: var(--dm-muted); }
+
+.d-modal__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .68rem 1.35rem;
+    border: 1px solid transparent;
+    border-radius: var(--r-pill, 999px);
+    font: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .2s, filter .2s, background-color .2s, border-color .2s, color .2s;
+}
+.d-modal__btn i { font-size: .95em; }
+.d-modal__btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #2f27b8 0%, #231a9a 100%);
+    box-shadow: 0 12px 24px -14px rgb(35 26 154 / 90%);
+}
+.d-modal__btn--primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.d-modal__btn--ghost { color: var(--dm-ink); background: #fff; border-color: var(--dm-line); }
+.d-modal__btn--ghost:hover { color: var(--dm-accent); border-color: var(--dm-accent); }
+.d-modal__btn:focus-visible { outline: 3px solid rgb(115 132 255 / 55%); outline-offset: 2px; }
+
+/* ---------- Legal document typography ---------- */
+.d-doc {
+    color: #34335c;
+    font-size: .95rem;
+    line-height: 1.7;
+}
+
+.d-doc__body {
+    padding: clamp(1.4rem, 3vw, 2.25rem) clamp(1.25rem, 4vw, 2.75rem) clamp(2rem, 4vw, 2.75rem);
+}
+
+.d-doc__section { margin-block-end: 2rem; }
+.d-doc__section:last-child { margin-block-end: 0; }
+
+.d-doc__section > h3 {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    margin: 0 0 .8rem;
+    font-family: var(--f-title);
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--dm-ink);
+}
+
+.d-doc__num {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 9px;
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    background: linear-gradient(135deg, #2f27b8, #6c3fe6);
+}
+
+.d-doc p { margin: 0 0 .8rem; }
+.d-doc p:last-child { margin-block-end: 0; }
+
+.d-doc ul {
+    display: grid;
+    gap: .4rem;
+    margin: 0 0 .8rem;
+    padding: 0;
+    list-style: none;
+}
+.d-doc ul li { position: relative; padding-inline-start: 1.4rem; }
+.d-doc ul li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: .62em;
+    width: .42rem;
+    height: .42rem;
+    border-radius: 50%;
+    background: var(--dm-accent);
+}
+
+.d-doc a {
+    color: var(--dm-brand);
+    text-decoration: none;
+    border-bottom: 1px solid rgb(47 39 184 / 30%);
+    transition: color .2s, border-color .2s;
+}
+.d-doc a:hover { color: var(--dm-accent); border-bottom-color: currentColor; }
+
+.d-doc strong { color: var(--dm-ink); }
+
+.d-doc__entity {
+    margin-block-end: 1rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--dm-line);
+    border-radius: 14px;
+    background: #fafaff;
+}
+.d-doc__entity:last-child { margin-block-end: 0; }
+.d-doc__entity h4 { margin: 0 0 .4rem; font-size: .95rem; font-weight: 700; color: var(--dm-ink); }
+.d-doc__entity p { margin: 0 0 .35rem; font-size: .9rem; }
+.d-doc__entity p:last-child { margin-block-end: 0; }
+
+.d-doc__contact { display: grid; gap: .3rem; margin-block-start: .6rem; }
+.d-doc__contact a { display: inline-flex; align-items: center; gap: .55rem; border-bottom: 0; }
+.d-doc__contact i { flex: 0 0 auto; width: 1.1rem; color: var(--dm-accent); text-align: center; }
+
+.d-doc__table-wrap {
+    margin: .4rem 0 1rem;
+    overflow-x: auto;
+    border: 1px solid var(--dm-line);
+    border-radius: 14px;
+}
+.d-doc__table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.d-doc__table th,
+.d-doc__table td {
+    padding: .7rem .95rem;
+    text-align: start;
+    border-block-end: 1px solid var(--dm-line);
+}
+.d-doc__table thead th {
+    color: var(--dm-muted);
+    background: #f5f4ff;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.d-doc__table tbody tr:last-child td { border-block-end: 0; }
+.d-doc__table td:not(:first-child),
+.d-doc__table th:not(:first-child) { white-space: nowrap; }
+
+.d-doc__note {
+    display: flex;
+    gap: .7rem;
+    margin-block-start: 1.4rem;
+    padding: .95rem 1.15rem;
+    border-radius: 14px;
+    color: var(--dm-ink);
+    background: var(--dm-tint);
+    font-size: .88rem;
+    line-height: 1.6;
+}
+.d-doc__note i { flex: 0 0 auto; margin-block-start: .15rem; color: var(--dm-accent); }
+
+/* ---------- Narrow screens: the dialog becomes a bottom sheet ---------- */
+@media (max-width: 640px) {
+    .d-modal {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .d-modal__dialog {
+        width: 100%;
+        max-height: 94vh;
+        border-start-start-radius: 18px;
+        border-start-end-radius: 18px;
+        border-end-start-radius: 0;
+        border-end-end-radius: 0;
+    }
+
+    .d-modal__toolbar { justify-content: center; }
+    .d-modal__hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .d-modal__dialog { animation: none; }
+    .d-modal__close,
+    .d-modal__btn { transition: none; }
+}

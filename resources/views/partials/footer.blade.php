@@ -164,11 +164,23 @@
 
         <ul class="d-footer__legal">
             <li><a href="{{ route('contact') }}">@lang('footer.privacy')</a></li>
-            <li><a href="{{ route('contact') }}">@lang('footer.legal')</a></li>
+            <li>
+                <button type="button" data-d-modal-open="legal-mentions">@lang('footer.legal')</button>
+            </li>
             <li><a href="{{ route('contact') }}">@lang('footer.terms')</a></li>
         </ul>
     </div>
 </footer>
+
+{{-- Mentions légales.
+
+     The footer link opens the document in the site-wide modal rather than
+     sending the visitor off the page. The shell is the shared component; the
+     contents come from partials/mentions-legales, which mirrors the published
+     PDF and offers it for download. --}}
+<x-modal id="legal-mentions" :label="__('legal.title')">
+    @include('partials.mentions-legales')
+</x-modal>
 
 <style>
 /* ==========================================================================
@@ -522,9 +534,30 @@
     color: var(--f-muted);
 }
 
+/* The Mentions légales entry is a button, not a link: it opens a dialog
+   instead of navigating. It is reset to look exactly like its siblings. */
+.d-footer__legal button {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--f-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
 .d-footer__legal a:hover,
-.d-footer__legal a:focus-visible {
+.d-footer__legal a:focus-visible,
+.d-footer__legal button:hover,
+.d-footer__legal button:focus-visible {
     color: var(--f-blue);
+}
+
+.d-footer__legal button:focus-visible {
+    outline: 2px solid var(--f-orange);
+    outline-offset: 3px;
+    border-radius: 8px;
 }
 
 /* ==========================================================================
@@ -613,7 +646,8 @@
         gap: 0 20px;
     }
 
-    .d-footer__legal a {
+    .d-footer__legal a,
+    .d-footer__legal button {
         min-height: 44px;
         display: inline-flex;
         align-items: center;

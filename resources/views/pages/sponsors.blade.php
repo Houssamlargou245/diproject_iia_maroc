@@ -1052,7 +1052,7 @@
 .sp-form .container { max-width: 980px; }
 
 .sp-form__banner {
-    background-image: url('/assets/images/images.png');
+    background-image: url('assets/images/images.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -1061,6 +1061,156 @@
             }
         });
     });
+
+    /* =====================================================================
+       Modals
+
+       One controller for every dialog on the site. A trigger names its dialog
+       with `data-d-modal-open="<id>"`; anything inside carrying
+       `data-d-modal-close` closes it — the overlay and the round button both
+       do. The id is the whole contract, so a dialog and its trigger never have
+       to know about each other in the markup.
+
+       Four things a dialog has to get right, and this does:
+
+         - Focus moves in when it opens and returns to the trigger when it
+           closes, so a keyboard user is never dropped back at the top of the
+           page after dismissing it.
+         - Tab is trapped. The page behind is claimed inert by `aria-modal`, so
+           letting focus wander into it would be a lie to the assistive tech
+           being told the rest is unavailable.
+         - Escape closes it, which is what every user already expects.
+         - The page behind does not scroll, and does not jump sideways as the
+           scrollbar is removed — the reservation in the stylesheet needs the
+           width, and the width is only known here.
+
+       Arriving with a hash equal to a dialog's id opens that dialog, so a
+       shared or reloaded link lands with it already up.
+       ===================================================================== */
+
+    safely('modals', function () {
+        var triggers = document.querySelectorAll('[data-d-modal-open]');
+
+        if (!triggers.length) {
+            return;
+        }
+
+        var active = null;
+        var lastFocus = null;
+
+        function lock(on) {
+            var root = document.documentElement;
+
+            if (on) {
+                root.style.setProperty('--d-scrollbar', (window.innerWidth - root.clientWidth) + 'px');
+            }
+
+            root.classList.toggle('d-modal-lock', on);
+        }
+
+        /* Visible, focusable elements, in document order. `offsetWidth`/`Height`
+           rather than `display: none`, which does not catch a hidden ancestor. */
+        function focusables(scope) {
+            var selector = 'a[href], button:not([disabled]), input:not([disabled]), '
+                + 'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+            return Array.prototype.filter.call(scope.querySelectorAll(selector), function (node) {
+                return node.offsetWidth > 0 || node.offsetHeight > 0 || node === document.activeElement;
+            });
+        }
+
+        function open(id, trigger) {
+            var modal = document.getElementById(id);
+
+            if (!modal || modal.hidden === false) {
+                return;
+            }
+
+            lastFocus = trigger || document.activeElement;
+            modal.hidden = false;
+            active = modal;
+            lock(true);
+
+            /* The dialog itself carries `role="dialog"` and the label, so
+               focusing it announces both; focusing the first control would
+               announce the control and leave the label unspoken. */
+            var target = modal.querySelector('[data-d-modal-focus]') || modal.querySelector('.d-modal__dialog');
+
+            if (target) {
+                window.setTimeout(function () { target.focus(); }, 40);
+            }
+        }
+
+        function close() {
+            if (!active) {
+                return;
+            }
+
+            active.hidden = true;
+            active = null;
+            lock(false);
+
+            if (lastFocus && lastFocus.focus) {
+                lastFocus.focus();
+            }
+        }
+
+        each('[data-d-modal-open]', function (trigger) {
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                open(trigger.getAttribute('data-d-modal-open'), trigger);
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            var closer = event.target.closest ? event.target.closest('[data-d-modal-close]') : null;
+
+            if (closer) {
+                event.preventDefault();
+                close();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (!active) {
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                close();
+                return;
+            }
+
+            if (event.key !== 'Tab') {
+                return;
+            }
+
+            var items = focusables(active);
+
+            if (!items.length) {
+                return;
+            }
+
+            var first = items[0];
+            var last = items[items.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
+
+        if (location.hash.length > 1) {
+            var named = document.getElementById(location.hash.slice(1));
+
+            if (named && named.classList.contains('d-modal')) {
+                open(named.id, null);
+            }
+        }
+    });
 }());
 
 /* =====================================================================
