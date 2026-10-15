@@ -12,7 +12,7 @@
 --}}
 
 <div class="d-doc">
-    <header class="d-modal__banner">
+    <header class="d-modal__banner" style="background-image: url('{{ asset('assets/images/images.png') }}');">
         <p class="d-modal__eyebrow">
             <i class="fas fa-balance-scale" aria-hidden="true"></i>
             @lang('legal.kicker')
