@@ -7354,7 +7354,7 @@ html.d-modal-lock body { padding-inline-end: var(--d-scrollbar, 0px); }
     background-color: #1a1280;
     background-image:
         linear-gradient(115deg, rgb(20 16 66 / 94%) 0%, rgb(47 39 184 / 70%) 62%, rgb(108 63 230 / 56%) 100%),
-        url('/assets/images/images.png');
+        url('assets/images/images.png');
     background-size: cover, cover;
     background-position: center, center;
     background-repeat: no-repeat;
