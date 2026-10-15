@@ -360,7 +360,7 @@
         </button>
 
         <div class="sp-modal__scroll">
-            <div class="sp-form__banner">
+            <div class="sp-form__banner"  style="background-image: url('{{ asset('assets/images/images.png') }}');">
             <p class="sp-form__kicker">@lang('sponsoring.form.kicker')</p>
             <h2 class="sp-form__banner-title">{{ $accent(__('sponsoring.form.banner_title'), 2) }}</h2>
             <p class="sp-form__banner-text">
