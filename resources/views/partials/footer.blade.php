@@ -167,7 +167,9 @@
             <li>
                 <button type="button" data-d-modal-open="legal-mentions">@lang('footer.legal')</button>
             </li>
-            <li><a href="{{ route('contact') }}">@lang('footer.terms')</a></li>
+            <li>
+                <button type="button" data-d-modal-open="conditions-generales">@lang('footer.terms')</button>
+            </li>
         </ul>
     </div>
 </footer>
@@ -180,6 +182,13 @@
      PDF and offers it for download. --}}
 <x-modal id="legal-mentions" :label="__('legal.title')">
     @include('partials.mentions-legales')
+</x-modal>
+
+{{-- Conditions générales d'inscription et de participation.
+
+     The same shell again, for the second legal document in the footer. --}}
+<x-modal id="conditions-generales" :label="__('terms.title')">
+    @include('partials.conditions-generales')
 </x-modal>
 
 <style>
