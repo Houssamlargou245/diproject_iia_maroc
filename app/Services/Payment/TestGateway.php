@@ -59,6 +59,7 @@ class TestGateway implements PaymentGateway
             // only by destination, which is the whole point of this stand-in.
             'sessionTimeout' => (string) config('cmi.session_timeout', '1800'),
             'callbackResponse' => (string) config('cmi.callback_response', 'true'),
+            'autoRedirect' => (string) config('cmi.auto_redirect', 'true'),
             'oid' => $order->uuid,
             'rnd' => bin2hex(random_bytes(8)),
             'BillToName' => (string) ($order->billing['first_name'] ?? $order->user?->displayName() ?? ''),

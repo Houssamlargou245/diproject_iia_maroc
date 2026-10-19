@@ -602,6 +602,7 @@ class RegistrationFlowTest extends TestCase
         // the payment page opens. `refreshtime` was never part of the contract.
         $this->assertStringContainsString('name="sessionTimeout" value="1800"', $content);
         $this->assertStringContainsString('name="callbackResponse"', $content);
+        $this->assertStringContainsString('name="autoRedirect"', $content);
         $this->assertStringNotContainsString('name="refreshtime"', $content);
 
         $this->assertSame(OrderStatus::AwaitingPayment, $order->refresh()->status);
@@ -849,6 +850,26 @@ class RegistrationFlowTest extends TestCase
         $response->assertDontSee($otherOrder->reference);
     }
 
+    public function test_the_basket_links_to_the_payment_history_only_for_a_buyer_who_has_orders(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+
+        // The label, not the URL: the header already links to the same route,
+        // so a URL assertion would pass without this change.
+        $label = __('order.cart.my_payments');
+
+        // A visitor has no history to look at.
+        $this->get(route('cart'))->assertOk()->assertDontSee($label);
+
+        // Neither does a signed-in buyer who has not ordered yet.
+        $this->actingAs($user)->get(route('cart'))->assertOk()->assertDontSee($label);
+
+        // Once there is an order, the basket points at it.
+        $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        $this->actingAs($user)->get(route('cart'))->assertOk()->assertSee($label);
+    }
+
     // --- The CMI hash itself ----------------------------------------------
 
     public function test_the_cmi_hash_excludes_hash_and_encoding_and_sorts_naturally(): void
@@ -917,6 +938,7 @@ class RegistrationFlowTest extends TestCase
         // card is ever entered. `refreshtime` was never part of the contract.
         $this->assertSame('1800', $fields['sessionTimeout']);
         $this->assertSame('true', $fields['callbackResponse']);
+        $this->assertSame('true', $fields['autoRedirect']);
         $this->assertArrayNotHasKey('refreshtime', $fields);
         $this->assertArrayHasKey('HASH', $fields);
     }

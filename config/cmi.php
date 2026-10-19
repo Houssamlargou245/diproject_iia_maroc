@@ -62,10 +62,16 @@ return [
     | POST to `callbackUrl`. Without it no callback is ever sent, so no order is
     | ever settled even after a successful authorisation.
     |
+    | `auto_redirect` returns the customer straight to `okUrl`/`failUrl` once the
+    | payment is processed. When it is off CMI parks them on its own
+    | `est3DTridesNotification` page ("L'autorisation de paiement a été traitée…
+    | Cliquez ici pour retourner au site marchand") and waits for a manual click.
+    |
     */
 
     'session_timeout' => (int) env('CMI_SESSION_TIMEOUT', 1800),
     'callback_response' => env('CMI_CALLBACK_RESPONSE', 'true'),
+    'auto_redirect' => env('CMI_AUTO_REDIRECT', 'true'),
 
     /*
     |--------------------------------------------------------------------------

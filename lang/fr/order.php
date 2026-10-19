@@ -145,6 +145,11 @@ return [
         'checkout' => 'Passer la commande',
         'sign_in_note' => 'Vous serez invité à vous connecter avant le paiement. Votre panier sera conservé.',
 
+        // Point d'entrée vers la liste complète des inscriptions/paiements de
+        // l'utilisateur connecté, affiché sur le panier.
+        'my_payments' => 'Mes paiements',
+        'my_payments_note' => 'Retrouvez vos commandes et l\'état de vos paiements.',
+
         // Le récapitulatif imprimable et téléchargeable du panier.
         //
         // Le panier est précisément l'endroit où ce document est utile : c'est

@@ -65,6 +65,10 @@ class CmiGateway implements PaymentGateway
             // Ask CMI to run the server-to-server confirmation. Without it no
             // callback is ever sent, so an authorised payment never settles.
             'callbackResponse' => (string) config('cmi.callback_response', 'true'),
+            // Return the customer straight to okUrl/failUrl when the payment is
+            // processed, instead of parking them on CMI's "Cliquez ici pour
+            // retourner au site marchand" notification page.
+            'autoRedirect' => (string) config('cmi.auto_redirect', 'true'),
             // Unique per attempt: order uuid (36 chars) + "-" + hex timestamp.
             'oid' => $order->uuid.'-'.dechex(time()),
             'rnd' => bin2hex(random_bytes(8)),
