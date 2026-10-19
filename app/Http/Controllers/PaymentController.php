@@ -59,11 +59,14 @@ class PaymentController extends Controller
             // CMI's protocol has one answer for "we could not process this":
             // FAILURE, meaning the merchant settles by hand. Anything else
             // risks a silent double charge.
-            Log::warning('cmi.callback.rejected', [
-                'reason' => $e->getMessage(),
-                'oid' => $payload['oid'] ?? null,
-                'ip' => $request->ip(),
-            ]);
+           Log::warning('cmi.callback.rejected', [
+    'reason' => $e->getMessage(),
+    'oid' => $payload['oid'] ?? null,
+    'ip' => $request->ip(),
+    'keys' => array_keys($payload),          // which fields actually arrived
+    'has_hash' => isset($payload['HASH']),
+    'hash_algo' => $payload['hashAlgorithm'] ?? null,
+])
 
             return $this->cmiProtocol('FAILURE');
         }
