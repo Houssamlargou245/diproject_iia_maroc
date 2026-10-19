@@ -68,6 +68,22 @@ class PaymentController extends Controller
             return $this->cmiProtocol('FAILURE');
         }
 
+        // Logged on every signed callback so a decline can be diagnosed from
+        // the log instead of guessed at: `ProcReturnCode` is the gateway's
+        // verdict, `mdStatus` the 3-D Secure outcome, and `ErrMsg` the human
+        // wording ("Autorisation de paiement non permise (57)" and friends).
+        // None of these are secrets.
+        Log::info('cmi.callback.verified', [
+            'oid' => $payload['oid'] ?? null,
+            'return_code' => $payload['ProcReturnCode'] ?? null,
+            'error' => $payload['ErrMsg'] ?? null,
+            'md_status' => $payload['mdStatus'] ?? null,
+            'response' => $payload['Response'] ?? null,
+            'amount' => $payload['amount'] ?? null,
+            'currency' => $payload['currency'] ?? null,
+            'successful' => $result->isSuccessful(),
+        ]);
+
         try {
             $this->settlement->settle(
                 payload: $payload,
@@ -83,12 +99,15 @@ class PaymentController extends Controller
             return $this->cmiProtocol('FAILURE');
         }
 
-        // `ACTION=POSTAUTH` asks CMI to capture the authorised amount. This is
-        // the PreAuth flow the 2024 site configured but never actually
-        // triggered, so authorised funds sat with the issuer uncaptured.
-        return $this->cmiProtocol(
-            $result->isSuccessful() ? 'ACTION=POSTAUTH' : 'APPROVED'
-        );
+        // `ACTION=POSTAUTH` asks CMI to capture the authorised amount, but only
+        // a PreAuth needs capturing: on an immediate sale (`Auth`) the funds are
+        // already captured and POSTAUTH would ask the gateway to capture twice.
+        // The reply is therefore driven by the configured transaction type.
+        if ($result->isSuccessful() && $this->usesPreAuth()) {
+            return $this->cmiProtocol('ACTION=POSTAUTH');
+        }
+
+        return $this->cmiProtocol('APPROVED');
     }
 
     /**
@@ -188,6 +207,18 @@ class PaymentController extends Controller
     private function gateway(): PaymentGateway
     {
         return app(PaymentGateway::class);
+    }
+
+    /**
+     * Whether the gateway was asked for a pre-authorisation.
+     *
+     * A pre-authorisation has to be captured with `ACTION=POSTAUTH`; an
+     * immediate sale (`Auth`) is already captured, so answering POSTAUTH there
+     * would attempt a second capture.
+     */
+    private function usesPreAuth(): bool
+    {
+        return strcasecmp((string) config('cmi.trans_type', 'PreAuth'), 'PreAuth') === 0;
     }
 
     /**

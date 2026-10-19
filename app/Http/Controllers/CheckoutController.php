@@ -408,8 +408,16 @@ class CheckoutController extends Controller
                 billing: [
                     'first_name' => $user->first_name ?? 'Test',
                     'last_name' => $user->last_name ?? 'Admin',
+                    'organisation' => $user->organisation,
                     'email' => $user->email,
                     'phone' => $user->phone,
+                    // A real checkout always carries these and the gateway
+                    // forwards them to the issuer for 3-D Secure; sending an
+                    // empty country is one way to have the authorization
+                    // refused, so the rehearsal mirrors a real order.
+                    'address' => $user->city ?: 'Casablanca',
+                    'city' => $user->city ?: 'Casablanca',
+                    'country_iso2' => $user->country?->iso2 ?: 'MA',
                 ],
                 ip: $request->ip(),
             );

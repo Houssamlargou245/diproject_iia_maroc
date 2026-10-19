@@ -21,6 +21,22 @@ return [
 
     'driver' => env('PAYMENT_DRIVER', 'test'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Gateway host
+    |--------------------------------------------------------------------------
+    |
+    | CMI runs two separate hosts. A merchant id and store key issued for the
+    | test kit authenticate only against the test host, and vice versa.
+    | Pointing test credentials at production (or production credentials at
+    | the test host) makes every authorization fail with "Autorisation de
+    | paiement non permise (57)", even for a plain 1 MAD sale.
+    |
+    |   production  https://payment.cmi.co.ma/fim/est3Dgate
+    |   test        https://testpayment.cmi.co.ma/fim/est3Dgate
+    |
+    */
+
     'gateway_url' => env('CMI_GATEWAY_URL', 'https://payment.cmi.co.ma/fim/est3Dgate'),
 
     'store_key' => env('CMI_STORE_KEY'),
