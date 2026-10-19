@@ -103,7 +103,7 @@ class CmiGateway implements PaymentGateway
             // `oid` must be unique per transaction. The order's uuid is used
             // rather than its autoincrement id so a response cannot be used to
             // count orders.
-            'oid' => $order->uuid,
+            'oid' => $order->uuid.'-'.dechex(time()),   // 36 + 1 + 8 = 45 chars
             // CMI echoes `rnd` back untouched, so including it in the hash is
             // what stops a captured response being replayed against a
             // different order.
@@ -210,17 +210,16 @@ class CmiGateway implements PaymentGateway
     /**
      * {@inheritDoc}
      */
-    public function resolveOrder(array $payload): ?Order
-    {
-        $oid = $payload['oid'] ?? $payload['OrderId'] ?? null;
+public function resolveOrder(array $payload): ?Order
+{
+    $oid = $payload['oid'] ?? $payload['OrderId'] ?? null;
 
-        if (! is_string($oid) || $oid === '') {
-            return null;
-        }
-
-        return Order::query()->where('uuid', $oid)->first();
+    if (! is_string($oid) || strlen($oid) < 36) {
+        return null;
     }
 
+    return Order::query()->where('uuid', substr($oid, 0, 36))->first();
+}
     // --- Amount handling -------------------------------------------------
 
     /**
