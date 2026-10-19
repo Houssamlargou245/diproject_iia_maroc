@@ -72,7 +72,7 @@
 <section class="h-hero f-hero">
 
     <span class="h-hero__bloom" aria-hidden="true"></span>
-    <span class="h-hero__sparks" aria-hidden="true"></span>
+    <!-- <span class="h-hero__sparks" aria-hidden="true"></span> -->
 
     <div class="container">
         <div class="h-hero__inner">

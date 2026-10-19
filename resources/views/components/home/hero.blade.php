@@ -28,7 +28,7 @@
 <section class="h-hero {{ $compact ? 'h-hero--compact' : '' }}" data-hero>
 
     <span class="h-hero__bloom" aria-hidden="true"></span>
-    <span class="h-hero__sparks" aria-hidden="true"></span>
+    <!-- <span class="h-hero__sparks" aria-hidden="true"></span> -->
 
     <div class="container">
         <div class="h-hero__inner">
