@@ -42,7 +42,7 @@ class CartController extends Controller
         $cart = $this->currentCart($request);
 
         if ($cart->items()->doesntExist()) {
-           // return redirect()->route('pricing')->with('status', __('order.cart_empty'));
+            // return redirect()->route('pricing')->with('status', __('order.cart_empty'));
         }
 
         $cart->load(['items.ticketType']);
@@ -75,7 +75,7 @@ class CartController extends Controller
         $cart = $this->currentCart($request);
 
         if ($cart->items()->doesntExist()) {
-        //    return redirect()->route('pricing')->with('status', __('order.cart_empty'));
+            //    return redirect()->route('pricing')->with('status', __('order.cart_empty'));
         }
 
         return $this->invoices->cartProforma($cart, $request->user());
@@ -95,7 +95,7 @@ class CartController extends Controller
         $cart = $this->currentCart($request);
 
         if ($cart->items()->doesntExist()) {
-          //  return redirect()->route('pricing')->with('status', __('order.cart_empty'));
+            //  return redirect()->route('pricing')->with('status', __('order.cart_empty'));
         }
 
         return view('pages.cart-print', [
@@ -141,6 +141,16 @@ class CartController extends Controller
         }
 
         $cart = $this->currentCart($request);
+
+        // A cart prices in a single currency, so adding a tariff in a different
+        // one is the buyer changing their mind about the currency rather than
+        // building a second order: the other currency's lines are dropped. That
+        // is also what the pricing page's currency toggle implies. Without it, a
+        // MAD-then-USD basket would only be refused later at checkout, after the
+        // buyer has already named every participant.
+        $cart->items()
+            ->whereHas('ticketType', fn ($query) => $query->where('currency', '!=', $ticket->currency))
+            ->delete();
 
         $line = $cart->items()->where('ticket_type_id', $ticket->getKey())->first();
 
@@ -199,7 +209,7 @@ class CartController extends Controller
         if ($data['quantity'] < 1) {
             $line->delete();
 
-            return redirect()->route('cart') ; 
+            return redirect()->route('cart');
         }
 
         if ($data['member_quantity'] > $data['quantity']) {
@@ -210,7 +220,7 @@ class CartController extends Controller
 
         $line->update($data);
 
-        return redirect()->route('cart') ; 
+        return redirect()->route('cart');
     }
 
     /**
@@ -225,7 +235,7 @@ class CartController extends Controller
             ->where('ticket_type_id', $ticketType)
             ->delete();
 
-        return redirect()->route('cart') ;
+        return redirect()->route('cart');
     }
 
     /**
