@@ -7,9 +7,11 @@ namespace App\Services\Payment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentException;
+use App\Mail\OrderStatusChanged;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\Registration\InvoiceService;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -110,7 +112,7 @@ class PaymentSettlementService
             // takes.
             if (isset($payload['amount'])) {
                 $claimed = (int) round(
-                    ((float) $payload['amount']) * (10 ** \App\Support\Money::exponent((string) $order->currency))
+                    ((float) $payload['amount']) * (10 ** Money::exponent((string) $order->currency))
                 );
 
                 if ($claimed !== $order->total) {
@@ -252,7 +254,7 @@ class PaymentSettlementService
         // problem, so it is logged and swallowed.
         try {
             Mail::to($order->user?->email)
-                ->queue(new \App\Mail\OrderStatusChanged($order, $event));
+                ->queue(new OrderStatusChanged($order, $event));
         } catch (Throwable $e) {
             report($e);
 
@@ -286,6 +288,11 @@ class PaymentSettlementService
             return null;
         }
 
-        return Order::query()->where('uuid', $reference)->first();
+        // CMI's `oid` carries a per-attempt suffix (`<uuid>-<hex>`) so a retry
+        // after a declined attempt is not refused as a duplicate `oid`. Only
+        // the leading uuid identifies the order, so both forms are matched.
+        return Order::query()
+            ->whereIn('uuid', [$reference, substr($reference, 0, 36)])
+            ->first();
     }
 }

@@ -62,6 +62,9 @@ class CmiGateway implements PaymentGateway
             'hashAlgorithm' => 'ver3',
             'encoding' => 'UTF-8',
             'sessionTimeout' => (string) config('cmi.session_timeout', '1800'),
+            // Ask CMI to run the server-to-server confirmation. Without it no
+            // callback is ever sent, so an authorised payment never settles.
+            'callbackResponse' => (string) config('cmi.callback_response', 'true'),
             // Unique per attempt: order uuid (36 chars) + "-" + hex timestamp.
             'oid' => $order->uuid.'-'.dechex(time()),
             'rnd' => bin2hex(random_bytes(8)),

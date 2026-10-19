@@ -30,6 +30,20 @@ class CmiHasher
         return hash_equals($this->hash($fields, $storeKey), $received);
     }
 
+    /**
+     * The exact string CMI signs, before hashing.
+     *
+     * Exposed so a rejected signature can be reproduced by hand and so the
+     * sorting and escaping rules stay directly testable — the final digest
+     * alone gives no clue which side built a different string.
+     *
+     * @param  array<string, mixed>  $fields
+     */
+    public function canonicalise(array $fields, string $storeKey): string
+    {
+        return $this->plainText($fields, $storeKey);
+    }
+
     private function plainText(array $fields, string $storeKey): string
     {
         $keys = array_keys($fields);

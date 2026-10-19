@@ -59,14 +59,15 @@ class PaymentController extends Controller
             // CMI's protocol has one answer for "we could not process this":
             // FAILURE, meaning the merchant settles by hand. Anything else
             // risks a silent double charge.
-           Log::warning('cmi.callback.rejected', [
-    'reason' => $e->getMessage(),
-    'oid' => $payload['oid'] ?? null,
-    'ip' => $request->ip(),
-    'keys' => array_keys($payload),          // which fields actually arrived
-    'has_hash' => isset($payload['HASH']),
-    'hash_algo' => $payload['hashAlgorithm'] ?? null,
-]);
+            Log::warning('cmi.callback.rejected', [
+                'reason' => $e->getMessage(),
+                'oid' => $payload['oid'] ?? null,
+                'ip' => $request->ip(),
+                'keys' => array_keys($payload), // which fields actually arrived
+                'has_hash' => isset($payload['HASH']),
+                'hash_algo' => $payload['hashAlgorithm'] ?? null,
+            ]);
+
             return $this->cmiProtocol('FAILURE');
         }
 
@@ -132,6 +133,21 @@ class PaymentController extends Controller
         $payload = $request->post();
 
         if ($payload !== []) {
+            // Logged so a payment that reaches the browser return but never
+            // settles can be told apart from one that never came back at all.
+            // These are CMI's own verdict fields, echoed onto okUrl; none are
+            // secrets. Without this, a callback that never fires is invisible.
+            Log::info('cmi.return.received', [
+                'order' => $order->reference,
+                'return_code' => $payload['ProcReturnCode'] ?? null,
+                'error' => $payload['ErrMsg'] ?? null,
+                'md_status' => $payload['mdStatus'] ?? null,
+                'response' => $payload['Response'] ?? null,
+                'amount' => $payload['amount'] ?? null,
+                'has_hash' => isset($payload['HASH']),
+                'keys' => array_keys($payload),
+            ]);
+
             try {
                 $result = $this->gateway()->verify($payload);
 

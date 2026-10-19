@@ -639,6 +639,28 @@ class RegistrationFlowTest extends TestCase
         Mail::assertQueued(OrderStatusChanged::class);
     }
 
+    public function test_a_callback_settles_when_the_oid_carries_a_per_attempt_suffix(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        // CMI rejects a reused `oid`, so the real driver submits
+        // `<uuid>-<hex>`. The order is still keyed by the leading uuid, and a
+        // callback that only matched the raw `oid` exactly would leave every
+        // payment unsettled.
+        $payload = $this->signedCallback($order, approved: true);
+        unset($payload['HASH']);
+        $payload['oid'] = $order->uuid.'-'.dechex(time());
+        $payload['HASH'] = (new CmiHasher)->hash($payload, $this->storeKey());
+
+        $this->post('/payment/cmi/callback', $payload)->assertOk();
+
+        $this->assertSame(OrderStatus::Paid, $order->refresh()->status);
+    }
+
     public function test_a_callback_with_a_bad_signature_is_rejected_and_settles_nothing(): void
     {
         [$ticket, $user] = $this->seedConference(withUser: true);
