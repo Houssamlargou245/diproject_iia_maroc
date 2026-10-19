@@ -199,17 +199,31 @@ class CmiGateway implements PaymentGateway
     // --- Amount handling -------------------------------------------------
 
     /**
-     * CMI expects major units as a bare integer string: 7 500.00 MAD is
-     * "7500", never "750000" and never "7500.00".
+     * CMI expects the amount in major units (dirhams, not centimes) as a plain
+     * number with no grouping character: 7 500,00 MAD is "7500" — never
+     * "750000" — and 0,09 EUR is "0.09". A fractional amount must keep its
+     * decimal part; truncating it sent "0" for a 9-cent order, which CMI
+     * rejected with 3D-1008 ("Montant est manquant ou en format invalide")
+     * after the gateway had already shown the customer "0 euro".
      *
-     * Money is stored in minor units throughout this application, so the
-     * conversion happens here and nowhere else.
+     * CMI accepts "." or "," as the separator and exactly two decimals
+     * (`^\d+(\.\d{2})?$`), which is what every supported currency's exponent
+     * produces here. Money is stored in minor units throughout this
+     * application, so the conversion happens here and nowhere else.
      */
     private function toMajorUnitsString(int $minorUnits, string $currency): string
     {
-        $divisor = 10 ** Money::exponent($currency);
+        $exponent = Money::exponent($currency);
+        $divisor = 10 ** $exponent;
 
-        return (string) intdiv($minorUnits, $divisor);
+        $whole = intdiv($minorUnits, $divisor);
+        $fraction = $minorUnits % $divisor;
+
+        if ($fraction === 0) {
+            return (string) $whole;
+        }
+
+        return $whole.'.'.str_pad((string) $fraction, $exponent, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -218,10 +232,17 @@ class CmiGateway implements PaymentGateway
      * Rounded rather than truncated: a gateway that sent "7500.4" for a
      * 750 040-cent order should match, while truncating here would report a
      * mismatch on a correct payment.
+     *
+     * The separator is normalised first because CMI echoes the amount in the
+     * format it was sent and accepts either "." or ","; without this a
+     * comma-formatted echo such as "0,09" would cast to 0.0 and be reported as
+     * an amount mismatch on a correct payment.
      */
     private function fromMajorUnitsString(string $major, string $currency): int
     {
-        return (int) round(((float) $major) * (10 ** Money::exponent($currency)));
+        $normalised = str_replace(',', '.', trim($major));
+
+        return (int) round(((float) $normalised) * (10 ** Money::exponent($currency)));
     }
 
     private function numericCurrency(string $currency): string
