@@ -879,6 +879,26 @@ class RegistrationFlowTest extends TestCase
         app(CmiGateway::class)->assertConfigured();
     }
 
+    public function test_the_real_gateway_request_carries_a_session_timeout(): void
+    {
+        config()->set('cmi.merchant_id', 'TESTMERCHANT');
+        config()->set('cmi.store_key', 'test-driver-key');
+
+        [, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        $fields = app(CmiGateway::class)
+            ->redirectFor($order, 'https://example.test/ok', 'https://example.test/fail')['fields'];
+
+        // CMI reads a missing session lifetime as an already-expired session
+        // and turns the customer away with "Transaction expiré (99)" before a
+        // card is ever entered. `refreshtime` was never part of the contract.
+        $this->assertSame('1800', $fields['sessionTimeout']);
+        $this->assertSame('true', $fields['callbackResponse']);
+        $this->assertArrayNotHasKey('refreshtime', $fields);
+        $this->assertArrayHasKey('HASH', $fields);
+    }
+
     // --- Helpers ----------------------------------------------------------
 
     /** @return array{0: TicketType, 1: ?User} */
