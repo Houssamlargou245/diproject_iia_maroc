@@ -61,10 +61,10 @@
                      decoding="async">
             </div>
 
-            <h1 class="h-hero__title">
+            <h4 class="h-hero__title">
                 <span class="h-hero__name">{{ $edition->organiser }}</span>
                 <span class="h-hero__year">{{ $edition->year }}</span>
-            </h1>
+            </h4>
 
             <p class="h-hero__kicker">@lang('home.landing.hero.kicker')</p>
 
