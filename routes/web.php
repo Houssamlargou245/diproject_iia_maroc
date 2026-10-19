@@ -319,6 +319,11 @@ Route::get('/{locale?}/inscription/payer/{order}', [CheckoutController::class, '
 Route::post('/inscription/test', [CheckoutController::class, 'testPayment'])->name('checkout.test.ar');
 Route::post('/{locale?}/inscription/test', [CheckoutController::class, 'testPayment'])->name('checkout.test');
 
+// The same rehearsal in EUR (0,09 €, about 1 MAD), to exercise the
+// international-card path and the gateway's non-MAD currency display.
+Route::post('/inscription/test-eur', [CheckoutController::class, 'testPaymentEur'])->name('checkout.test.eur.ar');
+Route::post('/{locale?}/inscription/test-eur', [CheckoutController::class, 'testPaymentEur'])->name('checkout.test.eur');
+
 // Add or remove a place on a basket line, from the checkout page.
 //
 // Its own route rather than a field on `checkout.store`, because the two

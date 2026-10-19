@@ -253,6 +253,17 @@
                                     <span>Test paiement 1 DH</span>
                                 </button>
                             </form>
+
+                            {{-- The same rehearsal in euros (0,09 € ≈ 1 MAD), to exercise
+                                 the international-card path and the gateway's display of a
+                                 non-MAD amount. --}}
+                            <form method="POST" action="{{ route('checkout.test.eur') }}" class="mt-3">
+                                @csrf
+                                <button type="submit" class="d-btn d-btn--quiet d-btn--block">
+                                    <i class="fas fa-vial" aria-hidden="true"></i>
+                                    <span>Test paiement 0,09 €</span>
+                                </button>
+                            </form>
                         @endif
 
                         @guest

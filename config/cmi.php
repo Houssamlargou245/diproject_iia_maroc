@@ -37,16 +37,19 @@ return [
     |--------------------------------------------------------------------------
     |
     | CMI wants the ISO-4217 numeric code, not the alpha-3 code that is stored
-    | on the order. 504 = MAD, 840 = USD (978 is EUR, not USD). The 2024
-    | build passed the string "MAD"
-    | and relied on the gateway defaulting, which silently charged the wrong
-    | currency for the USD tariff.
+    | on the order. 504 = MAD, 840 = USD, 978 = EUR. The 2024 build passed the
+    | string "MAD" and relied on the gateway defaulting, which silently charged
+    | the wrong currency for the USD tariff.
+    |
+    | EUR is not sold as a tariff; it exists so the admin-only payment rehearsal
+    | can exercise the international-card path with a token euro amount.
     |
     */
 
     'currencies' => [
         'MAD' => ['numeric' => env('CMI_CURRENCY_MAD', '504'), 'decimals' => 2],
         'USD' => ['numeric' => env('CMI_CURRENCY_USD', '840'), 'decimals' => 2],
+        'EUR' => ['numeric' => env('CMI_CURRENCY_EUR', '978'), 'decimals' => 2],
     ],
 
     /*

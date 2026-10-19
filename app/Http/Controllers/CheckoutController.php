@@ -335,6 +335,27 @@ class CheckoutController extends Controller
      */
     public function testPayment(Request $request): RedirectResponse
     {
+        return $this->raiseTestOrder($request, 'MAD');
+    }
+
+    /**
+     * The same rehearsal in EUR (0,09 €, about 1 MAD).
+     *
+     * Exercises the international-card path and the gateway's display of a
+     * non-MAD amount without a real tariff, for roughly the same token cost as
+     * the dirham test.
+     */
+    public function testPaymentEur(Request $request): RedirectResponse
+    {
+        return $this->raiseTestOrder($request, 'EUR');
+    }
+
+    /**
+     * Build and place a token order in the given currency, then send the tester
+     * to the gateway. Shared by the MAD and EUR rehearsals.
+     */
+    private function raiseTestOrder(Request $request, string $currency): RedirectResponse
+    {
         $user = $request->user();
 
         abort_unless($user !== null && $this->isPaymentTester($user), 403);
@@ -348,7 +369,13 @@ class CheckoutController extends Controller
 
         abort_if($ticket === null, 422, 'No ticket type is available to build a test order from.');
 
-        $amount = max(1, (int) config('conference.payment_test_amount', 100));
+        $currency = strtoupper($currency);
+
+        $amountKey = $currency === 'EUR'
+            ? 'conference.payment_test_amount_eur'
+            : 'conference.payment_test_amount';
+
+        $amount = max(1, (int) config($amountKey, $currency === 'EUR' ? 9 : 100));
 
         $quote = new Quote(
             lines: [[
@@ -362,7 +389,7 @@ class CheckoutController extends Controller
             ]],
             subtotal: $amount,
             total: $amount,
-            currency: 'MAD',
+            currency: $currency,
             memberCount: 0,
             standardCount: 1,
             participantCount: 1,

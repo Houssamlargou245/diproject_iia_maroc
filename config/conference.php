@@ -76,4 +76,12 @@ return [
 
     'payment_test_amount' => (int) env('PAYMENT_TEST_AMOUNT', 100),
 
+    /*
+    | The same rehearsal in euros: 9 minor units is 0,09 EUR, about 1 MAD, so
+    | the international-card path and the gateway's non-MAD currency display can
+    | be exercised for roughly the same token cost.
+    */
+
+    'payment_test_amount_eur' => (int) env('PAYMENT_TEST_AMOUNT_EUR', 9),
+
 ];
