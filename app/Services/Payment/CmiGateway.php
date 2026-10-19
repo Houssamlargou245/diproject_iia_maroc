@@ -72,10 +72,12 @@ class CmiGateway implements PaymentGateway
 
         $billing = (array) $order->billing;
 
+        $settlement = $this->settlementPlan($order);
+
         $fields = [
             'clientid' => (string) config('cmi.merchant_id'),
-            'amount' => $this->toMajorUnitsString($order->total, (string) $order->currency),
-            'currency' => $this->numericCurrency((string) $order->currency),
+            'amount' => $this->toMajorUnitsString($settlement['minor'], $settlement['currency']),
+            'currency' => $this->numericCurrency($settlement['currency']),
             'storetype' => (string) config('cmi.store_type', '3D_PAY_HOSTING'),
             'TranType' => (string) config('cmi.trans_type', 'PreAuth'),
             'okUrl' => $returnUrl,
@@ -104,6 +106,14 @@ class CmiGateway implements PaymentGateway
             'BillToCountry' => (string) ($billing['country_iso2'] ?? ''),
             'tel' => (string) ($billing['phone'] ?? $order->user?->phone ?? ''),
         ];
+
+        // A MAD-only contract cannot charge the customer's own currency, so the
+        // amount above is the MAD figure and the order's currency is shown
+        // alongside it instead of being submitted as `currency`.
+        if ($settlement['display'] !== null) {
+            $fields['amountCur'] = $this->toMajorUnitsString($order->total, $settlement['display']);
+            $fields['symbolCur'] = $settlement['display'];
+        }
 
         $fields['HASH'] = $this->hasher->hash($fields, (string) config('cmi.store_key'));
 
@@ -162,11 +172,17 @@ class CmiGateway implements PaymentGateway
         // from the order's own total, the transaction is not one we may settle
         // even though it is genuinely signed. Accepting it would let a
         // customer pay 100 MAD against a 7 500 MAD order and receive a place.
+        //
+        // Compared against the *settlement* figure, not the order's own total:
+        // on a MAD-only contract the gateway charges the converted MAD amount,
+        // so a USD order legitimately echoes MAD and would otherwise look like
+        // a mismatch on a correct payment.
         if ($order !== null && isset($payload['amount'])) {
-            $claimed = $this->fromMajorUnitsString((string) $payload['amount'], (string) $order->currency);
+            $settlement = $this->settlementPlan($order);
+            $claimed = $this->fromMajorUnitsString((string) $payload['amount'], $settlement['currency']);
 
-            if ($claimed !== $order->total) {
-                throw PaymentException::amountMismatch($order->total, $claimed);
+            if ($claimed !== $settlement['minor']) {
+                throw PaymentException::amountMismatch($settlement['minor'], $claimed);
             }
         }
 
@@ -197,6 +213,56 @@ class CmiGateway implements PaymentGateway
     }
 
     // --- Amount handling -------------------------------------------------
+
+    /**
+     * What CMI is actually charged, and what the customer is shown.
+     *
+     * The contract settles MAD-only, so only a MAD order is submitted as-is.
+     * Any other currency is charged in MAD — via `cmi.rates` — and shown to the
+     * customer in its own currency through CMI's conversion display. Sending
+     * the foreign ISO code as `currency` is refused with "Devise non autorisée
+     * pour ce marchand. (99)".
+     *
+     * @return array{minor: int, currency: string, display: ?string}
+     */
+    private function settlementPlan(Order $order): array
+    {
+        $settlement = strtoupper((string) config('cmi.settlement_currency', 'MAD'));
+        $orderCurrency = strtoupper((string) $order->currency);
+
+        if ($orderCurrency === '' || $orderCurrency === $settlement) {
+            return ['minor' => $order->total, 'currency' => $settlement, 'display' => null];
+        }
+
+        return [
+            'minor' => $this->toSettlementMinor($order->total, $orderCurrency, $settlement),
+            'currency' => $settlement,
+            'display' => $orderCurrency,
+        ];
+    }
+
+    /**
+     * Convert a foreign amount to the settlement currency.
+     *
+     * Thrown rather than silently defaulted when a rate is missing: charging
+     * the customer an unconverted figure would be worse than a checkout that
+     * plainly refuses to start.
+     */
+    private function toSettlementMinor(int $minorUnits, string $from, string $to): int
+    {
+        $rate = (float) config("cmi.rates.{$from}", 0);
+
+        if ($rate <= 0) {
+            throw new RuntimeException(
+                "No CMI settlement rate is configured for {$from}; add cmi.rates.{$from}."
+            );
+        }
+
+        $majorUnits = $minorUnits / (10 ** Money::exponent($from));
+        $settled = $majorUnits * $rate;
+
+        return (int) round($settled * (10 ** Money::exponent($to)));
+    }
 
     /**
      * CMI expects the amount in major units (dirhams, not centimes) as a plain

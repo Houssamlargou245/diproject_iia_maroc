@@ -62,7 +62,7 @@ class EditionSeederTest extends TestCase
         $usd = $this->ticket('STANDARD_USD');
 
         $this->assertSame('USD', $usd->currency);
-        $this->assertSame(978, (int) $usd->currency_numeric);
+        $this->assertSame(840, (int) $usd->currency_numeric);
 
         // Minor units: 750,00 USD and 850,00 USD.
         $this->assertSame(75000, $usd->price_member, 'Member rate must be 750,00 USD.');

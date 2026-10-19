@@ -54,6 +54,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Settlement currency
+    |--------------------------------------------------------------------------
+    |
+    | This merchant contract settles in MAD only. A non-MAD order is therefore
+    | charged in MAD and shown to the customer in its own currency through
+    | CMI's conversion display (`amountCur` + `symbolCur`); submitting the
+    | foreign ISO code as `currency` is refused with "Devise non autorisée pour
+    | ce marchand. (99)".
+    |
+    | `rates` is MAD per one unit of the foreign currency — the same pricing
+    | convention as the public tariffs (7 500 MAD = 750 USD, so USD is 10;
+    | 0,09 EUR = 1 MAD, so EUR is about 11,11).
+    |
+    */
+
+    'settlement_currency' => env('CMI_SETTLEMENT_CURRENCY', 'MAD'),
+
+    'rates' => [
+        'USD' => (float) env('CMI_RATE_USD', 10.0),
+        'EUR' => (float) env('CMI_RATE_EUR', 11.1111),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Callback
     |--------------------------------------------------------------------------
     |
