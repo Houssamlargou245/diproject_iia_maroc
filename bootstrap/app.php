@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withMiddleware(function (Middleware $middleware) {
+    $middleware->validateCsrfTokens(except: [
+        'payment/cmi/callback',
+    ]);
+})
     ->withMiddleware(function (Middleware $middleware): void {
         // Proxy trust is configured in AppServiceProvider::register(), not here:
         // this closure runs before the configuration is loaded, so config()

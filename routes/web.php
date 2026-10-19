@@ -25,6 +25,8 @@ use App\Http\Controllers\VenueController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CmiCallbackController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -437,3 +439,7 @@ Route::get('/newsletter/confirm/{subscriber}', [NewsletterController::class, 'co
 Route::post('/sponsoring/demande', [SponsorshipRequestController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('sponsoring.request');
+
+    // routes/web.php (or api.php)
+Route::post('/payment/cmi/callback', CmiCallbackController::class)
+    ->name('payment.cmi.callback');
