@@ -153,11 +153,18 @@
                     <h2 class="admin-card__title">@lang('admin.orders.show.payments')</h2>
                 </div>
                 <div class="admin-card__body">
-                    @if ($order->payments->isEmpty())
+                    {{-- Only attempts that actually took the money. A row left in
+                         `pending` with no authorisation code is an unfinished
+                         checkout, not a payment, and listing it beside the real
+                         one is how an operator ends up reading "En cours"
+                         against a customer who has already paid. --}}
+                    @php($payments = $order->payments->filter(fn ($payment) => $payment->isSuccessful()))
+
+                    @if ($payments->isEmpty())
                         <p class="admin-meta mb-0">@lang('admin.orders.show.none')</p>
                     @else
                         <ul class="list-unstyled mb-0">
-                            @foreach ($order->payments as $payment)
+                            @foreach ($payments as $payment)
                                 <li class="py-2 border-bottom" style="border-color: rgba(255,255,255,.06) !important;">
                                     {{-- The gateway reference is the join key to
                                          a CMI settlement report, so it is shown
@@ -166,7 +173,7 @@
                                          screen against a bank file needs it
                                          character for character. --}}
                                     <div class="d-flex justify-content-between gap-3">
-                                        <span class="admin-pill admin-pill--{{ $payment->status->isSuccessful() ? 'success' : ($payment->status === \App\Enums\PaymentStatus::Failed ? 'danger' : 'muted') }}">
+                                        <span class="admin-pill admin-pill--{{ $payment->isSuccessful() ? 'success' : ($payment->status === \App\Enums\PaymentStatus::Failed ? 'danger' : 'muted') }}">
                                             @lang("admin.stages.payment_status.{$payment->status->value}")
                                         </span>
                                         <span class="admin-num fw-bold">{{ $payment->formattedAmount() }}</span>

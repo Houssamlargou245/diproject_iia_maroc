@@ -345,8 +345,13 @@
                     </div>
 
                     <div class="d-order__side">
-                        <span class="d-tag d-tag--{{ $order->status->colour() }}">
-                            {{ $order->status->label($currentLocale->value) }}
+                        {{-- The derived status, not the stored one: an order the
+                             gateway authorised but never settled from its
+                             server-to-server callback reads as paid here rather
+                             than leaving the buyer with an "en cours" row for
+                             money that already left their account. --}}
+                        <span class="d-tag d-tag--{{ $order->effectiveStatus()->colour() }}">
+                            {{ $order->effectiveStatus()->label($currentLocale->value) }}
                         </span>
 
                         {{-- dir="ltr": an amount beside a currency code

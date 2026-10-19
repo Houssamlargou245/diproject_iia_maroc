@@ -137,8 +137,39 @@ class PaymentSettlementService
     }
 
     /**
-     * @param  array<string, mixed>  $payload
+     * Settle an order from a payment that already took the money.
+     *
+     * The gateway path never needs this; it exists for the order whose
+     * authorisation was accepted but whose server-to-server callback never
+     * landed. The payment row carries the gateway's own proof — an
+     * authorisation code and a transaction id — while the order still reads
+     * `awaiting_payment`, and the buyer is left staring at an in-progress row
+     * for money that has already left their account.
+     *
+     * This is the only place besides the authoritative callback that may mark
+     * an order paid, and it runs only from an explicit operator command (`php
+     * artisan orders:reconcile --apply`), never from a request. Returns whether
+     * anything changed; a non-successful payment, an already-paid order or a
+     * terminal one is left untouched.
      */
+    public function reconcile(Order $order, Payment $payment): bool
+    {
+        if (! $payment->isSuccessful() || $order->status === OrderStatus::Paid) {
+            return false;
+        }
+
+        if (! $order->status->canTransitionTo(OrderStatus::Paid)) {
+            return false;
+        }
+
+        $order->loadMissing(['user', 'edition']);
+
+        DB::transaction(function () use ($order, $payment): void {
+            $this->markPaid($order, $payment);
+        });
+
+        return true;
+    }
 
     /**
      * A stable key for "this gateway response for this order".

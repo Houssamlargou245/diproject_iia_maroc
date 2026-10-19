@@ -80,14 +80,14 @@
                                             {{ $order->created_at->translatedFormat('d M Y') }}
                                         </td>
                                         <td>
-                                            @php($statusColour = $order->status->colour())
+                                            @php($statusColour = $order->effectiveStatus()->colour())
                                             <span @class([
                                                 'ux-tag',
                                                 'ux-tag--solid' => $statusColour === 'danger',
                                                 'ux-tag--gold' => $statusColour === 'warning',
                                                 'ux-tag--cyan' => $statusColour === 'info',
                                             ])>
-                                                {{ $order->status->label($currentLocale->value) }}
+                                                {{ $order->effectiveStatus()->label($currentLocale->value) }}
                                             </span>
                                         </td>
                                         <td class="text-end" dir="ltr">

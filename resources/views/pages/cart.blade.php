@@ -245,7 +245,7 @@
                              whether a previous payment went through should not
                              have to guess the URL of the order list, and a
                              first-time visitor is not sent to an empty one. --}}
-                        <!-- @if (auth()->check() && ($hasOrders ?? false))
+                        @if (auth()->check() && ($hasOrders ?? false))
                             <a href="{{ route('orders.index') }}"
                                class="d-btn d-btn--ghost d-btn--block mt-3">
                                 <i class="fas fa-receipt" aria-hidden="true"></i>
@@ -256,7 +256,7 @@
                                 <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 <span>@lang('order.cart.my_payments_note')</span>
                             </p>
-                        @endif -->
+                        @endif
 
                         {{-- Payment rehearsal, visible only to the one account named in
                              config('conference.payment_test_user'). It raises a real 1 MAD

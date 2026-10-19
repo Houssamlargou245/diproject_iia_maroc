@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
 use App\Support\Money;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -247,10 +246,46 @@ class Order extends Model
 
     public function hasSuccessfulPayment(): bool
     {
-        return $this->payments()->whereIn('status', [
-            PaymentStatus::Authorised->value,
-            PaymentStatus::Captured->value,
-            PaymentStatus::Settled->value,
-        ])->exists();
+        // Read from the loaded collection when the caller eager-loaded it, so a
+        // list of orders does not issue one query per row. `effectiveStatus()`
+        // is called while rendering exactly those lists.
+        if ($this->relationLoaded('payments')) {
+            return $this->payments->contains(
+                fn (Payment $payment): bool => $payment->isSuccessful()
+            );
+        }
+
+        return $this->payments()->successful()->exists();
+    }
+
+    /**
+     * The status to show the buyer, corrected for a payment that succeeded
+     * without the order ever being settled.
+     *
+     * A CMI/Saham authorisation can be accepted while the server-to-server
+     * callback that settles the order never lands — the gateway shows the
+     * customer a "vérifiez l'état de votre commande avec votre marchand"
+     * receipt, and the order keeps reading `awaiting_payment` even though the
+     * money moved. Showing the stored string there is telling the buyer the
+     * opposite of the truth, so the display is derived from the payment
+     * evidence: an order that carries a successful payment reads as paid.
+     *
+     * Only the not-yet-settled states are upgraded. A refunded or cancelled
+     * order keeps its stored status — those are deliberate terminal states, not
+     * a callback that failed to arrive.
+     */
+    public function effectiveStatus(): OrderStatus
+    {
+        $promotable = in_array($this->status, [
+            OrderStatus::Pending,
+            OrderStatus::AwaitingPayment,
+            OrderStatus::Failed,
+        ], true);
+
+        if ($promotable && $this->hasSuccessfulPayment()) {
+            return OrderStatus::Paid;
+        }
+
+        return $this->status;
     }
 }

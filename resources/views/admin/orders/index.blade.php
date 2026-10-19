@@ -85,10 +85,11 @@
                     </table>
                 </div>
 
-                {{-- Pagination is rendered by the app's own markup rather than
-                     Bootstrap's, so it matches the public site's pager and keeps
-                     the RTL flip handled in one place. `withQueryString()` in the
-                     controller is what keeps the status filter attached. --}}
+                {{-- Bootstrap's pager, registered as the framework default in
+                     AppServiceProvider. Both layouts load `bootstrap.min.css`
+                     and no Tailwind build, so the framework's default pager
+                     rendered a wall of unstyled classes. `withQueryString()` in
+                     the controller keeps the status filter attached. --}}
                 @if ($orders->hasPages())
                     <div class="p-3 border-top" style="border-color: rgba(255,255,255,.07) !important;">
                         {{ $orders->links() }}
