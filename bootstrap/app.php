@@ -56,7 +56,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'paiement/annule/*',
             '*/paiement/annule/*',
         ]);
+        $cmiPaths = [
+            'payment/cmi/callback',
+            'paiement/retour/*',
+            '*/paiement/retour/*',
+            'paiement/annule/*',
+            '*/paiement/annule/*',
+        ];
 
+        $middleware->convertEmptyStringsToNull(except: [
+            fn (Request $request) => $request->is($cmiPaths),
+        ]);
+
+        $middleware->trimStrings(except: [
+            fn (Request $request) => $request->is($cmiPaths),
+        ]);
         $middleware->alias([
             'totp.confirmed' => EnsureTotpIsConfirmed::class,
             'admin' => EnsureUserIsAdmin::class,
