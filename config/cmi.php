@@ -37,7 +37,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | CMI wants the ISO-4217 numeric code, not the alpha-3 code that is stored
-    | on the order. 504 = MAD, 978 = USD. The 2024 build passed the string "MAD"
+    | on the order. 504 = MAD, 840 = USD (978 is EUR, not USD). The 2024
+    | build passed the string "MAD"
     | and relied on the gateway defaulting, which silently charged the wrong
     | currency for the USD tariff.
     |
@@ -45,7 +46,7 @@ return [
 
     'currencies' => [
         'MAD' => ['numeric' => env('CMI_CURRENCY_MAD', '504'), 'decimals' => 2],
-        'USD' => ['numeric' => env('CMI_CURRENCY_USD', '978'), 'decimals' => 2],
+        'USD' => ['numeric' => env('CMI_CURRENCY_USD', '840'), 'decimals' => 2],
     ],
 
     /*

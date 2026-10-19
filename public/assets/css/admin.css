@@ -350,6 +350,206 @@ a.admin-stat:hover {
 .admin-pill--info    { color: #a5b4fc; background: rgba(165, 180, 252, .12); }
 .admin-pill--muted   { color: rgba(232, 232, 240, .6); background: rgba(255, 255, 255, .05); }
 
+/* --- Registrations over time -------------------------------------------
+   A stretched SVG: the viewBox is 0–100 in both axes and the panel width
+   sets the height, so the two polylines fill whatever column they land in.
+   `non-scaling-stroke` on the lines keeps their width honest under that
+   stretch, which is the one thing a `preserveAspectRatio="none"` chart gets
+   wrong by default. */
+
+.admin-chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .9rem;
+    font-size: .78rem;
+    color: rgba(232, 232, 240, .6);
+}
+
+.admin-chart__key {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.admin-chart__key::before {
+    content: "";
+    inline-size: 1.1rem;
+    block-size: .2rem;
+    border-radius: 999px;
+}
+
+.admin-chart__key--orders::before { background: #a78bfa; }
+.admin-chart__key--paid::before { background: #5eead4; }
+
+.admin-chart {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.admin-chart svg {
+    width: 100%;
+    height: 12rem;
+    display: block;
+    overflow: visible;
+}
+
+.admin-chart__area {
+    fill: rgba(167, 139, 250, .16);
+    stroke: none;
+}
+
+.admin-chart__line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.admin-chart__line--orders { stroke: #a78bfa; }
+.admin-chart__line--paid { stroke: #5eead4; }
+
+.admin-chart__axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: .78rem;
+    color: rgba(232, 232, 240, .55);
+}
+
+.admin-chart__axis .admin-num {
+    color: #fff;
+    font-weight: 700;
+}
+
+/* --- Member / non-member split ----------------------------------------- */
+
+.admin-split {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.admin-split__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: .9rem;
+}
+
+.admin-split__label { color: rgba(232, 232, 240, .78); }
+.admin-split__value { font-weight: 700; color: #fff; }
+
+.admin-split__track {
+    block-size: .55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    overflow: hidden;
+}
+
+/* Space the second pair off the first without a wrapper element. */
+.admin-split__track + .admin-split__row { margin-top: .6rem; }
+
+.admin-split__fill {
+    display: block;
+    block-size: 100%;
+    border-radius: 999px;
+    /* A sliver rather than nothing when a side is not quite zero, so the
+       colour is still identifiable at 1%. */
+    min-inline-size: 2%;
+    transition: inline-size .3s ease;
+}
+
+.admin-split__fill--member { background: #a78bfa; }
+.admin-split__fill--standard { background: #5eead4; }
+
+.admin-split__summary { margin: .9rem 0 0; }
+
+/* --- Capacity gauges --------------------------------------------------- */
+
+.admin-gauge__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-gauge__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: .9rem;
+}
+
+.admin-gauge__name { font-weight: 600; color: #fff; }
+.admin-gauge__count { color: rgba(232, 232, 240, .6); font-size: .82rem; }
+
+.admin-gauge__track {
+    margin-top: .4rem;
+    block-size: .55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    overflow: hidden;
+}
+
+.admin-gauge__fill {
+    display: block;
+    block-size: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #a78bfa, #7c5cff);
+    transition: inline-size .3s ease;
+}
+
+.admin-gauge__fill--full { background: linear-gradient(90deg, #fca5a5, #f87171); }
+
+.admin-gauge__meta {
+    margin: .35rem 0 0;
+    font-size: .78rem;
+    color: rgba(232, 232, 240, .5);
+}
+
+/* --- Where buyers come from -------------------------------------------- */
+
+.admin-country {
+    list-style: none;
+    margin: 0;
+    padding: .4rem .5rem;
+}
+
+.admin-country__row {
+    /* Name, bar, count. The name column is bounded so a long country name
+       cannot squeeze the bar out to nothing. */
+    display: grid;
+    grid-template-columns: minmax(6rem, 9rem) 1fr auto;
+    align-items: center;
+    gap: .75rem;
+    padding: .5rem .75rem;
+    border-radius: .55rem;
+}
+
+.admin-country__row:hover { background: rgba(255, 255, 255, .035); }
+
+.admin-country__name { color: rgba(232, 232, 240, .85); font-size: .9rem; }
+
+.admin-country__bar {
+    block-size: .5rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    overflow: hidden;
+}
+
+.admin-country__bar-fill {
+    display: block;
+    block-size: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5eead4, #2dd4bf);
+}
+
+.admin-country__value { font-weight: 700; color: #fff; }
+
 /* --- Forms ------------------------------------------------------------- */
 
 .admin-form {
@@ -480,6 +680,8 @@ a.admin-stat:hover {
 @media (prefers-reduced-motion: reduce) {
     .admin-skip,
     .admin-stat,
+    .admin-split__fill,
+    .admin-gauge__fill,
     .admin-rail__link {
         transition: none;
     }

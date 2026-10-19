@@ -65,7 +65,7 @@ return new class extends Migration
             $table->unsignedBigInteger('price_standard');
             $table->char('currency', 3);
 
-            // ISO-4217 numeric code for the CMI gateway (504 = MAD, 978 = USD).
+            // ISO-4217 numeric code for the CMI gateway (504 = MAD, 840 = USD).
             $table->char('currency_numeric', 3);
 
             $table->string('colour', 16)->nullable();

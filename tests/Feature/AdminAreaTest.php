@@ -8,12 +8,14 @@ use App\Enums\EditionStatus;
 use App\Enums\OrderStatus;
 use App\Enums\SessionFormat;
 use App\Models\ContactMessage;
+use App\Models\Country;
 use App\Models\Edition;
 use App\Models\Order;
 use App\Models\Participant;
 use App\Models\SpeakerSubmission;
 use App\Models\SponsoringPackage;
 use App\Models\SponsorshipEnquiry;
+use App\Models\TicketType;
 use App\Models\User;
 use App\Support\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -270,6 +272,139 @@ class AdminAreaTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertDontSee(Money::format(999900));
+    }
+
+    // --- The shape of the run -----------------------------------------------
+
+    public function test_the_dashboard_splits_member_and_non_member_seats(): void
+    {
+        $edition = $this->edition();
+        $type = TicketType::factory()->create(['edition_id' => $edition->getKey()]);
+
+        // One paid order carrying both kinds of place: seven at the member
+        // rate, three at the standard one.
+        Order::factory()->forEdition($edition)->paid()->create([
+            'ticket_type_id' => $type->getKey(),
+            'member_count' => 7,
+            'standard_count' => 3,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            // The split line carries both counts, so it is the whole assertion.
+            ->assertSeeText(__('admin.members.summary', ['member' => 7, 'standard' => 3]), false);
+    }
+
+    public function test_the_dashboard_reports_remaining_capacity_per_tariff(): void
+    {
+        $edition = $this->edition();
+        $type = TicketType::factory()->create([
+            'edition_id' => $edition->getKey(),
+            'max_quantity' => 10,
+        ]);
+
+        Order::factory()->forEdition($edition)->paid()->create([
+            'ticket_type_id' => $type->getKey(),
+            'member_count' => 0,
+            'standard_count' => 4,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeText(__('admin.capacity.remaining', ['count' => 6]), false);
+    }
+
+    public function test_a_tariff_sold_to_capacity_is_reported_as_full(): void
+    {
+        $edition = $this->edition();
+        $type = TicketType::factory()->create([
+            'edition_id' => $edition->getKey(),
+            'max_quantity' => 3,
+        ]);
+
+        Order::factory()->forEdition($edition)->paid()->create([
+            'ticket_type_id' => $type->getKey(),
+            'member_count' => 1,
+            'standard_count' => 2,
+        ]);
+
+        // Sold == capacity: the gauge must read full, not "0 places remaining".
+        $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeText(__('admin.capacity.full'), false);
+    }
+
+    public function test_a_cancelled_order_holds_no_capacity(): void
+    {
+        $edition = $this->edition();
+        $type = TicketType::factory()->create([
+            'edition_id' => $edition->getKey(),
+            'max_quantity' => 10,
+        ]);
+
+        // A cancelled order is not money received, so it must not consume a
+        // place: the tariff still has all ten.
+        Order::factory()->forEdition($edition)->cancelled()->create([
+            'ticket_type_id' => $type->getKey(),
+            'member_count' => 0,
+            'standard_count' => 6,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeText(__('admin.capacity.remaining', ['count' => 10]), false);
+    }
+
+    public function test_the_dashboard_groups_buyers_by_country_for_the_current_edition_only(): void
+    {
+        $edition = $this->edition();
+
+        $morocco = Country::query()->create([
+            'iso2' => 'MA', 'iso3' => 'MAR',
+            'name_fr' => 'Maroc', 'name_en' => 'Morocco', 'name_ar' => 'المغرب',
+            'is_active' => true,
+        ]);
+        $atlantis = Country::query()->create([
+            'iso2' => 'ZZ', 'iso3' => 'ZZZ',
+            'name_fr' => 'Atlantide', 'name_en' => 'Atlantis', 'name_ar' => 'أطلانطس',
+            'is_active' => true,
+        ]);
+
+        $buyer = User::factory()->create(['country_id' => $morocco->getKey()]);
+        Order::factory()->forEdition($edition)->paid()->forUser($buyer)->create();
+
+        // A paid order from a previous edition must not leak into this panel.
+        $past = $this->pastEdition();
+        $pastBuyer = User::factory()->create(['country_id' => $atlantis->getKey()]);
+        Order::factory()->forEdition($past)->paid()->forUser($pastBuyer)->create();
+
+        // Operators read the country name in their own working language.
+        $admin = User::factory()->admin()->create(['locale' => 'fr']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeText('Maroc')
+            ->assertDontSeeText('Atlantide');
+    }
+
+    public function test_the_dashboard_trend_counts_registrations(): void
+    {
+        $edition = $this->edition();
+
+        Order::factory()->forEdition($edition)->paid()->create();
+        Order::factory()->forEdition($edition)->create();
+
+        // The trend counts every order placed, paid or not: the run-up is the
+        // funnel, and the paid line is drawn separately beside it.
+        $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeText(__('admin.trend.total', ['count' => 2]), false);
     }
 
     // --- Orders -------------------------------------------------------------

@@ -130,11 +130,9 @@ final class Money
     /** ISO-4217 numeric code required by the CMI gateway. */
     public static function numericCode(string $currency): string
     {
-        return match (strtoupper($currency)) {
-            'MAD' => (string) config('cmi.currency_mad', 504),
-            'USD' => (string) config('cmi.currency_usd', 978),
-            'EUR' => (string) config('cmi.currency_eur', 978),
-            default => (string) config('cmi.currency_mad', 504),
-        };
+        $currency = strtoupper($currency);
+
+        return (string) (config("cmi.currencies.{$currency}.numeric")
+            ?? config('cmi.currencies.MAD.numeric', '504'));
     }
 }

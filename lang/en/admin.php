@@ -53,9 +53,48 @@ return [
         'paid_orders' => 'of which paid',
         'participants' => 'Attendees',
         'checked_in' => 'checked in at the desk',
+        'paid_rate' => 'Paid rate',
+        'paid_rate_hint' => ':paid of :total registrations',
+        'average_order' => 'Average order',
     ],
 
     'revenue' => 'Takings',
+
+    // --- Registrations over time -------------------------------------------
+    'trend' => [
+        'title' => 'Registrations over time',
+        'legend_orders' => 'Registrations',
+        'legend_paid' => 'Paid',
+        'total' => ':count registrations in total',
+        'empty' => 'No registrations yet.',
+    ],
+
+    // --- Member / non-member split -----------------------------------------
+    'members' => [
+        'title' => 'Members and non-members',
+        'member' => 'Members',
+        'standard' => 'Non-members',
+        'summary' => ':member members · :standard non-members',
+        'none' => 'No places sold yet.',
+    ],
+
+    // --- Capacity per tariff -----------------------------------------------
+    'capacity' => [
+        'title' => 'Capacity by tariff',
+        'sold' => ':sold sold',
+        'sold_of' => ':sold / :max places',
+        'remaining' => ':count places left',
+        'full' => 'Full',
+        'unlimited' => 'Unlimited',
+        'empty' => 'No tariff defined for this edition.',
+    ],
+
+    // --- Where buyers come from --------------------------------------------
+    'countries' => [
+        'title' => 'Where buyers come from',
+        'registrations' => 'Registrations',
+        'empty' => 'No origin to show yet.',
+    ],
 
     // --- Places sold per tariff --------------------------------------------
     'sales' => [

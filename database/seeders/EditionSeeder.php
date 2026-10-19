@@ -601,7 +601,7 @@ Facing the rise of artificial intelligence, cyber threats and economic and socia
                 'price_member' => 75000,
                 'price_standard' => 85000,
                 'currency' => 'USD',
-                'currency_numeric' => 978,
+                'currency_numeric' => 840,
                 'sort_order' => 2,
             ],
         ];

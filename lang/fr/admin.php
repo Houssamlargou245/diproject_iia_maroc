@@ -68,9 +68,48 @@ return [
         'paid_orders' => 'dont payées',
         'participants' => 'Participants',
         'checked_in' => 'présents à l\'accueil',
+        'paid_rate' => 'Taux de paiement',
+        'paid_rate_hint' => ':paid sur :total inscriptions',
+        'average_order' => 'Panier moyen',
     ],
 
     'revenue' => 'Encaissements',
+
+    // --- Registrations over time -------------------------------------------
+    'trend' => [
+        'title' => 'Inscriptions dans le temps',
+        'legend_orders' => 'Inscriptions',
+        'legend_paid' => 'Payées',
+        'total' => ':count inscriptions au total',
+        'empty' => 'Aucune inscription pour le moment.',
+    ],
+
+    // --- Member / non-member split -----------------------------------------
+    'members' => [
+        'title' => 'Adhérents et non-adhérents',
+        'member' => 'Adhérents',
+        'standard' => 'Non-adhérents',
+        'summary' => ':member adhérents · :standard non-adhérents',
+        'none' => 'Aucune place vendue pour le moment.',
+    ],
+
+    // --- Capacity per tariff -----------------------------------------------
+    'capacity' => [
+        'title' => 'Remplissage par tarif',
+        'sold' => ':sold vendues',
+        'sold_of' => ':sold / :max places',
+        'remaining' => ':count places restantes',
+        'full' => 'Complet',
+        'unlimited' => 'Sans limite',
+        'empty' => 'Aucun tarif défini pour cette édition.',
+    ],
+
+    // --- Where buyers come from --------------------------------------------
+    'countries' => [
+        'title' => 'Provenance des acheteurs',
+        'registrations' => 'Inscriptions',
+        'empty' => 'Aucune provenance à afficher pour le moment.',
+    ],
 
     // --- Places sold per tariff --------------------------------------------
     'sales' => [

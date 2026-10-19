@@ -28,8 +28,8 @@ class NewsletterController extends Controller
             ['email' => ['required', 'email:rfc', 'max:190']],
             [
                 'email.required' => __('footer.newsletter_err_required'),
-                'email.email'    => __('footer.newsletter_err_invalid'),
-                'email.max'      => __('footer.newsletter_err_invalid'),
+                'email.email' => __('footer.newsletter_err_invalid'),
+                'email.max' => __('footer.newsletter_err_invalid'),
             ]
         );
 
@@ -41,7 +41,7 @@ class NewsletterController extends Controller
             return redirect()->to($this->backUrl())->withErrors($validator, 'newsletter');
         }
 
-        $locale     = app()->getLocale();
+        $locale = app()->getLocale();
         $subscriber = NewsletterSubscriber::firstOrNew([
             'email' => $validator->validated()['email'],
         ]);
@@ -60,10 +60,10 @@ class NewsletterController extends Controller
             // New, pending (resend) or previously unsubscribed (re-opt-in).
             // Consent evidence is refreshed every time the person opts in again.
             $subscriber->fill([
-                'locale'          => $locale,
-                'status'          => NewsletterSubscriber::STATUS_PENDING,
-                'consent_locale'  => $locale,
-                'consent_ip'      => $request->ip(),
+                'locale' => $locale,
+                'status' => NewsletterSubscriber::STATUS_PENDING,
+                'consent_locale' => $locale,
+                'consent_ip' => $request->ip(),
                 'unsubscribed_at' => null,
             ])->save();
 
@@ -87,7 +87,7 @@ class NewsletterController extends Controller
         }
 
         return redirect()
-            ->to(route('home') . '#newsletter')
+            ->to(route('home').'#newsletter')
             ->with('newsletter_status', __('footer.newsletter_confirmed'));
     }
 
@@ -112,6 +112,6 @@ class NewsletterController extends Controller
     /** Previous page, scrolled back to the newsletter card. */
     private function backUrl(): string
     {
-        return strtok(url()->previous(), '#') . '#newsletter';
+        return strtok(url()->previous(), '#').'#newsletter';
     }
 }

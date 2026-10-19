@@ -62,7 +62,7 @@ class TicketTypeFactory extends Factory
     {
         return $this->state(fn (): array => [
             'currency' => $currency,
-            'currency_numeric' => $currency === 'USD' ? '978' : '504',
+            'currency_numeric' => $currency === 'USD' ? '840' : '504',
             'price_standard' => $standard,
             'price_member' => $member,
         ]);
