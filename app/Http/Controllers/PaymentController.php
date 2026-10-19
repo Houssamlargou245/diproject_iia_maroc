@@ -66,8 +66,7 @@ class PaymentController extends Controller
     'keys' => array_keys($payload),          // which fields actually arrived
     'has_hash' => isset($payload['HASH']),
     'hash_algo' => $payload['hashAlgorithm'] ?? null,
-])
-
+]);
             return $this->cmiProtocol('FAILURE');
         }
 
