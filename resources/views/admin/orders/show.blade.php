@@ -153,18 +153,19 @@
                     <h2 class="admin-card__title">@lang('admin.orders.show.payments')</h2>
                 </div>
                 <div class="admin-card__body">
-                    {{-- Only attempts that actually took the money. A row left in
-                         `pending` with no authorisation code is an unfinished
-                         checkout, not a payment, and listing it beside the real
-                         one is how an operator ends up reading "En cours"
-                         against a customer who has already paid. --}}
-                    @php($payments = $order->payments->filter(fn ($payment) => $payment->isSuccessful()))
-
-                    @if ($payments->isEmpty())
+                    {{-- Every attempt is listed, failed ones included: a failed
+                         attempt carries the gateway's reason, and that is the
+                         only place it survives once the operator has left the
+                         return page. The pill is coloured by whether the
+                         attempt actually took the money, so a `pending` row
+                         that nevertheless carries an authorisation code and a
+                         transaction id reads green — that is the callback that
+                         never landed, not an unfinished checkout. --}}
+                    @if ($order->payments->isEmpty())
                         <p class="admin-meta mb-0">@lang('admin.orders.show.none')</p>
                     @else
                         <ul class="list-unstyled mb-0">
-                            @foreach ($payments as $payment)
+                            @foreach ($order->payments as $payment)
                                 <li class="py-2 border-bottom" style="border-color: rgba(255,255,255,.06) !important;">
                                     {{-- The gateway reference is the join key to
                                          a CMI settlement report, so it is shown

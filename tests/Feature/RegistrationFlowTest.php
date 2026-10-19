@@ -745,6 +745,80 @@ class RegistrationFlowTest extends TestCase
         $this->assertNotSame(OrderStatus::Paid, $order->refresh()->status);
     }
 
+    public function test_a_pending_payment_is_only_successful_with_the_gateways_own_evidence(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        // A bare `pending` row is an unfinished checkout, not a payment.
+        $bare = $this->recordPayment($order, ['status' => PaymentStatus::Pending->value]);
+        $this->assertFalse($bare->isSuccessful());
+
+        // The authorisation code and transaction id are the gateway's own proof
+        // that the money moved, even when the status never advanced past it.
+        $proven = $this->recordPayment($order, [
+            'status' => PaymentStatus::Pending->value,
+            'auth_code' => '397437',
+            'gateway_transaction_id' => '26292O8XA12513855',
+        ]);
+        $this->assertTrue($proven->isSuccessful());
+
+        $this->assertSame(1, Payment::query()->successful()->count());
+    }
+
+    public function test_an_authorised_order_reads_as_paid_even_before_the_callback_settles_it(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        // The browser return recorded the authorisation; the server-to-server
+        // callback that would have settled the order never landed, so the stored
+        // status is still an in-progress one.
+        $this->recordPayment($order, [
+            'auth_code' => '397437',
+            'gateway_transaction_id' => '26292O8XA12513855',
+        ]);
+
+        $order->refresh();
+
+        $this->assertNotSame(OrderStatus::Paid, $order->status);
+        $this->assertSame(OrderStatus::Paid, $order->effectiveStatus());
+
+        // A cancelled order stays cancelled: that is a deliberate terminal
+        // state, not a callback that failed to arrive.
+        $order->transitionTo(OrderStatus::Cancelled);
+        $this->assertSame(OrderStatus::Cancelled, $order->refresh()->effectiveStatus());
+    }
+
+    public function test_the_reconcile_command_settles_a_stuck_authorised_order(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        $this->recordPayment($order, [
+            'auth_code' => '397437',
+            'gateway_transaction_id' => '26292O8XA12513855',
+        ]);
+
+        // A dry run reports but writes nothing: settling is a decision the
+        // operator gets to look at first.
+        $this->artisan('orders:reconcile')->assertSuccessful();
+        $this->assertNotSame(OrderStatus::Paid, $order->refresh()->status);
+
+        // The explicit run settles the order and issues the invoice.
+        $this->artisan('orders:reconcile', ['--apply' => true])->assertSuccessful();
+
+        $order->refresh();
+
+        $this->assertSame(OrderStatus::Paid, $order->status);
+        $this->assertNotNull($order->paid_at);
+        $this->assertNotNull($order->invoice_number);
+        Mail::assertQueued(OrderStatusChanged::class);
+    }
+
     public function test_a_callback_for_an_unknown_order_is_refused(): void
     {
         $this->post('/payment/cmi/callback', $this->signedCallbackForUuid('00000000-0000-4000-8000-000000000000'));
@@ -1074,6 +1148,22 @@ class RegistrationFlowTest extends TestCase
                 'phone' => '+212600000001',
             ],
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function recordPayment(Order $order, array $attributes = []): Payment
+    {
+        return Payment::query()->create(array_merge([
+            'order_id' => $order->getKey(),
+            'driver' => 'cmi',
+            'idempotency_key' => 'test-'.bin2hex(random_bytes(8)),
+            'status' => PaymentStatus::Pending->value,
+            'amount' => $order->total,
+            'currency' => $order->currency,
+            'currency_numeric' => $order->currency_numeric,
+        ], $attributes));
     }
 
     /** @return array<string, string> */
