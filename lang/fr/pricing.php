@@ -50,6 +50,8 @@ return [
         'or' => 'ou',
         'cta' => 'Je m’inscris',
         'member_only' => 'Réservé aux adhérents IIA Maroc',
+        'currency_label' => 'Devise de paiement',
+        'currency_hint' => 'Le montant débité sur votre carte sera celui de la devise sélectionnée.',
         'note' => 'Les tarifs donnent accès aux deux journées de la conférence, aux interventions et au certificat de participation.',
     ],
 

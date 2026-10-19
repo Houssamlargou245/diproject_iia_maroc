@@ -105,36 +105,56 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
             <x-empty-state :message="__('state.empty')" icon="fas fa-tags" />
             @else
             @php
-            // Only ONE pair of cards (member / non-member): the MAD ticket is the reference,
-            // the USD amount is shown as a second line inside each card.
-            $primaryType = $ticketTypes->first(function ($t) {
-            return stripos((string) $t->formatAmount($t->priceFor(false)), 'MAD') !== false;
-            }) ?? $ticketTypes->first();
+            // Two currencies are on sale. MAD is the local default; USD is the
+            // alternative. Both are real tariffs, so the toggle only swaps which
+            // one a card shows and submits — the figure displayed is always the
+            // figure that travels with the order to the gateway.
+            $typesByCurrency = $ticketTypes->keyBy(fn ($t) => strtoupper((string) $t->currency));
+            $displayTypes = $typesByCurrency->sortBy(fn ($t, $code) => $code === 'MAD' ? 0 : 1);
+            $defaultCurrency = $displayTypes->keys()->first();
             @endphp
 
-            @foreach ([$primaryType] as $type)
+            @if ($displayTypes->count() > 1)
+            <div class="reg-currency" role="radiogroup" aria-label="{{ __('pricing.tariffs.currency_label') }}">
+                @foreach ($displayTypes as $code => $type)
+                <label class="reg-currency__opt">
+                    <input type="radio" name="currency_pref" value="{{ $code }}"
+                        data-currency-radio @checked($code === $defaultCurrency)>
+                    <span>{{ $code }}</span>
+                </label>
+                @endforeach
+            </div>
+            @endif
 
             <div class="reg-prices">
-                {{-- First card = member rate, second = non-member rate.
-                             The server still decides which rate is really charged. --}}
+                {{-- First card = member rate, second = non-member rate. Each card
+                             carries one body per currency; the server still decides which
+                             rate is really charged. --}}
                 @foreach ([true, false] as $memberCard)
                 @php
-                $amount = $type->priceFor($memberCard);
-                $label = trim((string) $type->formatAmount($amount));
+                // One entry per currency on sale: the figure, its code, and the
+                // "or X" line quoting the other currency from its own tariff
+                // rather than a converted rate, which would drift from the price
+                // the buyer is actually offered.
+                $panels = [];
+                foreach ($displayTypes as $code => $t) {
+                $parts = $t->amountParts($t->priceFor($memberCard));
 
-                // "7 500 MAD" -> figure "7 500" + currency "MAD"
-                $figure = $label; $currency = null;
-                if (preg_match('/^([\d\s\x{00A0}\x{202F}.,]+?)\s*([^\d\s.,][^\d]*)$/u', $label, $m)) {
-                $figure = trim($m[1]); $currency = trim($m[2]);
+                $alt = null;
+                foreach ($displayTypes as $otherCode => $other) {
+                if ($otherCode !== $code) {
+                $otherParts = $other->amountParts($other->priceFor($memberCard));
+                $alt = $otherParts['amount'].' '.$otherParts['currency'];
+                break;
+                }
                 }
 
-                // Second currency line ("ou 750 USD")
-                $usd = null;
-                if (method_exists($type, 'formatAmountUsd')) {
-                $usd = $type->formatAmountUsd($amount);
-                } elseif ($currency && strtoupper($currency) === 'MAD' && $madPerUsd > 0) {
-                $digits = preg_replace('/\D/', '', preg_replace('/[.,]\d{1,2}$/', '', $figure));
-                $usd = number_format(((float) $digits) / $madPerUsd, 0, ',', "\u{202F}") . ' USD';
+                $panels[$code] = [
+                'type' => $t,
+                'figure' => $parts['amount'],
+                'currency' => $parts['currency'],
+                'alt' => $alt,
+                ];
                 }
                 @endphp
 
@@ -148,14 +168,16 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
                     <p class="reg-price__badge"><i class="fas fa-star" aria-hidden="true"></i> {{ __('pricing.tariffs.member_badge') }}</p>
                     @endif
 
-                    <div class="reg-price__body">
+                    @foreach ($panels as $code => $panel)
+                    <div class="reg-price__body" data-currency-panel="{{ $code }}"
+                        @unless ($code === $defaultCurrency) hidden @endunless>
                         <p class="reg-price__amount" dir="ltr">
-                            <span class="reg-price__figure">{{ $figure }}</span>
-                            @if ($currency)<span class="reg-price__currency">{{ $currency }}</span>@endif
+                            <span class="reg-price__figure">{{ $panel['figure'] }}</span>
+                            <span class="reg-price__currency">{{ $panel['currency'] }}</span>
                         </p>
 
-                        @if ($usd)
-                        <p class="reg-price__alt" dir="ltr">{{ __('pricing.tariffs.or') }} {{ $usd }}</p>
+                        @if ($panel['alt'])
+                        <p class="reg-price__alt" dir="ltr">{{ __('pricing.tariffs.or') }} {{ $panel['alt'] }}</p>
                         @endif
 
                         @if (! $registrationOpen)
@@ -180,7 +202,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
                         @else
                         <form method="POST" action="{{ route('cart.store') }}">
                             @csrf
-                            <input type="hidden" name="ticket_type_id" value="{{ $type->id }}">
+                            <input type="hidden" name="ticket_type_id" value="{{ $panel['type']->id }}">
                             <input type="hidden" name="quantity" value="1">
                             <input type="hidden" name="member_quantity" value="{{ $memberCard ? 1 : 0 }}">
                             <button type="submit" class="reg-btn {{ $memberCard ? 'reg-btn--solid' : 'reg-btn--outline' }}">
@@ -189,10 +211,14 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
                         </form>
                         @endif
                     </div>
+                    @endforeach
                 </article>
                 @endforeach
             </div>
-            @endforeach
+
+            @if ($displayTypes->count() > 1)
+            <p class="reg-currency__hint">{{ __('pricing.tariffs.currency_hint') }}</p>
+            @endif
             @endif
 
             <p class="reg-note">{{ __('pricing.tariffs.note') }}</p>
@@ -327,6 +353,22 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
             var show = input.type === 'password';
             input.type = show ? 'text' : 'password';
             btn.querySelector('i').className = show ? 'far fa-eye-slash' : 'far fa-eye';
+        });
+    });
+
+    // Currency toggle. Both currencies' amounts and forms are already in the
+    // DOM, so switching is only a matter of showing the panel whose
+    // `data-currency-panel` matches the checked radio. No amount is recomputed
+    // in the browser: the figure shown is the figure the server rendered for the
+    // ticket the form will submit.
+    document.querySelectorAll('[data-currency-radio]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (!radio.checked) {
+                return;
+            }
+            document.querySelectorAll('[data-currency-panel]').forEach(function(panel) {
+                panel.hidden = panel.getAttribute('data-currency-panel') !== radio.value;
+            });
         });
     });
 </script>
@@ -723,7 +765,65 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
     }
 
     @media (max-width: 767.98px) {
-        .reg-prices {
+    /* ------------------------------------------------------------ currency */
+    .reg-currency {
+        background: #eef0fe;
+        border: 1px solid #d3d9f4;
+        border-radius: 999px;
+        display: flex;
+        gap: .3rem;
+        margin: 0 auto var(--sp-4);
+        padding: .28rem;
+        width: fit-content;
+    }
+
+    .reg-currency__opt {
+        cursor: pointer;
+        display: inline-flex;
+        position: relative;
+    }
+
+    .reg-currency__opt input {
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        width: 1px;
+    }
+
+    .reg-currency__opt span {
+        align-items: center;
+        border-radius: 999px;
+        color: var(--g-indigo);
+        display: inline-flex;
+        font-size: .82rem;
+        font-weight: 800;
+        justify-content: center;
+        letter-spacing: .05em;
+        min-width: 4.6rem;
+        padding: .5rem 1.15rem;
+        transition: background-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+    }
+
+    .reg-currency__opt input:checked+span {
+        background: linear-gradient(135deg, #2f27b8 0%, #231a9a 100%);
+        color: #fff;
+    }
+
+    .reg-currency__opt input:focus-visible+span {
+        outline: 3px solid rgb(115 132 255 / 55%);
+        outline-offset: 2px;
+    }
+
+    .reg-currency__hint {
+        color: var(--g-ink);
+        font-size: var(--t-xs);
+        margin: 0 auto var(--sp-4);
+        max-width: 52rem;
+        text-align: center;
+    }
+
+    .reg-prices {
             grid-template-columns: 1fr;
         }
     }
@@ -1331,7 +1431,8 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
     @media (prefers-reduced-motion: reduce) {
 
         .reg-btn,
-        .reg-member__cta {
+        .reg-member__cta,
+        .reg-currency__opt span {
             transition: none;
         }
 

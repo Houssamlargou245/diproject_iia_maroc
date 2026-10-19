@@ -50,6 +50,8 @@ return [
         'or' => 'or',
         'cta' => 'Register',
         'member_only' => 'Reserved for IIA Morocco members',
+        'currency_label' => 'Payment currency',
+        'currency_hint' => 'The amount charged to your card will be in the selected currency.',
         'note' => 'Fees give access to both conference days, the sessions and the certificate of participation.',
     ],
 
