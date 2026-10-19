@@ -53,7 +53,7 @@ class CmiGateway implements PaymentGateway
             'amount' => $this->toMajorUnitsString($settlement['minor'], $settlement['currency']),
             'currency' => $this->numericCurrency($settlement['currency']),
             'storetype' => (string) config('cmi.store_type', '3D_PAY_HOSTING'),
-            'TranType' => (string) config('cmi.trans_type', 'Auth'),
+            'TranType' => (string) config('cmi.trans_type', 'PreAuth'),
             'okUrl' => $returnUrl,
             'failUrl' => $cancelUrl,
             'callbackUrl' => url('/payment/cmi/callback'),
@@ -61,13 +61,17 @@ class CmiGateway implements PaymentGateway
             'lang' => $this->gatewayLanguage(),
             'hashAlgorithm' => 'ver3',
             'encoding' => 'UTF-8',
+            'sessionTimeout' => (string) config('cmi.session_timeout', '1800'),
             // Unique per attempt: order uuid (36 chars) + "-" + hex timestamp.
             'oid' => $order->uuid.'-'.dechex(time()),
             'rnd' => bin2hex(random_bytes(8)),
             'BillToName' => $this->billToName($order),
-            'BillToEmail' => (string) ($billing['email'] ?? $order->user?->email ?? ''),
-            'BillToStreet1' => (string) ($billing['address'] ?? ''),
-            'BillToCity' => (string) ($billing['city'] ?? ''),
+            'email' => (string) ($billing['email'] ?? $order->user?->email ?? ''),
+            'BillToCompany' => (string) ($billing['company'] ?? '-'),
+            'BillToStreet1' => (string) ($billing['address'] ?? '-'),
+            'BillToCity' => (string) ($billing['city'] ?? '-'),
+            'BillToStateProv' => (string) ($billing['state'] ?? '-'),
+            'BillToPostalCode' => (string) ($billing['postal_code'] ?? '-'),
             'BillToCountry' => (string) ($billing['country_iso2'] ?? ''),
             'tel' => (string) ($billing['phone'] ?? $order->user?->phone ?? ''),
         ];
@@ -84,7 +88,7 @@ class CmiGateway implements PaymentGateway
         $fields['HASH'] = $this->hasher->hash($fields, (string) config('cmi.store_key'));
 
         // TEMPORARY: remove once payments work. Contains no secret.
-        // \Log::info('cmi.out', collect($fields)->except('HASH')->all());
+        \Log::info('cmi.out', collect($fields)->except('HASH')->all());
 
         return [
             'gateway_url' => (string) config('cmi.gateway_url'),
