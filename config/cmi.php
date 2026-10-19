@@ -49,6 +49,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Payment-page session
+    |--------------------------------------------------------------------------
+    |
+    | `session_timeout` is how long the CMI payment page stays valid before the
+    | customer must restart the payment. CMI accepts 30 to 2700 seconds and the
+    | documented default is 1800. Leaving the field out entirely makes CMI apply
+    | a zero-length session, which is surfaced as "Transaction expiré. Merci
+    | d'essayer à nouveau (99)" as soon as the page opens.
+    |
+    | `callback_response` makes CMI perform the server-to-server confirmation
+    | POST to `callbackUrl`. Without it no callback is ever sent, so no order is
+    | ever settled even after a successful authorisation.
+    |
+    */
+
+    'session_timeout' => (int) env('CMI_SESSION_TIMEOUT', 1800),
+    'callback_response' => env('CMI_CALLBACK_RESPONSE', 'true'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Currencies
     |--------------------------------------------------------------------------
     |

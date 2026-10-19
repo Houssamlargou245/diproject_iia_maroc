@@ -7,7 +7,6 @@ namespace App\Services\Payment;
 use App\Exceptions\PaymentException;
 use App\Models\Order;
 use App\Support\Money;
-use RuntimeException;
 
 /**
  * A local stand-in for the real gateway.
@@ -46,7 +45,7 @@ class TestGateway implements PaymentGateway
         $fields = [
             'clientid' => 'TESTMERCHANT',
             'amount' => (string) intdiv($order->total, $divisor),
-            'currency' => (string) (config("cmi.currencies.".strtoupper($currency).'.numeric') ?? '504'),
+            'currency' => (string) (config('cmi.currencies.'.strtoupper($currency).'.numeric') ?? '504'),
             'storetype' => (string) config('cmi.store_type', '3D_PAY_HOSTING'),
             'TranType' => (string) config('cmi.trans_type', 'PreAuth'),
             'okUrl' => $returnUrl,
@@ -54,9 +53,12 @@ class TestGateway implements PaymentGateway
             'callbackUrl' => url('/payment/cmi/callback'),
             'shopurl' => rtrim((string) config('app.url'), '/'),
             'lang' => app()->getLocale(),
-            'refreshtime' => '5',
             'hashAlgorithm' => 'ver3',
             'encoding' => 'UTF-8',
+            // Kept identical to the real driver so the two hand-offs differ
+            // only by destination, which is the whole point of this stand-in.
+            'sessionTimeout' => (string) config('cmi.session_timeout', '1800'),
+            'callbackResponse' => (string) config('cmi.callback_response', 'true'),
             'oid' => $order->uuid,
             'rnd' => bin2hex(random_bytes(8)),
             'BillToName' => (string) ($order->billing['first_name'] ?? $order->user?->displayName() ?? ''),

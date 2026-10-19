@@ -88,9 +88,18 @@ class CmiGateway implements PaymentGateway
             'callbackUrl' => url('/payment/cmi/callback'),
             'shopurl' => rtrim((string) config('app.url'), '/'),
             'lang' => $this->gatewayLanguage(),
-            'refreshtime' => '5',
             'hashAlgorithm' => 'ver3',
             'encoding' => 'UTF-8',
+            // How long the payment page stays valid before the customer has to
+            // restart. CMI's own store accepts 30–2700 seconds; omitting it
+            // leaves CMI with a zero-length session, which the customer sees as
+            // "Transaction expiré. Merci d'essayer à nouveau (99)" the moment
+            // the page opens.
+            'sessionTimeout' => (string) config('cmi.session_timeout', '1800'),
+            // Ask CMI to run the server-to-server confirmation POST. Without
+            // this the callback — the only thing that settles an order — is
+            // never sent, and every order stays "awaiting payment".
+            'callbackResponse' => (string) config('cmi.callback_response', 'true'),
             // `oid` must be unique per transaction. The order's uuid is used
             // rather than its autoincrement id so a response cannot be used to
             // count orders.

@@ -44,8 +44,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // signature instead, which PaymentController verifies before acting on
         // anything. Excluding it narrowly — by path, not wholesale — keeps
         // CSRF protection on every other POST in the application.
+        //
+        // The browser return/abandon pages are exempted for the same reason:
+        // CMI posts the result to okUrl/failUrl, and that body is verified by
+        // the gateway signature before it is read. Neither path settles an
+        // order, so a forged POST there cannot mark anything paid.
         $middleware->validateCsrfTokens(except: [
             'payment/cmi/callback',
+            'paiement/retour/*',
+            '*/paiement/retour/*',
+            'paiement/annule/*',
+            '*/paiement/annule/*',
         ]);
 
         $middleware->alias([

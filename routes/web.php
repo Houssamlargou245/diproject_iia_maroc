@@ -368,11 +368,15 @@ Route::middleware('auth')->group(function () use ($page): void {
     Route::post('/commande/{order}/annuler', [OrderController::class, 'cancel'])->name('orders.cancel.ar');
     Route::post('/{locale?}/commande/{order}/annuler', [OrderController::class, 'cancel'])->name('orders.cancel');
 
-    Route::get('/paiement/retour/{order}', [PaymentController::class, 'return'])->name('payment.return.ar');
-    Route::get('/{locale?}/paiement/retour/{order}', [PaymentController::class, 'return'])->name('payment.return');
+    // CMI posts the result to okUrl/failUrl as well as to the server-to-server
+    // callback, so both verbs are accepted here. The payload is verified by
+    // signature before it is read, and this path never settles an order — the
+    // callback does — so accepting a POST costs nothing.
+    Route::match(['get', 'post'], '/paiement/retour/{order}', [PaymentController::class, 'return'])->name('payment.return.ar');
+    Route::match(['get', 'post'], '/{locale?}/paiement/retour/{order}', [PaymentController::class, 'return'])->name('payment.return');
 
-    Route::get('/paiement/annule/{order}', [PaymentController::class, 'cancel'])->name('payment.cancel.ar');
-    Route::get('/{locale?}/paiement/annule/{order}', [PaymentController::class, 'cancel'])->name('payment.cancel');
+    Route::match(['get', 'post'], '/paiement/annule/{order}', [PaymentController::class, 'cancel'])->name('payment.cancel.ar');
+    Route::match(['get', 'post'], '/{locale?}/paiement/annule/{order}', [PaymentController::class, 'cancel'])->name('payment.cancel');
 });
 
 // The CMI server-to-server callback. Deliberately NOT localised and NOT behind

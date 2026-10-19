@@ -597,6 +597,13 @@ class RegistrationFlowTest extends TestCase
         $this->assertStringContainsString('name="oid"', $content);
         $this->assertStringContainsString($order->uuid, $content);
 
+        // CMI reads a missing session lifetime as a zero-length session and
+        // shows "Transaction expiré. Merci d'essayer à nouveau (99)" the moment
+        // the payment page opens. `refreshtime` was never part of the contract.
+        $this->assertStringContainsString('name="sessionTimeout" value="1800"', $content);
+        $this->assertStringContainsString('name="callbackResponse"', $content);
+        $this->assertStringNotContainsString('name="refreshtime"', $content);
+
         $this->assertSame(OrderStatus::AwaitingPayment, $order->refresh()->status);
     }
 
