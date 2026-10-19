@@ -986,6 +986,24 @@ class RegistrationFlowTest extends TestCase
         $this->assertFalse($hasher->verify($params, 'secret', ''));
     }
 
+    public function test_response_verification_decodes_html_entities_before_signing(): void
+    {
+        $hasher = new CmiHasher;
+
+        // A response carries values CMI HTML-encoded on the way out, but the
+        // gateway signed the decoded form: `&amp;` arrives while the hash was
+        // computed over `&`. Verifying the raw value would reject every
+        // callback whose payload holds an entity, which surfaces to the
+        // customer as CMI's "vérifiez avec votre marchand" page.
+        $hash = $hasher->hash(['BillToName' => 'Tom & Jerry'], 'secret');
+
+        $this->assertTrue($hasher->verify(['BillToName' => 'Tom &amp; Jerry'], 'secret', $hash));
+
+        // And the entity really is why: signing the raw, still-encoded value
+        // yields a different digest, so without the decode this would be a miss.
+        $this->assertNotSame($hasher->hash(['BillToName' => 'Tom &amp; Jerry'], 'secret'), $hash);
+    }
+
     public function test_the_real_gateway_refuses_to_run_without_credentials(): void
     {
         config()->set('cmi.merchant_id', null);

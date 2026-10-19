@@ -7,6 +7,7 @@ namespace App\Services\Payment;
 use App\Exceptions\PaymentException;
 use App\Models\Order;
 use App\Support\Money;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 /**
@@ -119,6 +120,17 @@ class CmiGateway implements PaymentGateway
             (string) config('cmi.store_key'),
             is_string($received) ? $received : null,
         )) {
+            // TEMPORARY: remove once the gateway round trip is confirmed. A
+            // rejected signature is otherwise undiagnosable — the payload and
+            // both digests are needed to see which value the two sides signed
+            // differently. No card number is present; CMI sends only the masked
+            // form, and the store key itself is never logged.
+            Log::warning('cmi.signature_mismatch', [
+                'fields' => collect($payload)->except(['HASH', 'hash', 'Hash'])->all(),
+                'computed' => $this->hasher->hash($payload, (string) config('cmi.store_key')),
+                'received' => is_string($received) ? $received : null,
+            ]);
+
             throw PaymentException::invalidSignature();
         }
 

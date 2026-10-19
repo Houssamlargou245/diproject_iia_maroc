@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Services\Payment\CmiHasher;
+use App\Support\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,14 +15,15 @@ class CmiCallbackTest extends TestCase
     private function signedPayload(Order $order, array $overrides = []): array
     {
         $fields = array_merge([
-            'clientid'       => config('cmi.merchant_id'),
-            'oid'            => $order->uuid.'-'.dechex(time()),
-            'amount'         => '1',            // must equal the order total in MAD
+            'clientid' => config('cmi.merchant_id'),
+            'oid' => $order->uuid.'-'.dechex(time()),
+            // The signed amount must be the order's own total, in major units.
+            'amount' => (string) intdiv($order->total, 10 ** Money::exponent((string) $order->currency)),
             'ProcReturnCode' => '00',
-            'Response'       => 'Approved',
-            'TransId'        => 'TEST123456',
-            'AuthCode'       => '123456',
-            'MaskedPan'      => '5200 00** **** 1111',
+            'Response' => 'Approved',
+            'TransId' => 'TEST123456',
+            'AuthCode' => '123456',
+            'MaskedPan' => '5200 00** **** 1111',
         ], $overrides);
 
         $fields['HASH'] = app(CmiHasher::class)->hash($fields, (string) config('cmi.store_key'));
@@ -31,8 +33,8 @@ class CmiCallbackTest extends TestCase
 
     public function test_valid_callback_is_acknowledged(): void
     {
-        config(['cmi.merchant_id' => 'TEST', 'cmi.store_key' => 'secret']);
-        $order = Order::factory()->create(); // adjust: total must match 'amount'
+        config(['cmi.merchant_id' => 'TEST', 'cmi.store_key' => 'secret', 'cmi.trans_type' => 'PreAuth']);
+        $order = Order::factory()->create();
 
         $this->post('/payment/cmi/callback', $this->signedPayload($order))
             ->assertOk()

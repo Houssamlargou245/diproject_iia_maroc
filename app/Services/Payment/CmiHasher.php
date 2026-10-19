@@ -16,9 +16,17 @@ namespace App\Services\Payment;
  */
 class CmiHasher
 {
+    /**
+     * Sign an outgoing request.
+     *
+     * The value transform here is `trim()` alone, matching the request side of
+     * the 2024 implementation (`cmi/SendData.php`) and, in practice, accepted by
+     * CMI. The response side is different: CMI HTML-encodes some echoed values,
+     * so verification decodes before hashing — see `verify()`.
+     */
     public function hash(array $fields, string $storeKey): string
     {
-        return base64_encode(hash('sha512', $this->plainText($fields, $storeKey), true));
+        return $this->digest($fields, $storeKey, decode: false);
     }
 
     public function verify(array $fields, string $storeKey, ?string $received): bool
@@ -27,7 +35,7 @@ class CmiHasher
             return false;
         }
 
-        return hash_equals($this->hash($fields, $storeKey), $received);
+        return hash_equals($this->digest($fields, $storeKey, decode: true), $received);
     }
 
     /**
@@ -39,12 +47,17 @@ class CmiHasher
      *
      * @param  array<string, mixed>  $fields
      */
-    public function canonicalise(array $fields, string $storeKey): string
+    public function canonicalise(array $fields, string $storeKey, bool $decode = false): string
     {
-        return $this->plainText($fields, $storeKey);
+        return $this->plainText($fields, $storeKey, $decode);
     }
 
-    private function plainText(array $fields, string $storeKey): string
+    private function digest(array $fields, string $storeKey, bool $decode): string
+    {
+        return base64_encode(hash('sha512', $this->plainText($fields, $storeKey, $decode), true));
+    }
+
+    private function plainText(array $fields, string $storeKey, bool $decode): string
     {
         $keys = array_keys($fields);
         natcasesort($keys);
@@ -61,7 +74,13 @@ class CmiHasher
             $value = $fields[$key];
             $value = is_scalar($value) || $value === null ? (string) $value : '';
 
-            $plain .= $this->escape(trim($value)).'|';
+            // A response carries values CMI HTML-encoded when they were echoed
+            // back; the 2024 verifier decoded them before signing and the
+            // gateway hashes the decoded form, so we must do the same or every
+            // callback whose payload holds an entity is rejected.
+            $value = trim($decode ? html_entity_decode($value, ENT_QUOTES, 'UTF-8') : $value);
+
+            $plain .= $this->escape($value).'|';
         }
 
         return $plain.$this->escape($storeKey);
