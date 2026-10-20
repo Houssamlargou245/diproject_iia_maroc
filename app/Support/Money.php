@@ -83,6 +83,31 @@ final class Money
     }
 
     /**
+     * Minor units as a plain decimal string, for a machine reader.
+     *
+     * A gateway field or a CSV cell needs `8500.50`, not the grouped, locale
+     * marked form `format()` produces — and it needs the fraction only when
+     * there is one, because CMI reads a trailing `.00` as a non-conforming
+     * amount and refuses the transaction.
+     */
+    public static function decimal(int $minorUnits, string $currency = 'MAD'): string
+    {
+        $exponent = self::exponent($currency);
+        $divisor = 10 ** $exponent;
+
+        $sign = $minorUnits < 0 ? '-' : '';
+        $absolute = abs($minorUnits);
+        $whole = intdiv($absolute, $divisor);
+        $cents = $absolute % $divisor;
+
+        if ($cents === 0) {
+            return $sign.$whole;
+        }
+
+        return $sign.$whole.'.'.str_pad((string) $cents, $exponent, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Parse a human-entered amount ("7 500", "7,500.00", "7500") into minor
      * units. Returns null when the input is not a usable number, so a bad form
      * entry surfaces as a validation error rather than a silently wrong price.

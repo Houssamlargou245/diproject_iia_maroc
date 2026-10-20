@@ -41,6 +41,7 @@ class PaymentSettlementService
 {
     public function __construct(
         private readonly InvoiceService $invoices,
+        private readonly SettlementPlan $plan,
     ) {}
 
     /**
@@ -101,9 +102,15 @@ class PaymentSettlementService
             //
             // A signature proves the payload came from the gateway; it does
             // not prove the gateway processed the amount *we* asked for. If the
-            // signed amount is not the order's own total, the transaction is
-            // not one we may settle — and accepting it would let a customer
-            // pay 100 MAD against a 7 500 MAD order and receive a place.
+            // signed amount is not the one this order was sent out to be
+            // charged, the transaction is not one we may settle — and
+            // accepting it would let a customer pay 100 against a 7 500 place.
+            //
+            // The comparison runs in the settlement currency, because that is
+            // the figure CMI signs: a store contracted to MAD-only settles a
+            // 750 USD order by charging 7 500 MAD, and reading that `amount`
+            // back as USD (or against `$order->total`) rejects a payment that
+            // was processed correctly.
             //
             // Living in the settlement service rather than in CmiGateway is
             // deliberate: a check that only the production driver performs is
@@ -111,12 +118,11 @@ class PaymentSettlementService
             // test driver ends up validating a path the real gateway never
             // takes.
             if (isset($payload['amount'])) {
-                $claimed = (int) round(
-                    ((float) $payload['amount']) * (10 ** Money::exponent((string) $order->currency))
-                );
+                $settlement = $this->plan->forOrder($order);
+                $claimed = Money::parse((string) $payload['amount'], $settlement['currency']) ?? 0;
 
-                if ($claimed !== $order->total) {
-                    throw PaymentException::amountMismatch($order->total, $claimed);
+                if ($claimed !== $settlement['minor']) {
+                    throw PaymentException::amountMismatch($settlement['minor'], $claimed);
                 }
             }
 

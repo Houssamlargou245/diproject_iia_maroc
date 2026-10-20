@@ -57,6 +57,7 @@ class RegisterController extends Controller
     {
         $user = DB::transaction(function () use ($request): User {
             $user = User::create($request->accountAttributes());
+            
 
             // Consent is recorded at the moment the box was ticked, not when the
             // authenticator was confirmed, so the audit trail shows when the

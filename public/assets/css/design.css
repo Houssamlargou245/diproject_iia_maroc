@@ -598,7 +598,7 @@ background: #fff;
    Latin versions ballooning to the Arabic one's width. */
 .d-header__brand img {
     height: auto;
-    height: 44px;
+    height: 55px;
     max-width: min(230px, 42vw);
     transition: opacity var(--dur-1) var(--ease);
     width: auto;

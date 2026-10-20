@@ -26,6 +26,7 @@ class TestGateway implements PaymentGateway
 {
     public function __construct(
         private readonly CmiHasher $hasher,
+        private readonly SettlementPlan $plan,
     ) {}
 
     /** A key used only to sign the rehearsal, never a production secret. */
@@ -39,13 +40,12 @@ class TestGateway implements PaymentGateway
      */
     public function redirectFor(Order $order, string $returnUrl, string $cancelUrl): array
     {
-        $currency = (string) $order->currency;
-        $divisor = 10 ** Money::exponent($currency);
+        $settlement = $this->plan->forOrder($order);
 
         $fields = [
             'clientid' => 'TESTMERCHANT',
-            'amount' => (string) intdiv($order->total, $divisor),
-            'currency' => (string) (config('cmi.currencies.'.strtoupper($currency).'.numeric') ?? '504'),
+            'amount' => Money::decimal($settlement['minor'], $settlement['currency']),
+            'currency' => Money::numericCode($settlement['currency']),
             'storetype' => (string) config('cmi.store_type', '3D_PAY_HOSTING'),
             'TranType' => (string) config('cmi.trans_type', 'PreAuth'),
             'okUrl' => $returnUrl,
@@ -65,6 +65,13 @@ class TestGateway implements PaymentGateway
             'BillToName' => (string) ($order->billing['first_name'] ?? $order->user?->displayName() ?? ''),
             'tel' => (string) ($order->billing['phone'] ?? ''),
         ];
+
+        // The real driver's conversion display, so a foreign-currency order is
+        // rehearsed with the figures CMI would actually receive.
+        if ($settlement['display'] !== null) {
+            $fields['amountCur'] = Money::decimal($order->total, $settlement['display']);
+            $fields['symbolCur'] = $settlement['display'];
+        }
 
         $fields['HASH'] = $this->hasher->hash($fields, $this->storeKey());
 
@@ -140,11 +147,15 @@ class TestGateway implements PaymentGateway
      */
     public function simulate(Order $order, bool $approved): array
     {
-        $divisor = 10 ** Money::exponent((string) $order->currency);
+        // CMI signs the settlement figure, not the order's own total: a 750 USD
+        // order is charged 7 500 MAD under the store's MAD-only contract, and
+        // the callback carries that MAD amount. Mirroring it is what makes the
+        // rehearsal exercise the same cross-check production does.
+        $settlement = $this->plan->forOrder($order);
 
         $payload = [
             'oid' => $order->uuid,
-            'amount' => (string) intdiv($order->total, $divisor),
+            'amount' => Money::decimal($settlement['minor'], $settlement['currency']),
             'ProcReturnCode' => $approved ? '00' : '05',
             'TransId' => 'TEST'.strtoupper(substr(str_replace('-', '', $order->uuid), 0, 8)),
             'MaskedPan' => $approved ? '************2585' : '',

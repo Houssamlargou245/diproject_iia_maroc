@@ -114,7 +114,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
             $defaultCurrency = $displayTypes->keys()->first();
             @endphp
 
-            @if ($displayTypes->count() > 1)
+            <!-- @if ($displayTypes->count() > 1)
             <div class="reg-currency" role="radiogroup" aria-label="{{ __('pricing.tariffs.currency_label') }}">
                 @foreach ($displayTypes as $code => $type)
                 <label class="reg-currency__opt">
@@ -124,7 +124,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
                 </label>
                 @endforeach
             </div>
-            @endif
+            @endif -->
 
             <div class="reg-prices">
                 {{-- First card = member rate, second = non-member rate. Each card
@@ -215,10 +215,10 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
                 </article>
                 @endforeach
             </div>
-
+<!-- 
             @if ($displayTypes->count() > 1)
             <p class="reg-currency__hint">{{ __('pricing.tariffs.currency_hint') }}</p>
-            @endif
+            @endif -->
             @endif
 
             <p class="reg-note">{{ __('pricing.tariffs.note') }}</p>
