@@ -255,6 +255,44 @@
                             </a>
                         </div>
 
+                                                    <a href="{{ route('account.edit') }}" class="d-btn d-btn--ghost d-btn--block mt-4">
+                                <span>@lang('account.edit_title')</span>
+                            </a>
+                        </div>
+
+                        {{-- ========================================== --}}
+                        {{-- ADD THE PROMO CODE PANEL HERE --}}
+                        {{-- ========================================== --}}
+                        @if ($user->promo_code)
+                        <div class="d-panel">
+                            <h3 class="d-panel__title">@lang('account.promo_title')</h3>
+                            
+                            <p class="d-form-panel__lede">@lang('account.promo_lede')</p>
+                            
+                            <div class="d-flex align-items-center gap-2 mt-3">
+                                <code class="flex-grow-1 px-3 py-2 rounded border font-monospace text-center" 
+                                      style="font-size: 1.1rem; letter-spacing: 0.12em; background-color: var(--bs-tertiary-bg);">
+                                    {{ $user->promo_code }}
+                                </code>
+
+                                <button type="button" 
+                                        class="d-btn d-btn--quiet d-btn--sm" 
+                                        data-promo-code="{{ $user->promo_code }}"
+                                        onclick="
+                                            navigator.clipboard.writeText(this.dataset.promoCode);
+                                            const label = this.querySelector('span');
+                                            const original = label.textContent;
+                                            label.textContent = @js(__('account.promo_copied'));
+                                            setTimeout(() => { label.textContent = original; }, 1500);
+                                        ">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                    <span>@lang('account.promo_copy')</span>
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                        {{-- ========================================== --}}
+
                         {{-- Signing out is its own form at the foot of the page
                              rather than a fourth shortcut row: it is destructive
                              to the session, and a link among three harmless ones

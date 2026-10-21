@@ -76,4 +76,8 @@ return [
     'order_no_places' => 'No places',
     'actions_title' => 'Shortcuts',
     'logout_confirm' => 'Sign out of this device?',
+    'promo_title'  => 'Your promo code',
+    'promo_lede'   => 'Share this code to earn rewards. It stays the same for your whole account.',
+    'promo_copy'   => 'Copy',
+    'promo_copied' => 'Copied!',
 ];
