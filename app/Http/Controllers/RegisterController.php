@@ -11,6 +11,7 @@ use App\Models\Country;
 use App\Models\User;
 use App\Services\Registration\PromoCodeGenerator;
 use App\Services\Security\SecurityEventLogger;
+use App\Notifications\PromoCodeAssigned;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
