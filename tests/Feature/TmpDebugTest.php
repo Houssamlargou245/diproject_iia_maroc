@@ -17,7 +17,18 @@ class TmpDebugTest extends TestCase
     {
         parent::setUp();
         $this->app['env'] = 'local';
-        config(['logging.default' => 'null']);
+        config(['logging.default' => 'single', 'session.driver' => 'database']);
+
+        \Illuminate\Support\Facades\DB::listen(function ($query): void {
+            if (! str_contains($query->sql, 'sessions')) {
+                return;
+            }
+            $trace = [];
+            foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 14) as $frame) {
+                $trace[] = ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'];
+            }
+            \Illuminate\Support\Facades\Log::info('sql', ['sql' => $query->sql, 'trace' => $trace]);
+        });
     }
 
     public function test_debug(): void
@@ -35,6 +46,14 @@ class TmpDebugTest extends TestCase
             'has_session_expired' => $store->get('session_expired'),
             'flash' => $store->get('_flash'),
             'keys' => array_keys($store->all()),
+            'same_as_request' => spl_object_id($store) === spl_object_id(\Illuminate\Support\Facades\Request::instance()->session()),
+        ]);
+
+        $store->save();
+
+        dump([
+            'after_manual_save' => $store->get('session_expired'),
+            'flash_after' => $store->get('_flash'),
         ]);
     }
 }

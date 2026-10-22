@@ -132,10 +132,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            $trace = [];
+            foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 30) as $frame) {
+                $trace[] = ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'];
+            }
             \Illuminate\Support\Facades\Log::info('419-debug', [
                 'has_session' => $request->hasSession(),
                 'flash_bag' => $request->session()->get('_flash'),
                 'store_class' => get_class($request->session()),
+                'trace' => $trace,
             ]);
 
             return redirect()
