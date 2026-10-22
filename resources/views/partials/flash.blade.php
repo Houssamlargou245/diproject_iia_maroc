@@ -12,8 +12,6 @@
     success or failure only if the visitor happens to scroll back up.
 --}}
 
-@php \Illuminate\Support\Facades\Log::info('flash-view', ['session_expired' => session('session_expired'), 'flash' => session('_flash'), 'id' => session()->getId(), 'all' => array_keys(session()->all())]); @endphp
-
 @if (session('session_expired'))
     {{-- The session that held the form went away — usually it expired while
          the page sat open. The form itself is back and usable, so this is a

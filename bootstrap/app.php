@@ -116,6 +116,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // The exception arrives already prepared — Laravel maps a token
         // mismatch to a 419 HttpException before the render callbacks run — so
         // this listens for the status code rather than for the exception class.
+        //
+        // The message is flashed, not written to the session here: the refusal
+        // is raised inside the middleware stack, but the routing pipeline
+        // catches it and lets the stack finish, so the session is written once
+        // the request is done — after this callback has flashed the message.
+        // Saving it here as well would age the flash straight away and the
+        // notice would never reach the page.
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
             if ($e->getStatusCode() !== 419) {
                 return null;
@@ -125,40 +132,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            $response = redirect()
+            \Illuminate\Support\Facades\Log::info('419-debug', [
+                'has_session' => $request->hasSession(),
+                'flash_bag' => $request->session()->get('_flash'),
+                'store_class' => get_class($request->session()),
+            ]);
+
+            return redirect()
                 ->back()
                 ->with('session_expired', true);
-
-            // The session is normally written when the request finishes, but the
-            // refusal is raised from inside the middleware stack: the session
-            // middleware never gets past the request it was handling, so it
-            // neither saves the session nor re-issues its cookie. The notice
-            // would be dropped on the way out, and the visitor would be sent
-            // back to a form with no explanation. Writing the session here is
-            // what carries the message to that page.
-            if ($request->hasSession()) {
-                \Illuminate\Support\Facades\DB::listen(function ($query): void {
-                    \Illuminate\Support\Facades\Log::info('sql-after-419', ['sql' => $query->sql]);
-                });
-                \Illuminate\Support\Facades\Log::info('419-debug', [
-                    'has_session' => true,
-                    'flash' => $request->session()->get('session_expired'),
-                    'id' => $request->session()->getId(),
-                    'flash_bag' => $request->session()->get('_flash'),
-                ]);
-                $request->session()->save();
-                $row = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $request->session()->getId())->first();
-                \Illuminate\Support\Facades\Log::info('419-debug-saved', [
-                    'id' => $request->session()->getId(),
-                    'attributes' => $request->session()->all(),
-                    'row_found' => $row ? 'yes' : 'no',
-                    'row_len' => $row ? strlen((string) $row->payload) : 0,
-                    'row_has_flash' => $row ? (str_contains((string) $row->payload, 'session_expired') ? 'yes' : 'no') : 'n/a',
-                    'row_last_activity' => $row->last_activity ?? null,
-                ]);
-            }
-
-            return $response;
         });
     })->create();
 
