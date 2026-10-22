@@ -76,7 +76,11 @@ class CmiGateway implements PaymentGateway
             'rnd' => bin2hex(random_bytes(8)),
             'BillToName' => $this->billToName($order),
             'email' => (string) ($billing['email'] ?? $order->user?->email ?? ''),
-            'BillToCompany' => (string) ($billing['company'] ?? '-'),
+            // The billing snapshot stores the organisation under
+            // `organisation`; reading `company` here sent every payment with
+            // an empty company, which is one more field the issuer had to
+            // treat as unverifiable.
+            'BillToCompany' => (string) ($billing['organisation'] ?? $billing['company'] ?? '-'),
             'BillToStreet1' => (string) ($billing['address'] ?? '-'),
             'BillToCity' => (string) ($billing['city'] ?? '-'),
             'BillToStateProv' => (string) ($billing['state'] ?? '-'),
@@ -96,8 +100,20 @@ class CmiGateway implements PaymentGateway
 
         $fields['HASH'] = $this->hasher->hash($fields, (string) config('cmi.store_key'));
 
-        // TEMPORARY: remove once payments work. Contains no secret.
-        \Log::info('cmi.out', collect($fields)->except('HASH')->all());
+        // Operational fields only. The request itself carries the payer's
+        // name, email and phone, and this line is read by whoever answers a
+        // payment question — the amount, the currency, the order id and the
+        // country are what a support question is actually answered from.
+        Log::info('cmi.out', [
+            'oid' => $fields['oid'] ?? null,
+            'amount' => $fields['amount'] ?? null,
+            'currency' => $fields['currency'] ?? null,
+            'tran_type' => $fields['TranType'] ?? null,
+            'store_type' => $fields['storetype'] ?? null,
+            'lang' => $fields['lang'] ?? null,
+            'country' => $fields['BillToCountry'] ?? null,
+            'ok_url' => $fields['okUrl'] ?? null,
+        ]);
 
         return [
             'gateway_url' => (string) config('cmi.gateway_url'),
@@ -121,13 +137,19 @@ class CmiGateway implements PaymentGateway
             (string) config('cmi.store_key'),
             is_string($received) ? $received : null,
         )) {
-            // TEMPORARY: remove once the gateway round trip is confirmed. A
-            // rejected signature is otherwise undiagnosable — the payload and
+            // A rejected signature is otherwise undiagnosable: the payload and
             // both digests are needed to see which value the two sides signed
-            // differently. No card number is present; CMI sends only the masked
-            // form, and the store key itself is never logged.
+            // differently. The payer's identity is left out of it — the name,
+            // the email, the phone and the address are redacted, and no card
+            // number is present either, since CMI sends only the masked form
+            // and the store key itself is never logged.
             Log::warning('cmi.signature_mismatch', [
-                'fields' => collect($payload)->except(['HASH', 'hash', 'Hash'])->all(),
+                'fields' => collect($payload)->except([
+                    'HASH', 'hash', 'Hash',
+                    'email', 'tel',
+                    'BillToName', 'BillToCompany', 'BillToStreet1', 'BillToCity',
+                    'BillToStateProv', 'BillToPostalCode',
+                ])->all(),
                 'computed' => $this->hasher->hash($payload, (string) config('cmi.store_key')),
                 'received' => is_string($received) ? $received : null,
             ]);

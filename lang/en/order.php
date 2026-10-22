@@ -24,6 +24,7 @@ return [
     'no_orders' => 'No registrations yet.',
     'pay_now' => 'Pay now',
     'download_invoice' => 'Download invoice',
+    'phone_international' => 'International format, for example +212 6 12 34 56 78 or +966 5 12 34 56 78.',
 
     // --- Checkout ---------------------------------------------------------
     'title' => 'Conference registration',

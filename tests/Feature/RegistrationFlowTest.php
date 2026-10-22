@@ -231,6 +231,30 @@ class RegistrationFlowTest extends TestCase
         $this->assertDatabaseCount('orders', 0);
     }
 
+    public function test_the_billing_country_is_required(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+
+        $this->actingAs($user)->post('/panier', [
+            'ticket_type_id' => $ticket->getKey(),
+            'quantity' => 1,
+            'member_quantity' => 0,
+        ]);
+
+        // The country the payer states reaches the issuing bank, and a payment
+        // sent without it is a foreign payment with nothing to verify: the
+        // bank reads that as unverifiable and declines. So the country is
+        // asked for, not inferred from the profile.
+        $payload = $this->checkoutPayload(participants: 1);
+        unset($payload['country_id']);
+
+        $this->actingAs($user)
+            ->post('/inscription', $payload)
+            ->assertSessionHasErrors('country_id');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_placing_an_order_empties_the_basket(): void
     {
         [$ticket, $user] = $this->seedConference(withUser: true);
@@ -1133,6 +1157,12 @@ class RegistrationFlowTest extends TestCase
             'first_name' => 'Ahmed',
             'last_name' => 'Benali',
             'organisation' => 'BNA',
+            // The billing block the gateway is given, and the issuing bank
+            // reads it to judge the payer: a country, an address and a city
+            // are required, and the phone is international.
+            'address' => '12 Avenue Ibn Sina',
+            'city' => 'Rabat',
+            'country_id' => (int) Country::query()->where('iso2', 'MA')->value('id'),
             'email' => 'ahmed@example.test',
             'phone' => '+212600000001',
             'participants' => $list,
