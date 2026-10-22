@@ -255,11 +255,6 @@
                             </a>
                         </div>
 
-                                                    <a href="{{ route('account.edit') }}" class="d-btn d-btn--ghost d-btn--block mt-4">
-                                <span>@lang('account.edit_title')</span>
-                            </a>
-                        </div>
-
                         {{-- ========================================== --}}
                         {{-- ADD THE PROMO CODE PANEL HERE --}}
                         {{-- ========================================== --}}
