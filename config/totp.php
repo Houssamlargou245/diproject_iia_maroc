@@ -67,4 +67,14 @@ return [
     */
     'max_attempts' => (int) env('TOTP_MAX_ATTEMPTS', 5),
 
+    /*
+    | How long the session may sit idle while the authenticator app is being
+    | set up, in minutes. The site-wide session lifetime is two hours, and
+    | enrolment is the one step where a visitor legitimately puts the phone
+    | down: installing an app, granting it permission, reading the code. A
+    | session that expires there turns a half-finished enrolment into a 419
+    | with the code they had just typed thrown away.
+    */
+    'session_lifetime' => (int) env('TOTP_SESSION_LIFETIME', 600),
+
 ];
