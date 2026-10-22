@@ -9,6 +9,7 @@ use App\Models\Edition;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PragmaRX\Google2FAQRCode\Google2FA;
+use Symfony\Component\HttpFoundation\Cookie;
 use Tests\TestCase;
 use Tests\Unit\TotpServiceTest;
 
@@ -103,6 +104,36 @@ class TotpEnrolmentTest extends TestCase
         $this->assertNotNull($user->totp_confirmed_at);
         $this->assertTrue($user->hasConfirmedTotp());
         $this->assertCount(8, $user->totp_recovery_codes);
+    }
+
+    // --- The session that has to survive the pause ------------------------
+
+    /**
+     * The enrolment is the one step where the visitor puts the phone down.
+     *
+     * Installing an app, granting it permission and reading six digits off a
+     * screen takes longer than any other step in the registration. A session
+     * that expires in the middle of it turns the code they have just read into
+     * a 419, so the enrolment pages carry a longer window than the two hours
+     * the rest of the site gets.
+     */
+    public function test_the_setup_page_keeps_the_session_alive_for_the_length_of_the_enrolment(): void
+    {
+        $user = $this->unconfirmedUser();
+
+        $response = $this->actingAs($user)->get(route('totp.setup'));
+
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn (Cookie $cookie) => $cookie->getName() === config('session.cookie'));
+
+        $this->assertNotNull($cookie, 'The response carried no session cookie.');
+
+        $this->assertEqualsWithDelta(
+            (int) config('totp.session_lifetime') * 60,
+            $cookie->getMaxAge(),
+            5,
+            'The enrolment page did not lengthen the session cookie.',
+        );
     }
 
     // --- Refusals ---------------------------------------------------------

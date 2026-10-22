@@ -24,6 +24,7 @@ return [
     'no_orders' => 'No registrations yet.',
     'pay_now' => 'Pay now',
     'download_invoice' => 'Download invoice',
+    'phone_international' => 'International format, for example +212 6 12 34 56 78 or +966 5 12 34 56 78.',
 
     // --- Checkout ---------------------------------------------------------
     'title' => 'Conference registration',
@@ -137,6 +138,11 @@ return [
         'clear' => 'Empty the basket',
         'checkout' => 'Proceed to checkout',
         'sign_in_note' => 'You will be asked to sign in before payment. Your basket will be kept.',
+
+        // Entry point to the signed-in buyer's full list of orders/payments,
+        // shown on the basket.
+        'my_payments' => 'My payments',
+        'my_payments_note' => 'Review your orders and the status of your payments.',
 
         // The printable, downloadable summary of the basket.
         //

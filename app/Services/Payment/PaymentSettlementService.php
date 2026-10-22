@@ -7,9 +7,11 @@ namespace App\Services\Payment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentException;
+use App\Jobs\IssueInvoiceAndNotify;
+use App\Mail\OrderStatusChanged;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Services\Registration\InvoiceService;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -38,7 +40,7 @@ use Throwable;
 class PaymentSettlementService
 {
     public function __construct(
-        private readonly InvoiceService $invoices,
+        private readonly SettlementPlan $plan,
     ) {}
 
     /**
@@ -99,9 +101,15 @@ class PaymentSettlementService
             //
             // A signature proves the payload came from the gateway; it does
             // not prove the gateway processed the amount *we* asked for. If the
-            // signed amount is not the order's own total, the transaction is
-            // not one we may settle — and accepting it would let a customer
-            // pay 100 MAD against a 7 500 MAD order and receive a place.
+            // signed amount is not the one this order was sent out to be
+            // charged, the transaction is not one we may settle — and
+            // accepting it would let a customer pay 100 against a 7 500 place.
+            //
+            // The comparison runs in the settlement currency, because that is
+            // the figure CMI signs: a store contracted to MAD-only settles a
+            // 750 USD order by charging 7 500 MAD, and reading that `amount`
+            // back as USD (or against `$order->total`) rejects a payment that
+            // was processed correctly.
             //
             // Living in the settlement service rather than in CmiGateway is
             // deliberate: a check that only the production driver performs is
@@ -109,12 +117,11 @@ class PaymentSettlementService
             // test driver ends up validating a path the real gateway never
             // takes.
             if (isset($payload['amount'])) {
-                $claimed = (int) round(
-                    ((float) $payload['amount']) * (10 ** \App\Support\Money::exponent((string) $order->currency))
-                );
+                $settlement = $this->plan->forOrder($order);
+                $claimed = Money::parse((string) $payload['amount'], $settlement['currency']) ?? 0;
 
-                if ($claimed !== $order->total) {
-                    throw PaymentException::amountMismatch($order->total, $claimed);
+                if ($claimed !== $settlement['minor']) {
+                    throw PaymentException::amountMismatch($settlement['minor'], $claimed);
                 }
             }
 
@@ -135,8 +142,39 @@ class PaymentSettlementService
     }
 
     /**
-     * @param  array<string, mixed>  $payload
+     * Settle an order from a payment that already took the money.
+     *
+     * The gateway path never needs this; it exists for the order whose
+     * authorisation was accepted but whose server-to-server callback never
+     * landed. The payment row carries the gateway's own proof — an
+     * authorisation code and a transaction id — while the order still reads
+     * `awaiting_payment`, and the buyer is left staring at an in-progress row
+     * for money that has already left their account.
+     *
+     * This is the only place besides the authoritative callback that may mark
+     * an order paid, and it runs only from an explicit operator command (`php
+     * artisan orders:reconcile --apply`), never from a request. Returns whether
+     * anything changed; a non-successful payment, an already-paid order or a
+     * terminal one is left untouched.
      */
+    public function reconcile(Order $order, Payment $payment): bool
+    {
+        if (! $payment->isSuccessful() || $order->status === OrderStatus::Paid) {
+            return false;
+        }
+
+        if (! $order->status->canTransitionTo(OrderStatus::Paid)) {
+            return false;
+        }
+
+        $order->loadMissing(['user', 'edition']);
+
+        DB::transaction(function () use ($order, $payment): void {
+            $this->markPaid($order, $payment);
+        });
+
+        return true;
+    }
 
     /**
      * A stable key for "this gateway response for this order".
@@ -203,8 +241,13 @@ class PaymentSettlementService
             'captured_at' => now(),
         ])->save();
 
-        $this->issueInvoice($order);
-        $this->notify($order, 'paid');
+        // The payment is settled above; its paperwork is not. Rendering the
+        // invoice with dompdf takes seconds and the gateway waits only a few
+        // for our answer — replying late is what sends a paying customer to
+        // CMI's "vérifiez l'état de votre commande" page while the money has
+        // already been taken. The mail rides along in the same job so that it
+        // can carry the invoice that was just rendered.
+        IssueInvoiceAndNotify::dispatch($order->getKey());
     }
 
     private function markAwaitingPayment(Order $order): void
@@ -220,45 +263,23 @@ class PaymentSettlementService
             $order->transitionTo(OrderStatus::Failed);
         }
 
-        $this->notify($order, 'failed');
+        $this->notifyFailed($order);
     }
 
-    /**
-     * Allocate the invoice number and render the PDF.
-     *
-     * Failures are swallowed on purpose: the payment is settled and the money
-     * is at the bank, so a PDF renderer error must not roll that back or show
-     * the customer an error page. The order is paid and the invoice can be
-     * regenerated from the admin panel.
-     */
-    private function issueInvoice(Order $order): void
-    {
-        try {
-            $this->invoices->generate($order);
-        } catch (Throwable $e) {
-            report($e);
-
-            Log::error('invoice.generation_failed', [
-                'order' => $order->reference,
-                'reason' => $e::class,
-            ]);
-        }
-    }
-
-    private function notify(Order $order, string $event): void
+    private function notifyFailed(Order $order): void
     {
         // Queued so a slow mail server cannot hold the gateway's callback
         // open. A failure to notify is an operator problem, not a payment
         // problem, so it is logged and swallowed.
         try {
             Mail::to($order->user?->email)
-                ->queue(new \App\Mail\OrderStatusChanged($order, $event));
+                ->queue(new OrderStatusChanged($order, 'failed'));
         } catch (Throwable $e) {
             report($e);
 
             Log::error('order.notification_failed', [
                 'order' => $order->reference,
-                'event' => $event,
+                'event' => 'failed',
             ]);
         }
     }
@@ -286,6 +307,11 @@ class PaymentSettlementService
             return null;
         }
 
-        return Order::query()->where('uuid', $reference)->first();
+        // CMI's `oid` carries a per-attempt suffix (`<uuid>-<hex>`) so a retry
+        // after a declined attempt is not refused as a duplicate `oid`. Only
+        // the leading uuid identifies the order, so both forms are matched.
+        return Order::query()
+            ->whereIn('uuid', [$reference, substr($reference, 0, 36)])
+            ->first();
     }
 }

@@ -231,6 +231,30 @@ class RegistrationFlowTest extends TestCase
         $this->assertDatabaseCount('orders', 0);
     }
 
+    public function test_the_billing_country_is_required(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+
+        $this->actingAs($user)->post('/panier', [
+            'ticket_type_id' => $ticket->getKey(),
+            'quantity' => 1,
+            'member_quantity' => 0,
+        ]);
+
+        // The country the payer states reaches the issuing bank, and a payment
+        // sent without it is a foreign payment with nothing to verify: the
+        // bank reads that as unverifiable and declines. So the country is
+        // asked for, not inferred from the profile.
+        $payload = $this->checkoutPayload(participants: 1);
+        unset($payload['country_id']);
+
+        $this->actingAs($user)
+            ->post('/inscription', $payload)
+            ->assertSessionHasErrors('country_id');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_placing_an_order_empties_the_basket(): void
     {
         [$ticket, $user] = $this->seedConference(withUser: true);
@@ -602,6 +626,7 @@ class RegistrationFlowTest extends TestCase
         // the payment page opens. `refreshtime` was never part of the contract.
         $this->assertStringContainsString('name="sessionTimeout" value="1800"', $content);
         $this->assertStringContainsString('name="callbackResponse"', $content);
+        $this->assertStringContainsString('name="autoRedirect"', $content);
         $this->assertStringNotContainsString('name="refreshtime"', $content);
 
         $this->assertSame(OrderStatus::AwaitingPayment, $order->refresh()->status);
@@ -636,7 +661,29 @@ class RegistrationFlowTest extends TestCase
             'status' => PaymentStatus::Authorised->value,
         ]);
 
-        Mail::assertQueued(OrderStatusChanged::class);
+        Mail::assertSent(OrderStatusChanged::class);
+    }
+
+    public function test_a_callback_settles_when_the_oid_carries_a_per_attempt_suffix(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        // CMI rejects a reused `oid`, so the real driver submits
+        // `<uuid>-<hex>`. The order is still keyed by the leading uuid, and a
+        // callback that only matched the raw `oid` exactly would leave every
+        // payment unsettled.
+        $payload = $this->signedCallback($order, approved: true);
+        unset($payload['HASH']);
+        $payload['oid'] = $order->uuid.'-'.dechex(time());
+        $payload['HASH'] = (new CmiHasher)->hash($payload, $this->storeKey());
+
+        $this->post('/payment/cmi/callback', $payload)->assertOk();
+
+        $this->assertSame(OrderStatus::Paid, $order->refresh()->status);
     }
 
     public function test_a_callback_with_a_bad_signature_is_rejected_and_settles_nothing(): void
@@ -689,7 +736,7 @@ class RegistrationFlowTest extends TestCase
         // makes the second call a no-op rather than a second capture — and the
         // customer is told once, not twice.
         $this->assertSame(1, Payment::query()->where('order_id', $order->getKey())->count());
-        Mail::assertQueued(OrderStatusChanged::class, 1);
+        Mail::assertSent(OrderStatusChanged::class, 1);
     }
 
     public function test_a_declined_payment_marks_the_order_failed(): void
@@ -720,6 +767,80 @@ class RegistrationFlowTest extends TestCase
         );
 
         $this->assertNotSame(OrderStatus::Paid, $order->refresh()->status);
+    }
+
+    public function test_a_pending_payment_is_only_successful_with_the_gateways_own_evidence(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        // A bare `pending` row is an unfinished checkout, not a payment.
+        $bare = $this->recordPayment($order, ['status' => PaymentStatus::Pending->value]);
+        $this->assertFalse($bare->isSuccessful());
+
+        // The authorisation code and transaction id are the gateway's own proof
+        // that the money moved, even when the status never advanced past it.
+        $proven = $this->recordPayment($order, [
+            'status' => PaymentStatus::Pending->value,
+            'auth_code' => '397437',
+            'gateway_transaction_id' => '26292O8XA12513855',
+        ]);
+        $this->assertTrue($proven->isSuccessful());
+
+        $this->assertSame(1, Payment::query()->successful()->count());
+    }
+
+    public function test_an_authorised_order_reads_as_paid_even_before_the_callback_settles_it(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        // The browser return recorded the authorisation; the server-to-server
+        // callback that would have settled the order never landed, so the stored
+        // status is still an in-progress one.
+        $this->recordPayment($order, [
+            'auth_code' => '397437',
+            'gateway_transaction_id' => '26292O8XA12513855',
+        ]);
+
+        $order->refresh();
+
+        $this->assertNotSame(OrderStatus::Paid, $order->status);
+        $this->assertSame(OrderStatus::Paid, $order->effectiveStatus());
+
+        // A cancelled order stays cancelled: that is a deliberate terminal
+        // state, not a callback that failed to arrive.
+        $order->transitionTo(OrderStatus::Cancelled);
+        $this->assertSame(OrderStatus::Cancelled, $order->refresh()->effectiveStatus());
+    }
+
+    public function test_the_reconcile_command_settles_a_stuck_authorised_order(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+
+        [$ticket, $user] = $this->seedConference(withUser: true);
+        $order = $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        $this->recordPayment($order, [
+            'auth_code' => '397437',
+            'gateway_transaction_id' => '26292O8XA12513855',
+        ]);
+
+        // A dry run reports but writes nothing: settling is a decision the
+        // operator gets to look at first.
+        $this->artisan('orders:reconcile')->assertSuccessful();
+        $this->assertNotSame(OrderStatus::Paid, $order->refresh()->status);
+
+        // The explicit run settles the order and issues the invoice.
+        $this->artisan('orders:reconcile', ['--apply' => true])->assertSuccessful();
+
+        $order->refresh();
+
+        $this->assertSame(OrderStatus::Paid, $order->status);
+        $this->assertNotNull($order->paid_at);
+        $this->assertNotNull($order->invoice_number);
+        Mail::assertSent(OrderStatusChanged::class);
     }
 
     public function test_a_callback_for_an_unknown_order_is_refused(): void
@@ -827,6 +948,26 @@ class RegistrationFlowTest extends TestCase
         $response->assertDontSee($otherOrder->reference);
     }
 
+    public function test_the_basket_links_to_the_payment_history_only_for_a_buyer_who_has_orders(): void
+    {
+        [$ticket, $user] = $this->seedConference(withUser: true);
+
+        // The label, not the URL: the header already links to the same route,
+        // so a URL assertion would pass without this change.
+        $label = __('order.cart.my_payments');
+
+        // A visitor has no history to look at.
+        $this->get(route('cart'))->assertOk()->assertDontSee($label);
+
+        // Neither does a signed-in buyer who has not ordered yet.
+        $this->actingAs($user)->get(route('cart'))->assertOk()->assertDontSee($label);
+
+        // Once there is an order, the basket points at it.
+        $this->placeOrder($user, quantity: 1, memberQuantity: 0);
+
+        $this->actingAs($user)->get(route('cart'))->assertOk()->assertSee($label);
+    }
+
     // --- The CMI hash itself ----------------------------------------------
 
     public function test_the_cmi_hash_excludes_hash_and_encoding_and_sorts_naturally(): void
@@ -869,6 +1010,24 @@ class RegistrationFlowTest extends TestCase
         $this->assertFalse($hasher->verify($params, 'secret', ''));
     }
 
+    public function test_response_verification_decodes_html_entities_before_signing(): void
+    {
+        $hasher = new CmiHasher;
+
+        // A response carries values CMI HTML-encoded on the way out, but the
+        // gateway signed the decoded form: `&amp;` arrives while the hash was
+        // computed over `&`. Verifying the raw value would reject every
+        // callback whose payload holds an entity, which surfaces to the
+        // customer as CMI's "vérifiez avec votre marchand" page.
+        $hash = $hasher->hash(['BillToName' => 'Tom & Jerry'], 'secret');
+
+        $this->assertTrue($hasher->verify(['BillToName' => 'Tom &amp; Jerry'], 'secret', $hash));
+
+        // And the entity really is why: signing the raw, still-encoded value
+        // yields a different digest, so without the decode this would be a miss.
+        $this->assertNotSame($hasher->hash(['BillToName' => 'Tom &amp; Jerry'], 'secret'), $hash);
+    }
+
     public function test_the_real_gateway_refuses_to_run_without_credentials(): void
     {
         config()->set('cmi.merchant_id', null);
@@ -895,6 +1054,7 @@ class RegistrationFlowTest extends TestCase
         // card is ever entered. `refreshtime` was never part of the contract.
         $this->assertSame('1800', $fields['sessionTimeout']);
         $this->assertSame('true', $fields['callbackResponse']);
+        $this->assertSame('true', $fields['autoRedirect']);
         $this->assertArrayNotHasKey('refreshtime', $fields);
         $this->assertArrayHasKey('HASH', $fields);
     }
@@ -997,6 +1157,12 @@ class RegistrationFlowTest extends TestCase
             'first_name' => 'Ahmed',
             'last_name' => 'Benali',
             'organisation' => 'BNA',
+            // The billing block the gateway is given, and the issuing bank
+            // reads it to judge the payer: a country, an address and a city
+            // are required, and the phone is international.
+            'address' => '12 Avenue Ibn Sina',
+            'city' => 'Rabat',
+            'country_id' => (int) Country::query()->where('iso2', 'MA')->value('id'),
             'email' => 'ahmed@example.test',
             'phone' => '+212600000001',
             'participants' => $list,
@@ -1030,6 +1196,22 @@ class RegistrationFlowTest extends TestCase
                 'phone' => '+212600000001',
             ],
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function recordPayment(Order $order, array $attributes = []): Payment
+    {
+        return Payment::query()->create(array_merge([
+            'order_id' => $order->getKey(),
+            'driver' => 'cmi',
+            'idempotency_key' => 'test-'.bin2hex(random_bytes(8)),
+            'status' => PaymentStatus::Pending->value,
+            'amount' => $order->total,
+            'currency' => $order->currency,
+            'currency_numeric' => $order->currency_numeric,
+        ], $attributes));
     }
 
     /** @return array<string, string> */

@@ -153,6 +153,14 @@
                     <h2 class="admin-card__title">@lang('admin.orders.show.payments')</h2>
                 </div>
                 <div class="admin-card__body">
+                    {{-- Every attempt is listed, failed ones included: a failed
+                         attempt carries the gateway's reason, and that is the
+                         only place it survives once the operator has left the
+                         return page. The pill is coloured by whether the
+                         attempt actually took the money, so a `pending` row
+                         that nevertheless carries an authorisation code and a
+                         transaction id reads green — that is the callback that
+                         never landed, not an unfinished checkout. --}}
                     @if ($order->payments->isEmpty())
                         <p class="admin-meta mb-0">@lang('admin.orders.show.none')</p>
                     @else
@@ -166,7 +174,7 @@
                                          screen against a bank file needs it
                                          character for character. --}}
                                     <div class="d-flex justify-content-between gap-3">
-                                        <span class="admin-pill admin-pill--{{ $payment->status->isSuccessful() ? 'success' : ($payment->status === \App\Enums\PaymentStatus::Failed ? 'danger' : 'muted') }}">
+                                        <span class="admin-pill admin-pill--{{ $payment->isSuccessful() ? 'success' : ($payment->status === \App\Enums\PaymentStatus::Failed ? 'danger' : 'muted') }}">
                                             @lang("admin.stages.payment_status.{$payment->status->value}")
                                         </span>
                                         <span class="admin-num fw-bold">{{ $payment->formattedAmount() }}</span>

@@ -36,9 +36,10 @@ class AccountController extends Controller
             'user' => $user,
             'locale' => Locale::parse($user->locale),
             // Eager loaded: the order list renders each order's items and total,
-            // and a lazy relation here is one query per order.
+            // and the status tag is derived from the order's payments, so a lazy
+            // relation here is one query per order.
             'orders' => $user->orders()
-                ->with('items')
+                ->with(['items', 'payments'])
                 ->latest('id')
                 ->limit(20)
                 ->get(),

@@ -9,6 +9,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Concerns\ResolvesOwnedOrder;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Country;
 use App\Models\Edition;
 use App\Models\Order;
 use App\Models\TicketType;
@@ -20,6 +21,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -87,6 +89,13 @@ class CheckoutController extends Controller
             'maxPlacesPerLine' => self::MAX_PLACES_PER_LINE,
             'seatRows' => $this->seatRows($cart, $quote),
             'participantValues' => old('participants', []),
+            // The billing country, which the issuing bank reads to judge the
+            // payer. Eager loaded: the select renders every row's name, and a
+            // lazy relation here is one query per country in the list.
+            'countries' => Country::query()
+                ->where('is_active', true)
+                ->orderBy('name_'.app()->getLocale())
+                ->get(),
         ]);
     }
 
@@ -294,9 +303,14 @@ class CheckoutController extends Controller
                     'first_name' => $data['first_name'],
                     'last_name' => $data['last_name'],
                     'organisation' => $data['organisation'] ?? null,
-                    'address' => $data['address'] ?? null,
-                    'city' => $data['city'] ?? null,
-                    'country_iso2' => $data['country_iso2'] ?? null,
+                    // Address, city and country are what the issuing bank
+                    // reads to decide whether the payer is who they say they
+                    // are. They are required, not optional, because a payment
+                    // sent with an empty country is a foreign payment with
+                    // nothing to verify, and the bank declines it.
+                    'address' => $data['address'],
+                    'city' => $data['city'],
+                    'country_iso2' => $data['country_iso2'],
                     'email' => $data['email'],
                     'phone' => $data['phone'],
                 ],
@@ -339,11 +353,10 @@ class CheckoutController extends Controller
     }
 
     /**
-     * The same rehearsal in EUR (0,09 €, about 1 MAD).
+     * The same rehearsal in EUR (15,00 €, about 166,67 MAD).
      *
      * Exercises the international-card path and the gateway's display of a
-     * non-MAD amount without a real tariff, for roughly the same token cost as
-     * the dirham test.
+     * non-MAD amount without a real tariff.
      */
     public function testPaymentEur(Request $request): RedirectResponse
     {
@@ -351,10 +364,20 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Build and place a token order in the given currency, then send the tester
-     * to the gateway. Shared by the MAD and EUR rehearsals.
+     * The same rehearsal at 0,50 MAD — the smallest amount the rehearsal can
+     * raise, to push a sub-unit figure through the gateway and the settlement
+     * plan end to end.
      */
-    private function raiseTestOrder(Request $request, string $currency): RedirectResponse
+    public function testPaymentHalf(Request $request): RedirectResponse
+    {
+        return $this->raiseTestOrder($request, 'MAD', 'conference.payment_test_amount_half');
+    }
+
+    /**
+     * Build and place a token order in the given currency, then send the tester
+     * to the gateway. Shared by the MAD, EUR and half-dirham rehearsals.
+     */
+    private function raiseTestOrder(Request $request, string $currency, ?string $amountKey = null): RedirectResponse
     {
         $user = $request->user();
 
@@ -371,11 +394,11 @@ class CheckoutController extends Controller
 
         $currency = strtoupper($currency);
 
-        $amountKey = $currency === 'EUR'
+        $amountKey ??= $currency === 'EUR'
             ? 'conference.payment_test_amount_eur'
             : 'conference.payment_test_amount';
 
-        $amount = max(1, (int) config($amountKey, $currency === 'EUR' ? 9 : 100));
+        $amount = max(1, (int) config($amountKey, $currency === 'EUR' ? 1500 : 100));
 
         $quote = new Quote(
             lines: [[
@@ -515,15 +538,22 @@ class CheckoutController extends Controller
      */
     private function validated(Request $request, int $placeCount): array
     {
+        // The phone reaches the issuing bank as `tel`, and the bank matches it
+        // against the cardholder's own number. Separators are dropped here so
+        // a buyer who types "+212 6 12 34 56 78" is not refused for the
+        // spaces; the `+` is kept because it is what tells an international
+        // number from a national one.
+        $request->merge(['phone' => $this->compactPhone((string) $request->input('phone'))]);
+
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:80'],
             'last_name' => ['required', 'string', 'max:80'],
             'organisation' => ['nullable', 'string', 'max:190'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:120'],
-            'country_iso2' => ['nullable', 'string', 'size:2'],
+            'address' => ['required', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:120'],
+            'country_id' => ['required', 'integer', Rule::exists('countries', 'id')->where('is_active', true)],
             'email' => ['required', 'email:filter', 'max:190'],
-            'phone' => ['required', 'string', 'max:32'],
+            'phone' => ['required', 'string', 'max:32', 'regex:/^\+[1-9]\d{7,14}$/'],
             'participants' => ['required', 'array', 'min:1', 'max:20'],
             'participants.*.full_name' => ['required', 'string', 'max:190'],
             'participants.*.job_title' => ['nullable', 'string', 'max:160'],
@@ -531,13 +561,15 @@ class CheckoutController extends Controller
             'participants.*.phone' => ['nullable', 'string', 'max:32'],
             'participants.*.is_member' => ['nullable', 'boolean'],
             'participants.*.badge_name' => ['nullable', 'string', 'max:48'],
-        ], [], [
+        ], [
+            'phone.regex' => __('order.phone_international'),
+        ], [
             'first_name' => __('register.first_name'),
             'last_name' => __('register.last_name'),
             'organisation' => __('register.organisation'),
             'address' => __('order.address'),
             'city' => __('register.city'),
-            'country_iso2' => __('register.country'),
+            'country_id' => __('register.country'),
             'email' => __('register.email'),
             'phone' => __('register.phone'),
             'participants' => __('order.participants'),
@@ -546,6 +578,14 @@ class CheckoutController extends Controller
             'participants.*.email' => __('register.email'),
             'participants.*.phone' => __('register.phone'),
         ]);
+
+        // The country the buyer states, not the one on their profile: a
+        // delegate who has moved, or who pays with a card issued abroad, must
+        // be able to say where they actually are. The gateway is given the ISO
+        // code because that is what it forwards to the issuing bank.
+        $data['country_iso2'] = Country::query()
+            ->whereKey($data['country_id'])
+            ->value('iso2');
 
         // Checked here as well as in the service. The service is the
         // authority â€” it runs inside the transaction â€” but failing here with a
@@ -560,5 +600,23 @@ class CheckoutController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * A phone number with its separators removed.
+     *
+     * The buyer may type "+212 6 12 34 56 78" or "+212.6.12.34.56.78"; the
+     * issuing bank is given one form. The `+` is kept because it is what
+     * tells an international number from a national one, and a national number
+     * is refused rather than guessed at: a wrong country code on a payment is
+     * a payment the bank cannot reconcile with the cardholder.
+     */
+    private function compactPhone(string $phone): string
+    {
+        $trimmed = trim($phone);
+        $hasPlus = str_starts_with($trimmed, '+');
+        $digits = preg_replace('/\D+/', '', $trimmed) ?? '';
+
+        return $hasPlus ? '+'.$digits : $digits;
     }
 }

@@ -68,6 +68,13 @@ class UserFactory extends Factory
             'preferences' => null,
             'last_login_at' => now(),
             'last_verification_sent_at' => null,
+
+            // Registration always draws a promo code and the account page reads
+            // it off the model. Same reasoning as `locale` above: the in-memory
+            // model only carries the attributes the factory set, and strict mode
+            // turns a read of anything else into a MissingAttributeException.
+            // The charset is the generator's, minus the ambiguous characters.
+            'promo_code' => 'PR-'.fake()->unique()->regexify('[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}'),
         ];
     }
 

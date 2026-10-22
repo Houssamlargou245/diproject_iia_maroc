@@ -31,6 +31,7 @@ return [
     'no_orders' => 'Aucune inscription pour le moment.',
     'pay_now' => 'Payer maintenant',
     'download_invoice' => 'Télécharger la facture',
+    'phone_international' => 'Format international, par exemple +212 6 12 34 56 78 ou +966 5 12 34 56 78.',
 
     // --- Checkout ---------------------------------------------------------
     'title' => 'Inscription à la conférence',
@@ -144,6 +145,11 @@ return [
         'clear' => 'Vider le panier',
         'checkout' => 'Passer la commande',
         'sign_in_note' => 'Vous serez invité à vous connecter avant le paiement. Votre panier sera conservé.',
+
+        // Point d'entrée vers la liste complète des inscriptions/paiements de
+        // l'utilisateur connecté, affiché sur le panier.
+        'my_payments' => 'Mes paiements',
+        'my_payments_note' => 'Retrouvez vos commandes et l\'état de vos paiements.',
 
         // Le récapitulatif imprimable et téléchargeable du panier.
         //

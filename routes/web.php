@@ -330,6 +330,10 @@ Route::post('/{locale?}/inscription/test', [CheckoutController::class, 'testPaym
 Route::post('/inscription/test-eur', [CheckoutController::class, 'testPaymentEur'])->name('checkout.test.eur.ar');
 Route::post('/{locale?}/inscription/test-eur', [CheckoutController::class, 'testPaymentEur'])->name('checkout.test.eur');
 
+// The same rehearsal at 0,50 MAD, for a sub-unit amount.
+Route::post('/inscription/test-half', [CheckoutController::class, 'testPaymentHalf'])->name('checkout.test.half.ar');
+Route::post('/{locale?}/inscription/test-half', [CheckoutController::class, 'testPaymentHalf'])->name('checkout.test.half');
+
 // Add or remove a place on a basket line, from the checkout page.
 //
 // Its own route rather than a field on `checkout.store`, because the two

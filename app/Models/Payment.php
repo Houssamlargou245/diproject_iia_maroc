@@ -55,11 +55,44 @@ class Payment extends Model
     /** @param  Builder<Payment>  $query */
     public function scopeSuccessful(Builder $query): void
     {
-        $query->whereIn('status', [
-            PaymentStatus::Authorised->value,
-            PaymentStatus::Captured->value,
-            PaymentStatus::Settled->value,
-        ]);
+        // Two ways to be a successful payment.
+        //
+        //  1. The stored status says so, which is what the server-to-server
+        //     callback writes.
+        //  2. The gateway's own evidence is present — an authorisation code and
+        //     a transaction id — even if the status never advanced. A payment
+        //     recorded through the browser return is stored as `authorised` but
+        //     never settles the order, so when the callback never arrives (the
+        //     "vérifiez l'état de votre commande avec votre marchand" receipt)
+        //     the money moved while the row still looks merely in progress.
+        //
+        // The two fields are the ones CMI sends only on an accepted
+        // authorisation, so requiring both is what keeps a bare `pending` row
+        // out of the list.
+        $query->where(function (Builder $query): void {
+            $query->whereIn('status', [
+                PaymentStatus::Authorised->value,
+                PaymentStatus::Captured->value,
+                PaymentStatus::Settled->value,
+            ])->orWhere(function (Builder $query): void {
+                $query->whereNotNull('auth_code')->where('auth_code', '!=', '')
+                    ->whereNotNull('gateway_transaction_id')
+                    ->where('gateway_transaction_id', '!=', '');
+            });
+        });
+    }
+
+    /**
+     * Whether this attempt actually took the money.
+     *
+     * The instance counterpart of scopeSuccessful(), and deliberately the same
+     * rule: the stored status, or the gateway's authorisation code and
+     * transaction id.
+     */
+    public function isSuccessful(): bool
+    {
+        return $this->status->isSuccessful()
+            || (filled($this->auth_code) && filled($this->gateway_transaction_id));
     }
 
     public function formattedAmount(): string

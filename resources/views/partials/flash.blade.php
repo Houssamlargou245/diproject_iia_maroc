@@ -12,6 +12,17 @@
     success or failure only if the visitor happens to scroll back up.
 --}}
 
+@if (session('session_expired'))
+    {{-- The session that held the form went away — usually it expired while
+         the page sat open. The form itself is back and usable, so this is a
+         notice, not an error: there is nothing to fix, only to resend. --}}
+    <div class="container">
+        <div class="alert alert-warning mt-4" role="alert">
+            @lang('auth.session_expired')
+        </div>
+    </div>
+@endif
+
 @if ($errors->any())
     <div class="container">
         <div class="alert alert-danger mt-4" role="alert" tabindex="-1" id="error-summary">

@@ -23,8 +23,8 @@ return [
     */
 
     'logos' => [
-        'ar' => ['path' => 'assets/brand/logo-arabic-main.png', 'width' => 800, 'height' => 251],
-        'en' => ['path' => 'assets/brand/logo-english.png', 'width' => 360, 'height' => 201],
+        'ar' => ['path' => 'assets/brand/logo-french.png', 'width' => 800, 'height' => 251],
+        'en' => ['path' => 'assets/brand/logo-french.png', 'width' => 360, 'height' => 201],
         'fr' => ['path' => 'assets/brand/logo-french.png', 'width' => 360, 'height' => 205],
     ],
 
@@ -149,86 +149,85 @@ return [
         // Shown in the partners band when no sponsor row carries a logo yet.
         // One designed mark reads as a wall of one; an empty dark block reads
         // as a page that failed to load.
-  
-  
-'partners_fallback' => [
 
-    // Platinum
-    [
-        'name'  => 'CIH Bank',
-        'src'   => 'assets/images/logo/cih-logo.png',
-        'tier'  => 'platinum',
-        'class' => 'sponsor-cih',
-        'style' => 'max-height: 52px; max-height: 100%',
-    ],
+        'partners_fallback' => [
 
-    // Gold
-    [
-        'name'  => 'Banque Populaire',
-        'src'   => 'assets/parteners/banque-populaire-logo.png',
-        'tier'  => 'gold',
-        'class' => 'sponsor-banque-populaire',
-        'style' => 'height:55px !important ;',
-    ],
-    [
-        'name'  => 'OCP Group',
-        'src'   => 'assets/parteners/OCP_Group.svg',
-        'tier'  => 'gold',
-        'class' => 'sponsor-ocp',
-        'style' => 'max-height: 52px; max-height: 100%',
-    ],
-    [
-        'name'  => 'IFACI Certification',
-        'src'   => 'assets/parteners/Logo_IFACI-Certification_alixds.png',
-        'tier'  => 'gold',
-        'class' => 'sponsor-ifaci',
-        'style' => 'max-height: 42px; ',
-    ],
-    [
-        'name'  => 'MEGA',
-        'src'   => 'assets/parteners/images.png', // drop the file in assets/parteners/ and set the path; until then the name renders as text
-        'tier'  => 'gold',
-        'class' => 'sponsor-mega',
-        'style' => 'max-height: 52px; max-height: 100%',
-    ],
+            // Platinum
+            [
+                'name' => 'CIH Bank',
+                'src' => 'assets/images/logo/cih-logo.png',
+                'tier' => 'platinum',
+                'class' => 'sponsor-cih',
+                'style' => 'max-height: 52px; max-height: 100%',
+            ],
 
-    // Silver
-    [
-        'name'  => 'Holmarcom',
-        'src'   => 'assets/parteners/Logo-holmarcom-1.png',
-        'tier'  => 'silver',
-        'class' => 'sponsor-holmarcom',
-        'style' => 'max-height: 82px;',
-    ],
-    [
-        'name'  => 'SOFAC',
-        'src'   => 'assets/parteners/Sofac-logo.png',
-        'tier'  => 'silver',
-        'class' => 'sponsor-sofac',
-        'style' => 'max-height: 52px; max-height: 100%',
-    ],
-    [
-        'name'  => 'Caseware',
-        'src'   => 'assets/parteners/caseware.svg',
-        'tier'  => 'silver',
-        'class' => 'sponsor-caseware',
-        'style' => 'max-height: 52px; max-height: 100%',
-    ],
-    [
-        'name'  => 'Wolters Kluwer',
-        'src'   => 'assets/parteners/Wolters_Kluwer_Logo.png',
-        'tier'  => 'silver',
-        'class' => 'sponsor-wolters-kluwer',
-        'style' => 'height:90px !important ;',
-    ],
-    [
-        'name'  => 'TeamMate by Wolters Kluwer',
-        'src'   => 'assets/parteners/TeamMate-Updated-Logo.png',
-        'tier'  => 'silver',
-        'class' => 'sponsor-teammate',
-        'style' => 'max-height: 52px; max-height: 100%',
-    ],
-],
+            // Gold
+            [
+                'name' => 'Banque Populaire',
+                'src' => 'assets/parteners/banque-populaire-logo.png',
+                'tier' => 'gold',
+                'class' => 'sponsor-banque-populaire',
+                'style' => 'height:55px !important ;',
+            ],
+            [
+                'name' => 'OCP Group',
+                'src' => 'assets/parteners/OCP_Group.svg',
+                'tier' => 'gold',
+                'class' => 'sponsor-ocp',
+                'style' => 'max-height: 52px; max-height: 100%',
+            ],
+            [
+                'name' => 'IFACI Certification',
+                'src' => 'assets/parteners/Logo_IFACI-Certification_alixds.png',
+                'tier' => 'gold',
+                'class' => 'sponsor-ifaci',
+                'style' => 'max-height: 42px; ',
+            ],
+            [
+                'name' => 'MEGA',
+                'src' => 'assets/parteners/images.png', // drop the file in assets/parteners/ and set the path; until then the name renders as text
+                'tier' => 'gold',
+                'class' => 'sponsor-mega',
+                'style' => 'max-height: 52px; max-height: 100%',
+            ],
+
+            // Silver
+            [
+                'name' => 'Holmarcom',
+                'src' => 'assets/parteners/Logo-holmarcom-1.png',
+                'tier' => 'silver',
+                'class' => 'sponsor-holmarcom',
+                'style' => 'max-height: 82px;',
+            ],
+            [
+                'name' => 'SOFAC',
+                'src' => 'assets/parteners/Sofac-logo.png',
+                'tier' => 'silver',
+                'class' => 'sponsor-sofac',
+                'style' => 'max-height: 52px; max-height: 100%',
+            ],
+            [
+                'name' => 'Caseware',
+                'src' => 'assets/parteners/caseware.svg',
+                'tier' => 'silver',
+                'class' => 'sponsor-caseware',
+                'style' => 'max-height: 52px; max-height: 100%',
+            ],
+            [
+                'name' => 'Wolters Kluwer',
+                'src' => 'assets/parteners/Wolters_Kluwer_Logo.png',
+                'tier' => 'silver',
+                'class' => 'sponsor-wolters-kluwer',
+                'style' => 'height:90px !important ;',
+            ],
+            [
+                'name' => 'TeamMate by Wolters Kluwer',
+                'src' => 'assets/parteners/TeamMate-Updated-Logo.png',
+                'tier' => 'silver',
+                'class' => 'sponsor-teammate',
+                'style' => 'max-height: 52px; max-height: 100%',
+            ],
+        ],
     ],
 
 ];

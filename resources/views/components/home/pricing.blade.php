@@ -110,7 +110,7 @@
                     $defaultCurrency = $displayTypes->keys()->first();
                 @endphp
 
-                @if ($displayTypes->count() > 1)
+                <!-- @if ($displayTypes->count() > 1)
                     <div class="reg-currency" role="radiogroup" aria-label="{{ __('pricing.tariffs.currency_label') }}">
                         @foreach ($displayTypes as $code => $type)
                             <label class="reg-currency__opt">
@@ -120,7 +120,7 @@
                             </label>
                         @endforeach
                     </div>
-                @endif
+                @endif -->
 
                 <div class="reg-prices">
                     {{-- First card = member rate, second = non-member rate. Each card
@@ -211,9 +211,9 @@
                         @endforeach
                     </div>
 
-                    @if ($displayTypes->count() > 1)
+                    <!-- @if ($displayTypes->count() > 1)
                     <p class="reg-currency__hint">{{ __('pricing.tariffs.currency_hint') }}</p>
-                    @endif
+                    @endif -->
             @endif
 
             <p class="reg-note">{{ __('pricing.tariffs.note') }}</p>

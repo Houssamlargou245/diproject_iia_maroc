@@ -15,6 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * The payment endpoints.
@@ -59,15 +61,18 @@ class PaymentController extends Controller
             // CMI's protocol has one answer for "we could not process this":
             // FAILURE, meaning the merchant settles by hand. Anything else
             // risks a silent double charge.
-           Log::warning('cmi.callback.rejected', [
-    'reason' => $e->getMessage(),
-    'oid' => $payload['oid'] ?? null,
-    'ip' => $request->ip(),
-    'keys' => array_keys($payload),          // which fields actually arrived
-    'has_hash' => isset($payload['HASH']),
-    'hash_algo' => $payload['hashAlgorithm'] ?? null,
-]);
+            Log::warning('cmi.callback.rejected', [
+                'reason' => $e->getMessage(),
+                'oid' => $payload['oid'] ?? null,
+                'ip' => $request->ip(),
+                'keys' => array_keys($payload), // which fields actually arrived
+                'has_hash' => isset($payload['HASH']),
+                'hash_algo' => $payload['hashAlgorithm'] ?? null,
+            ]);
+
             return $this->cmiProtocol('FAILURE');
+        } catch (Throwable $e) {
+            return $this->crashed($e, $payload);
         }
 
         // Logged on every signed callback so a decline can be diagnosed from
@@ -99,6 +104,8 @@ class PaymentController extends Controller
             ]);
 
             return $this->cmiProtocol('FAILURE');
+        } catch (Throwable $e) {
+            return $this->crashed($e, $payload);
         }
 
         // `ACTION=POSTAUTH` asks CMI to capture the authorised amount, but only
@@ -132,6 +139,21 @@ class PaymentController extends Controller
         $payload = $request->post();
 
         if ($payload !== []) {
+            // Logged so a payment that reaches the browser return but never
+            // settles can be told apart from one that never came back at all.
+            // These are CMI's own verdict fields, echoed onto okUrl; none are
+            // secrets. Without this, a callback that never fires is invisible.
+            Log::info('cmi.return.received', [
+                'order' => $order->reference,
+                'return_code' => $payload['ProcReturnCode'] ?? null,
+                'error' => $payload['ErrMsg'] ?? null,
+                'md_status' => $payload['mdStatus'] ?? null,
+                'response' => $payload['Response'] ?? null,
+                'amount' => $payload['amount'] ?? null,
+                'has_hash' => isset($payload['HASH']),
+                'keys' => array_keys($payload),
+            ]);
+
             try {
                 $result = $this->gateway()->verify($payload);
 
@@ -142,6 +164,17 @@ class PaymentController extends Controller
                 // customer over; the callback is authoritative regardless.
                 Log::info('cmi.return.invalid_signature', [
                     'order' => $order->reference,
+                ]);
+            } catch (Throwable $e) {
+                // Still not the customer's problem: the browser return never
+                // settles anything, and the callback is authoritative whether
+                // or not this courtesy page managed to run.
+                report($e);
+
+                Log::error('cmi.return.crashed', [
+                    'order' => $order->reference,
+                    'exception' => $e::class,
+                    'message' => Str::limit((string) $e->getMessage(), 500),
                 ]);
             }
         }
@@ -221,6 +254,30 @@ class PaymentController extends Controller
     private function usesPreAuth(): bool
     {
         return strcasecmp((string) config('cmi.trans_type', 'PreAuth'), 'PreAuth') === 0;
+    }
+
+    /**
+     * An error that is not a payment verdict: a crash, not a rejection.
+     *
+     * CMI cannot parse an HTML error page, so a 500 on the callback leaves the
+     * customer on the "vérifiez l'état de votre commande" screen while nothing
+     * in the log names what failed. FAILURE is the honest answer — the
+     * notification was not processed — and the order stays unsettled until an
+     * operator reconciles it.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function crashed(Throwable $e, array $payload): Response
+    {
+        report($e);
+
+        Log::error('cmi.callback.crashed', [
+            'oid' => $payload['oid'] ?? null,
+            'exception' => $e::class,
+            'message' => Str::limit((string) $e->getMessage(), 500),
+        ]);
+
+        return $this->cmiProtocol('FAILURE');
     }
 
     /**

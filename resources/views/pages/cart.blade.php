@@ -240,30 +240,58 @@
                             <i class="fas fa-arrow-right d-btn__arrow" aria-hidden="true"></i>
                         </a>
 
+                        {{-- The buyer's own history, and only when there is one.
+                             A delegate who comes back to the basket to check
+                             whether a previous payment went through should not
+                             have to guess the URL of the order list, and a
+                             first-time visitor is not sent to an empty one. --}}
+                        <!-- @if (auth()->check() && ($hasOrders ?? false))
+                            <a href="{{ route('orders.index') }}"
+                               class="d-btn d-btn--ghost d-btn--block mt-3">
+                                <i class="fas fa-receipt" aria-hidden="true"></i>
+                                <span>@lang('order.cart.my_payments')</span>
+                            </a>
+
+                            <p class="d-cart-summary__hint">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                <span>@lang('order.cart.my_payments_note')</span>
+                            </p>
+                        @endif -->
+
                         {{-- Payment rehearsal, visible only to the one account named in
                              config('conference.payment_test_user'). It raises a real 1 MAD
                              order and jumps straight to the gateway, so the CMI round trip
                              can be tested without a delegate ever seeing the button. --}}
                         @if (auth()->check() && auth()->user()->email
                             && strcasecmp(auth()->user()->email, (string) config('conference.payment_test_user', 'admin@arabcia.test')) === 0)
-                            <form method="POST" action="{{ route('checkout.test') }}" class="mt-3">
+                            <!-- <form method="POST" action="{{ route('checkout.test') }}" class="mt-3">
                                 @csrf
                                 <button type="submit" class="d-btn d-btn--quiet d-btn--block">
                                     <i class="fas fa-vial" aria-hidden="true"></i>
                                     <span>Test paiement 1 DH</span>
                                 </button>
-                            </form>
+                            </form> -->
 
                             {{-- The same rehearsal in euros (0,09 € ≈ 1 MAD), to exercise
                                  the international-card path and the gateway's display of a
                                  non-MAD amount. --}}
-                            <form method="POST" action="{{ route('checkout.test.eur') }}" class="mt-3">
+                            <!-- <form method="POST" action="{{ route('checkout.test.eur') }}" class="mt-3">
                                 @csrf
                                 <button type="submit" class="d-btn d-btn--quiet d-btn--block">
                                     <i class="fas fa-vial" aria-hidden="true"></i>
-                                    <span>Test paiement 0,09 €</span>
+                                    <span>Test paiement 15 €</span>
                                 </button>
-                            </form>
+                            </form> -->
+
+                            {{-- The same rehearsal at 0,50 MAD, the smallest amount a
+                                 rehearsal can raise. --}}
+                            <!-- <form method="POST" action="{{ route('checkout.test.half') }}" class="mt-3">
+                                @csrf
+                                <button type="submit" class="d-btn d-btn--quiet d-btn--block">
+                                    <i class="fas fa-vial" aria-hidden="true"></i>
+                                    <span>Test paiement 0,5 DH</span>
+                                </button>
+                            </form> -->
                         @endif
 
                         @guest

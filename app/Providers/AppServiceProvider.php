@@ -15,6 +15,7 @@ use App\Services\Payment\TestGateway;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -91,6 +92,12 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->isProduction()) {
             $this->assertProductionConfiguration();
         }
+
+        // Bootstrap's pager, not the framework's default Tailwind markup. Both
+        // layouts load `bootstrap.min.css` and no Tailwind build, so the default
+        // pager rendered a wall of unstyled Tailwind classes that looked broken
+        // on the orders list and every admin table.
+        Paginator::useBootstrapFive();
 
         $this->configureUrlGeneration();
         $this->configurePasswordRules();

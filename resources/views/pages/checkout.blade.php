@@ -61,24 +61,46 @@
                             </div>
 
                             <div class="col-md-6">
-                                <x-form.field name="phone" :label="__('register.phone')" required>
+                                <x-form.field name="phone" :label="__('register.phone')" :help="__('order.phone_international')" required>
                                     <input type="tel" name="phone" id="phone" required dir="ltr"
                                            value="{{ old('phone', $user->phone) }}"
                                            class="form-control @error('phone') is-invalid @enderror">
                                 </x-form.field>
                             </div>
 
+                            {{-- The country the payer is in. The issuing bank
+                                 reads it to check the payer against the card,
+                                 so it is asked for here rather than taken from
+                                 the profile: a delegate who has moved, or who
+                                 pays with a card issued abroad, must be able
+                                 to say where they actually are. --}}
                             <div class="col-md-6">
-                                <x-form.field name="address" :label="__('order.address')">
-                                    <input type="text" name="address" id="address"
-                                           value="{{ old('address') }}" class="form-control">
+                                <x-form.field name="country_id" :label="__('register.country')" required>
+                                    <select name="country_id" id="country_id" required
+                                            class="form-control @error('country_id') is-invalid @enderror">
+                                        @foreach ($countries as $country)
+                                            <option value="{{ $country->id }}"
+                                                @selected((int) old('country_id', $user->country_id) === (int) $country->id)>
+                                                {{ $country->name() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </x-form.field>
                             </div>
 
                             <div class="col-md-6">
-                                <x-form.field name="city" :label="__('register.city')">
-                                    <input type="text" name="city" id="city"
-                                           value="{{ old('city') }}" class="form-control">
+                                <x-form.field name="address" :label="__('order.address')" required>
+                                    <input type="text" name="address" id="address" required
+                                           value="{{ old('address') }}"
+                                           class="form-control @error('address') is-invalid @enderror">
+                                </x-form.field>
+                            </div>
+
+                            <div class="col-md-6">
+                                <x-form.field name="city" :label="__('register.city')" required>
+                                    <input type="text" name="city" id="city" required
+                                           value="{{ old('city') }}"
+                                           class="form-control @error('city') is-invalid @enderror">
                                 </x-form.field>
                             </div>
                         </div>

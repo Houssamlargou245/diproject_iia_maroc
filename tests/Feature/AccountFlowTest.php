@@ -75,6 +75,7 @@ class AccountFlowTest extends TestCase
             'first_name' => 'Amina',
             'last_name' => 'Bennani',
             'email' => 'amina@example.test',
+            'phone_code' => '+212',
             'phone' => '0612345678',
             'password' => 'Correct-Horse!9',
             'password_confirmation' => 'Correct-Horse!9',
@@ -401,6 +402,7 @@ class AccountFlowTest extends TestCase
             'first_name' => 'Yasmine',
             'last_name' => 'El Idrissi',
             'email' => 'valid@example.test',
+            'phone_code' => '+212',
             'phone' => '0661234567',
             'password' => 'Correct-Horse!9',
             'password_confirmation' => 'Correct-Horse!9',
@@ -417,6 +419,7 @@ class AccountFlowTest extends TestCase
             [
                 'iso3' => 'MAR',
                 'phone_code' => '+212',
+                'dial_code' => '+212',
                 'name_fr' => 'Maroc',
                 'name_en' => 'Morocco',
                 'name_ar' => 'المغرب',

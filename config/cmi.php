@@ -62,10 +62,19 @@ return [
     | POST to `callbackUrl`. Without it no callback is ever sent, so no order is
     | ever settled even after a successful authorisation.
     |
+    | `auto_redirect` returns the customer straight to `okUrl`/`failUrl` once the
+    | payment is processed. When it is off CMI parks them on its own
+    | `est3DTridesNotification` page ("L'autorisation de paiement a été traitée…
+    | Cliquez ici pour retourner au site marchand") and waits for a manual click.
+    |
     */
 
     'session_timeout' => (int) env('CMI_SESSION_TIMEOUT', 1800),
-    'callback_response' => env('CMI_CALLBACK_RESPONSE', 'true'),
+    // CMI reads the literal words "true"/"false". An .env `true` reaches PHP as
+    // the boolean, which stringifies to "1" — a value the gateway does not
+    // recognise, so the flag is silently ignored.
+    'callback_response' => filter_var(env('CMI_CALLBACK_RESPONSE', true), FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
+    'auto_redirect' => filter_var(env('CMI_AUTO_REDIRECT', true), FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
 
     /*
     |--------------------------------------------------------------------------

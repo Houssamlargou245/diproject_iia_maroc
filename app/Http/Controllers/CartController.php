@@ -50,10 +50,17 @@ class CartController extends Controller
         // The estimate is indicative only. The authoritative figure is the
         // quote produced at checkout, which applies the member rate from the
         // server's own record rather than from what the visitor claimed.
+        //
+        // `hasOrders` gates the "My payments" entry point on the basket: it is
+        // shown only to a signed-in buyer who already has something to look at,
+        // so a first-time visitor is not sent to an empty order list.
+        $user = $request->user();
+
         return view('pages.cart', [
             'cart' => $cart,
             'locale' => Locale::parse(app()->getLocale()),
             'currentRoute' => 'cart',
+            'hasOrders' => $user !== null && $user->orders()->exists(),
             'estimatedTotal' => (int) $cart->items->sum(
                 fn ($item): int => $item->estimatedTotal()
             ),
