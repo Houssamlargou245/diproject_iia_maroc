@@ -70,8 +70,11 @@ return [
     */
 
     'session_timeout' => (int) env('CMI_SESSION_TIMEOUT', 1800),
-    'callback_response' => env('CMI_CALLBACK_RESPONSE', 'true'),
-    'auto_redirect' => env('CMI_AUTO_REDIRECT', 'true'),
+    // CMI reads the literal words "true"/"false". An .env `true` reaches PHP as
+    // the boolean, which stringifies to "1" — a value the gateway does not
+    // recognise, so the flag is silently ignored.
+    'callback_response' => filter_var(env('CMI_CALLBACK_RESPONSE', true), FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
+    'auto_redirect' => filter_var(env('CMI_AUTO_REDIRECT', true), FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
 
     /*
     |--------------------------------------------------------------------------

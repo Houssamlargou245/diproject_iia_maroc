@@ -7,10 +7,10 @@ namespace App\Services\Payment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentException;
+use App\Jobs\IssueInvoiceAndNotify;
 use App\Mail\OrderStatusChanged;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Services\Registration\InvoiceService;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -40,7 +40,6 @@ use Throwable;
 class PaymentSettlementService
 {
     public function __construct(
-        private readonly InvoiceService $invoices,
         private readonly SettlementPlan $plan,
     ) {}
 
@@ -242,8 +241,13 @@ class PaymentSettlementService
             'captured_at' => now(),
         ])->save();
 
-        $this->issueInvoice($order);
-        $this->notify($order, 'paid');
+        // The payment is settled above; its paperwork is not. Rendering the
+        // invoice with dompdf takes seconds and the gateway waits only a few
+        // for our answer — replying late is what sends a paying customer to
+        // CMI's "vérifiez l'état de votre commande" page while the money has
+        // already been taken. The mail rides along in the same job so that it
+        // can carry the invoice that was just rendered.
+        IssueInvoiceAndNotify::dispatch($order->getKey());
     }
 
     private function markAwaitingPayment(Order $order): void
@@ -259,45 +263,23 @@ class PaymentSettlementService
             $order->transitionTo(OrderStatus::Failed);
         }
 
-        $this->notify($order, 'failed');
+        $this->notifyFailed($order);
     }
 
-    /**
-     * Allocate the invoice number and render the PDF.
-     *
-     * Failures are swallowed on purpose: the payment is settled and the money
-     * is at the bank, so a PDF renderer error must not roll that back or show
-     * the customer an error page. The order is paid and the invoice can be
-     * regenerated from the admin panel.
-     */
-    private function issueInvoice(Order $order): void
-    {
-        try {
-            $this->invoices->generate($order);
-        } catch (Throwable $e) {
-            report($e);
-
-            Log::error('invoice.generation_failed', [
-                'order' => $order->reference,
-                'reason' => $e::class,
-            ]);
-        }
-    }
-
-    private function notify(Order $order, string $event): void
+    private function notifyFailed(Order $order): void
     {
         // Queued so a slow mail server cannot hold the gateway's callback
         // open. A failure to notify is an operator problem, not a payment
         // problem, so it is logged and swallowed.
         try {
             Mail::to($order->user?->email)
-                ->queue(new OrderStatusChanged($order, $event));
+                ->queue(new OrderStatusChanged($order, 'failed'));
         } catch (Throwable $e) {
             report($e);
 
             Log::error('order.notification_failed', [
                 'order' => $order->reference,
-                'event' => $event,
+                'event' => 'failed',
             ]);
         }
     }

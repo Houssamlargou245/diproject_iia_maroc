@@ -637,7 +637,7 @@ class RegistrationFlowTest extends TestCase
             'status' => PaymentStatus::Authorised->value,
         ]);
 
-        Mail::assertQueued(OrderStatusChanged::class);
+        Mail::assertSent(OrderStatusChanged::class);
     }
 
     public function test_a_callback_settles_when_the_oid_carries_a_per_attempt_suffix(): void
@@ -712,7 +712,7 @@ class RegistrationFlowTest extends TestCase
         // makes the second call a no-op rather than a second capture — and the
         // customer is told once, not twice.
         $this->assertSame(1, Payment::query()->where('order_id', $order->getKey())->count());
-        Mail::assertQueued(OrderStatusChanged::class, 1);
+        Mail::assertSent(OrderStatusChanged::class, 1);
     }
 
     public function test_a_declined_payment_marks_the_order_failed(): void
@@ -816,7 +816,7 @@ class RegistrationFlowTest extends TestCase
         $this->assertSame(OrderStatus::Paid, $order->status);
         $this->assertNotNull($order->paid_at);
         $this->assertNotNull($order->invoice_number);
-        Mail::assertQueued(OrderStatusChanged::class);
+        Mail::assertSent(OrderStatusChanged::class);
     }
 
     public function test_a_callback_for_an_unknown_order_is_refused(): void

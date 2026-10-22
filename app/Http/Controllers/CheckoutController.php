@@ -339,11 +339,10 @@ class CheckoutController extends Controller
     }
 
     /**
-     * The same rehearsal in EUR (0,09 €, about 1 MAD).
+     * The same rehearsal in EUR (15,00 €, about 166,67 MAD).
      *
      * Exercises the international-card path and the gateway's display of a
-     * non-MAD amount without a real tariff, for roughly the same token cost as
-     * the dirham test.
+     * non-MAD amount without a real tariff.
      */
     public function testPaymentEur(Request $request): RedirectResponse
     {
@@ -351,10 +350,20 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Build and place a token order in the given currency, then send the tester
-     * to the gateway. Shared by the MAD and EUR rehearsals.
+     * The same rehearsal at 0,50 MAD — the smallest amount the rehearsal can
+     * raise, to push a sub-unit figure through the gateway and the settlement
+     * plan end to end.
      */
-    private function raiseTestOrder(Request $request, string $currency): RedirectResponse
+    public function testPaymentHalf(Request $request): RedirectResponse
+    {
+        return $this->raiseTestOrder($request, 'MAD', 'conference.payment_test_amount_half');
+    }
+
+    /**
+     * Build and place a token order in the given currency, then send the tester
+     * to the gateway. Shared by the MAD, EUR and half-dirham rehearsals.
+     */
+    private function raiseTestOrder(Request $request, string $currency, ?string $amountKey = null): RedirectResponse
     {
         $user = $request->user();
 
@@ -371,11 +380,11 @@ class CheckoutController extends Controller
 
         $currency = strtoupper($currency);
 
-        $amountKey = $currency === 'EUR'
+        $amountKey ??= $currency === 'EUR'
             ? 'conference.payment_test_amount_eur'
             : 'conference.payment_test_amount';
 
-        $amount = max(1, (int) config($amountKey, $currency === 'EUR' ? 9 : 100));
+        $amount = max(1, (int) config($amountKey, $currency === 'EUR' ? 1500 : 100));
 
         $quote = new Quote(
             lines: [[

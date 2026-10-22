@@ -77,11 +77,19 @@ return [
     'payment_test_amount' => (int) env('PAYMENT_TEST_AMOUNT', 100),
 
     /*
-    | The same rehearsal in euros: 9 minor units is 0,09 EUR, about 1 MAD, so
-    | the international-card path and the gateway's non-MAD currency display can
-    | be exercised for roughly the same token cost.
+    | The same rehearsal in euros: 1500 minor units is 15,00 EUR, charged as
+    | about 166,67 MAD at the settlement rate — enough to exercise the
+    | international-card path and the gateway's non-MAD currency display with a
+    | real amount.
     */
 
-    'payment_test_amount_eur' => (int) env('PAYMENT_TEST_AMOUNT_EUR', 9),
+    'payment_test_amount_eur' => (int) env('PAYMENT_TEST_AMOUNT_EUR', 1500),
+
+    /*
+    | The half-dirham rehearsal: 50 minor units is 0,50 MAD, the smallest
+    | amount a rehearsal can raise.
+    */
+
+    'payment_test_amount_half' => (int) env('PAYMENT_TEST_AMOUNT_HALF', 50),
 
 ];
