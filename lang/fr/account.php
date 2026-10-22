@@ -76,4 +76,8 @@ return [
     'order_no_places' => 'Aucune place',
     'actions_title' => 'Raccourcis',
     'logout_confirm' => 'Se déconnecter de cet appareil ?',
+    'promo_title'  => 'Votre code promo',
+    'promo_lede'   => 'Partagez ce code pour gagner des récompenses. Il reste le même pour tout votre compte.',
+    'promo_copy'   => 'Copier',
+    'promo_copied' => 'Copié !',
 ];

@@ -72,7 +72,7 @@
 <section class="h-hero f-hero">
 
     <span class="h-hero__bloom" aria-hidden="true"></span>
-    <span class="h-hero__sparks" aria-hidden="true"></span>
+    <!-- <span class="h-hero__sparks" aria-hidden="true"></span> -->
 
     <div class="container">
         <div class="h-hero__inner">
@@ -106,13 +106,13 @@
                  same band — it is the one place a repeated year earns its
                  place, because it is what tells the reader which event's
                  programme or map they are looking at. --}}
-            <h1 class="h-hero__title">
+            <h4 class="h-hero__title">
                 <span class="h-hero__name">{{ $title ?? $edition?->organiser }}</span>
 
                 @if ($edition?->year)
                     <span class="h-hero__year">{{ $edition->year }}</span>
                 @endif
-            </h1>
+            </h4>
 
             @if ($eyebrow)
                 <p class="h-hero__kicker">{{ $eyebrow }}</p>
