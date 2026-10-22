@@ -28,10 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-    $middleware->validateCsrfTokens(except: [
-        'payment/cmi/callback',
-    ]);
-})
+        $middleware->validateCsrfTokens(except: [
+            'payment/cmi/callback',
+        ]);
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         // Proxy trust is configured in AppServiceProvider::register(), not here:
         // this closure runs before the configuration is loaded, so config()
@@ -132,20 +132,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            $trace = [];
-            foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 30) as $frame) {
-                $trace[] = ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'];
-            }
-            \Illuminate\Support\Facades\Log::info('419-debug', [
-                'has_session' => $request->hasSession(),
-                'flash_bag' => $request->session()->get('_flash'),
-                'store_class' => get_class($request->session()),
-                'trace' => $trace,
-            ]);
-
             return redirect()
                 ->back()
                 ->with('session_expired', true);
         });
     })->create();
-
