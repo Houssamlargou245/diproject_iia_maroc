@@ -20,14 +20,20 @@ class PromoCodeAssigned extends Notification
     }
 
     public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->subject('Bienvenue chez IAA Maroc - Votre Code Promo')
-            ->greeting('Bonjour ' . $notifiable->first_name . ',')
-            ->line('Merci de vous être inscrit sur notre plateforme.')
-            ->line('Voici votre code promo personnel. Il restera le même pour tout votre compte.')
-            ->line('**' . $this->promoCode . '**') // The code itself
-            ->action('Accéder à mon profil', url('/compte'))
-            ->line('Merci de votre confiance !');
-    }
+   {
+    $profileUrl = url('/compte');
+
+    return (new MailMessage)
+        ->subject('Bienvenue chez ARABCIA 2026 — Votre code promo personnel')
+        ->greeting('Bonjour ' . $notifiable->first_name . ',')
+        ->line('Nous vous remercions pour votre inscription sur notre plateforme !')
+        ->line('Voici votre code promo personnel, qui restera le même pour votre compte.')
+        ->line('**' . $this->promoCode . '**')
+        ->line('Merci pour votre confiance!')
+        ->line('Cordialement,')
+        ->line('ARABCIA 2026')
+        ->action('Accéder à mon profil', $profileUrl)
+        ->line('Si vous rencontrez des difficultés pour cliquer sur le bouton « Accéder à mon profil », copiez et collez le lien ci-dessous dans votre navigateur :')
+        ->line($profileUrl);
+}
 }
