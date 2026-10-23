@@ -82,5 +82,5 @@ return [
     'promo_lede'   => 'Partagez ce code pour gagner des récompenses. Il reste le même pour tout votre compte.',
     'promo_copy'   => 'Copier',
     'promo_copied' => 'Copié !',
-    'promo_support' => 'En cas de non-réception de votre code promo, veuillez contacter notre support aux adresses e-mail suivantes : info@arabciia.org ou info@iiamaroc.org',
+    'promo_support' => "Si vous rencontrez des difficultés pour effectuer votre paiement sur la plateforme, nous vous invitons à nous contacter par e-mail :\n\nArab CIA : info@arabciia.org\nIia Maroc: Info@iiamaroc.org\n\nNous vous répondrons dans les plus brefs délais.",
 ];

@@ -221,7 +221,7 @@ Route::post('/{locale?}/logout', SessionController::class)
 
 // --- The signed-in delegate area ------------------------------------------
 
-Route::middleware('auth')->group(function () use ($page): void {
+Route::middleware(['auth', 'totp.confirmed'])->group(function () use ($page): void {
     $page('account', 'compte', [AccountController::class, 'show']);
     Route::get('/account', [AccountController::class, 'show'])->name('account-alt.ar');
     Route::get('/{locale?}/account', [AccountController::class, 'show'])->name('account-alt');
@@ -312,9 +312,14 @@ $page('cart.printable', 'panier/imprimer', [CartController::class, 'printable'])
 
 // --- The checkout -----------------------------------------------------------
 
-$page('checkout', 'inscription', [CheckoutController::class, 'create']);
-Route::post('/inscription', [CheckoutController::class, 'store'])->name('checkout.store.ar');
-Route::post('/{locale?}/inscription', [CheckoutController::class, 'store'])->name('checkout.store');
+// --- The checkout -----------------------------------------------------------
+
+// On englobe les routes dans un groupe avec les deux middlewares
+Route::middleware(['auth', 'totp.confirmed'])->group(function () use ($page): void {
+    $page('checkout', 'inscription', [CheckoutController::class, 'create']);
+    Route::post('/inscription', [CheckoutController::class, 'store'])->name('checkout.store.ar');
+    Route::post('/{locale?}/inscription', [CheckoutController::class, 'store'])->name('checkout.store');
+});
 
 Route::get('/inscription/payer/{order}', [CheckoutController::class, 'pay'])->name('checkout.pay.ar');
 Route::get('/{locale?}/inscription/payer/{order}', [CheckoutController::class, 'pay'])->name('checkout.pay');

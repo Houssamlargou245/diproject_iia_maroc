@@ -289,7 +289,7 @@
                                                         <div class="mt-4 p-3 bg-light border rounded d-flex align-items-start gap-2">
                                 <i class="fas fa-info-circle mt-1" style="color: #4f3cc9;"></i>
                                 <p class="mb-0 text-muted" style="font-size: 0.85rem; line-height: 1.5;">
-                                    {{ __('account.promo_support') }}
+                                    {!! nl2br(e(__('account.promo_support'))) !!}
                                 </p>
                             </div>
                         @endif
