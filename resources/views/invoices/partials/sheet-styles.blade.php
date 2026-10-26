@@ -14,6 +14,7 @@
         </div>
 --}}
 <style>
+     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
     .invoice-doc {
         --invoice-deep: #2b1a78;
         --invoice-violet: #5b36c4;
@@ -164,12 +165,25 @@
         .invoice-doc .foot { flex-direction: column; height: auto; padding: 1rem; position: static; background: var(--invoice-grad); margin: 1rem -1rem -12rem; }
     }
 
-    @media print {
+    /* @media print {
         @page { margin: 0; size: A4; }
         .invoice-doc--embedded, .invoice-doc--page { background: #fff; padding: 0; }
         .invoice-doc .container { max-width: none !important; padding: 0 !important; width: auto !important; }
         .invoice-doc .toolbar { display: none; }
         .invoice-doc .sheet { border-radius: 0; box-shadow: none; height: 297mm; min-height: 0; width: 210mm; }
+        .invoice-doc tr { break-inside: avoid; }
+    } */
+
+         @media print {
+        @page { margin: 0; size: A4; }
+        body, html {
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .invoice-doc--embedded, .invoice-doc--page { background: #fff !important; padding: 0 !important; }
+        .invoice-doc .toolbar, .ux-notice, header, footer { display: none !important; }
+        .invoice-doc .sheet { border-radius: 0; box-shadow: none; height: 297mm; min-height: 0; width: 210mm; margin: 0 auto; }
         .invoice-doc tr { break-inside: avoid; }
     }
 </style>

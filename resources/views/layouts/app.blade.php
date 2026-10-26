@@ -33,6 +33,7 @@
 
     <title>@yield('title', $currentEdition?->titleIn($currentLocale) ?? __('site.site_name'))</title>
     <meta name="description" content="@yield('description', __('meta.description', ['year' => $currentEdition?->year ?? date('Y')]))">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     {{-- The three language variants are the same page, and the default language —
          Arabic — is the unprefixed, canonical one.

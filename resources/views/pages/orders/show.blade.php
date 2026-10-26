@@ -50,14 +50,20 @@
                 </a>
             @endif
 
-            @if ($order->status->isSettled())
+            <!-- @if ($order->status->isSettled())
                 <form method="POST"
                       action="{{ route('orders.invoice', ['order' => $order->id]) }}"
                       class="m-0">
                     @csrf
                     <button type="submit" class="btn btn--ghost">@lang('order.download_invoice')</button>
                 </form>
-            @endif
+            @endif -->
+
+            @if ($order->status->isSettled())
+    <button type="button" class="btn btn--ghost" onclick="window.print()">
+    @lang('order.download_invoice')
+</button>
+@endif
 
             <button type="button" class="btn btn--ghost" onclick="window.print()">
                 @lang('order.print')

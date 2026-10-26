@@ -25,7 +25,7 @@
     $colorTotal = '#3a2394';   // Solid Purple for total bar
 @endphp
 
-<article class="sheet" role="document" dir="{{ $dir }}" style="font-family: sans-serif; color: #333;">
+<article class="sheet" role="document" dir="{{ $dir }}" style="color: #333;">
 
     {{-- HEADER --}}
     <header style="margin-bottom: 20px;">
@@ -45,7 +45,7 @@
 </p>
                 </td>
                 <td style="width: 50%; text-align: {{ $alignEnd }}; vertical-align: top;">
-                    <img src="{{ asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="{{ $organiser }}" width="150">
+                    <img src="{{ asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="{{ $organiser }}" width="260" style="max-width: 100%; height: auto;">
                 </td>
             </tr>
         </table>
