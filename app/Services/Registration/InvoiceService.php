@@ -120,14 +120,17 @@ class InvoiceService
             $participantName = $order->user->displayName();
         }
 
-        return [
+                return [
             'edition' => $order->edition,
             'reference' => (string) $order->reference,
-                        'lines' => $order->items->map(function ($item) use ($currency, $locale) {
+            
+            // ADD THIS LINE BACK IN:
+            'issuedOn' => $order->created_at ? $order->created_at->format('d/m/Y') : now()->format('d/m/Y'),
+            
+            'lines' => $order->items->map(function ($item) use ($currency, $locale) {
                 $qty = $item->totalQuantity();
-                $attributes = $item->getAttributes(); // Safe way to get DB columns
+                $attributes = $item->getAttributes();
                 
-                // Try to find the unit price, or calculate it from the line total
                 $unitPrice = $attributes['unit_price'] ?? $attributes['price'] ?? 0;
                 $lineTotal = $attributes['total'] ?? $attributes['subtotal'] ?? $attributes['amount'] ?? $attributes['line_total'] ?? 0;
                 
@@ -150,7 +153,6 @@ class InvoiceService
             'billedTo' => $this->orderBillingLines($order),
             'invoiceLocale' => $locale,
             
-            // --- NEW FIELDS FOR THE FACTURE ACQUITTÉE DESIGN ---
             'participant_name' => $participantName,
             'payment_date' => $latestPayment ? ($latestPayment->settled_at ?? $latestPayment->created_at)->format('d/m/Y') : null,
             'transaction_reference' => $latestPayment ? ($latestPayment->gateway_transaction_id ?? $latestPayment->gateway_reference) : null,
