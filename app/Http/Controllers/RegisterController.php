@@ -11,6 +11,7 @@ use App\Models\Country;
 use App\Models\User;
 use App\Services\Registration\PromoCodeGenerator;
 use App\Services\Security\SecurityEventLogger;
+use App\Notifications\PromoCodeAssigned;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,6 +78,8 @@ class RegisterController extends Controller
 
         Auth::login($user, remember: true);
         $request->session()->regenerate();
+
+        $user->notify(new PromoCodeAssigned($user->promo_code));
 
         $this->events->log('auth.registered', [
             'user_id' => $user->getKey(),

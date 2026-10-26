@@ -25,6 +25,12 @@ use App\Http\Controllers\VenueController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use App\Models\User;
+use App\Services\Registration\PromoCodeGenerator;
+use App\Notifications\PromoCodeAssigned;
+use Illuminate\Support\Facades\Hash;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -215,7 +221,7 @@ Route::post('/{locale?}/logout', SessionController::class)
 
 // --- The signed-in delegate area ------------------------------------------
 
-Route::middleware('auth')->group(function () use ($page): void {
+Route::middleware(['auth', 'totp.confirmed'])->group(function () use ($page): void {
     $page('account', 'compte', [AccountController::class, 'show']);
     Route::get('/account', [AccountController::class, 'show'])->name('account-alt.ar');
     Route::get('/{locale?}/account', [AccountController::class, 'show'])->name('account-alt');
@@ -306,9 +312,14 @@ $page('cart.printable', 'panier/imprimer', [CartController::class, 'printable'])
 
 // --- The checkout -----------------------------------------------------------
 
-$page('checkout', 'inscription', [CheckoutController::class, 'create']);
-Route::post('/inscription', [CheckoutController::class, 'store'])->name('checkout.store.ar');
-Route::post('/{locale?}/inscription', [CheckoutController::class, 'store'])->name('checkout.store');
+// --- The checkout -----------------------------------------------------------
+
+// On englobe les routes dans un groupe avec les deux middlewares
+Route::middleware(['auth', 'totp.confirmed'])->group(function () use ($page): void {
+    $page('checkout', 'inscription', [CheckoutController::class, 'create']);
+    Route::post('/inscription', [CheckoutController::class, 'store'])->name('checkout.store.ar');
+    Route::post('/{locale?}/inscription', [CheckoutController::class, 'store'])->name('checkout.store');
+});
 
 Route::get('/inscription/payer/{order}', [CheckoutController::class, 'pay'])->name('checkout.pay.ar');
 Route::get('/{locale?}/inscription/payer/{order}', [CheckoutController::class, 'pay'])->name('checkout.pay');
@@ -441,3 +452,28 @@ Route::get('/newsletter/confirm/{subscriber}', [NewsletterController::class, 'co
 Route::post('/sponsoring/demande', [SponsorshipRequestController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('sponsoring.request');
+
+
+Route::get('/test-final-registration', function (PromoCodeGenerator $generator) {
+    
+    $firstName = 'Houssam';
+    $email = 'houssamlargou+' . time() . '@gmail.com'; 
+    
+    $promoCode = $generator->generate($firstName);
+
+    $user = User::create([
+        'first_name' => $firstName,
+        'last_name' => 'Test',
+        'name' => $firstName . ' Test',
+        'email' => $email,
+        'password' => Hash::make('Password!2026'),
+        'promo_code' => $promoCode,
+        'locale' => 'fr',
+    ]);
+
+    $user->forceFill(['terms_accepted_at' => now()])->save();
+
+    $user->notify(new PromoCodeAssigned($user->promo_code));
+
+    return "Success! User created with code: <strong>{$promoCode}</strong> <br> Email sent to: <strong>{$email}</strong> <br> Check your Gmail!";
+});

@@ -127,7 +127,7 @@
         <div class="d-header__actions">
             <x-locale-switcher />
 
-            @auth
+                        @if(auth()->check() && auth()->user()->hasConfirmedTotp())
                 {{-- The cart icon points at the basket, not the order history: it
                      is the shopping symbol, and the order list is one click away
                      from the account page. The count is the number of places in
@@ -149,7 +149,7 @@
                         @lang('order.cart.title')@if ($basketCount > 0) ({{ $basketCount }}) @endif
                     </span>
                 </a>
-            @endauth
+            @endif
 
             {{-- The account control.
 
@@ -164,7 +164,7 @@
                  own name and needs no translation. The visually hidden text
                  names the destination, so the accessible name is "My account —
                  Ahmed Bennani" rather than the name alone. --}}
-            @auth
+                        @if(auth()->check() && auth()->user()->hasConfirmedTotp())
                 <a href="{{ route('account') }}" class="d-btn d-btn--outline d-btn--sm d-header__account">
                     <span class="visually-hidden">@lang('account.title')</span>
                     <i class="fas fa-user-circle" aria-hidden="true"></i>
@@ -177,7 +177,7 @@
                     <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
                     <span class="d-header__account-name">@lang('action.login')</span>
                 </a>
-            @endauth
+            @endif
 
             {{-- The one thing the header is asking for. Present at every width
                  with room for it; below that it moves into the drawer rather
@@ -260,7 +260,8 @@
          Signing out is a POST, not a link, so it is a real form with a CSRF
          token. A link would be a GET, and a GET that mutates state is
          triggerable by a third-party page. --}}
-    @guest
+        {{-- On affiche le menu invité si non connecté OU si 2FA non validé --}}
+    @if(!auth()->check() || !auth()->user()->hasConfirmedTotp())
         <ul class="d-drawer__list d-drawer__list--account">
             <li><a href="{{ route('login') }}">@lang('action.login')</a></li>
             @if ($currentEdition?->registration_open)
@@ -278,7 +279,7 @@
                 </form>
             </li>
         </ul>
-    @endguest
+    @endif
 </div>
 
 

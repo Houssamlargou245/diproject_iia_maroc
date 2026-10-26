@@ -52,8 +52,10 @@ return [
     'registrations_label' => 'Inscriptions',
     'email_label' => 'Adresse e-mail',
 
-    'checklist_title' => 'Avant de pouvoir vous inscrire',
-    'checklist_lede' => 'Trois conditions, vérifiées avant le paiement. Les deux premières se règlent en quelques minutes ; la troisième est un simple accord de votre part.',
+    // 'checklist_title' => 'Avant de pouvoir vous inscrire',
+    'checklist_title' => 'Avant de pouvoir finaliser votre inscription',
+    // 'checklist_lede' => 'Trois conditions, vérifiées avant le paiement. Les deux premières se règlent en quelques minutes ; la troisième est un simple accord de votre part.',
+    'checklist_lede' => 'Les deux premières conditions ont déjà été remplies. Il ne vous reste plus qu\'à donner votre accord pour valider la troisième condition avant de procéder au paiement et de finaliser votre inscription.',
     'checklist_done' => 'Tout est prêt : vous pouvez vous inscrire.',
     'step_email_title' => 'Confirmer votre adresse e-mail',
     'step_email_text' => 'Un lien de confirmation vous a été envoyé. Sans lui, aucun justificatif ne peut vous être envoyé.',
@@ -80,4 +82,5 @@ return [
     'promo_lede'   => 'Partagez ce code pour gagner des récompenses. Il reste le même pour tout votre compte.',
     'promo_copy'   => 'Copier',
     'promo_copied' => 'Copié !',
+    'promo_support' => "Si vous rencontrez des difficultés pour effectuer votre paiement sur la plateforme, nous vous invitons à nous contacter par e-mail :\n\nArab CIA : info@arabciia.org\nIia Maroc: Info@iiamaroc.org\n\nNous vous répondrons dans les plus brefs délais.",
 ];

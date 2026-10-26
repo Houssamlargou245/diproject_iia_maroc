@@ -255,19 +255,14 @@
                             </a>
                         </div>
 
-                                                    <a href="{{ route('account.edit') }}" class="d-btn d-btn--ghost d-btn--block mt-4">
-                                <span>@lang('account.edit_title')</span>
-                            </a>
-                        </div>
-
-                        {{-- ========================================== --}}
+                                                {{-- ========================================== --}}
                         {{-- ADD THE PROMO CODE PANEL HERE --}}
                         {{-- ========================================== --}}
                         @if ($user->promo_code)
                         <div class="d-panel">
                             <h3 class="d-panel__title">@lang('account.promo_title')</h3>
                             
-                            <p class="d-form-panel__lede">@lang('account.promo_lede')</p>
+                            <!-- <p class="d-form-panel__lede">@lang('account.promo_lede')</p> -->
                             
                             <div class="d-flex align-items-center gap-2 mt-3">
                                 <code class="flex-grow-1 px-3 py-2 rounded border font-monospace text-center" 
@@ -289,7 +284,14 @@
                                     <span>@lang('account.promo_copy')</span>
                                 </button>
                             </div>
-                        </div>
+
+                                                        {{-- Modern Soft Info Box --}}
+                                                        <div class="mt-4 p-3 bg-light border rounded d-flex align-items-start gap-2">
+                                <i class="fas fa-info-circle mt-1" style="color: #4f3cc9;"></i>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; line-height: 1.5;">
+                                    {!! nl2br(e(__('account.promo_support'))) !!}
+                                </p>
+                            </div>
                         @endif
                         {{-- ========================================== --}}
 

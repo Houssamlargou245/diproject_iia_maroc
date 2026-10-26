@@ -52,8 +52,8 @@ return [
     'registrations_label' => 'Registrations',
     'email_label' => 'Email address',
 
-    'checklist_title' => 'Before you can register',
-    'checklist_lede' => 'Three requirements, all checked before payment. The first two take a few minutes; the third is simply your agreement.',
+    'checklist_title' => 'Before you can finalize your registration',
+    'checklist_lede' => 'The first two conditions have already been met. You just need to give your consent to validate the third condition before proceeding to payment and finalizing your registration.',
     'checklist_done' => 'Everything is ready: you can register.',
     'step_email_title' => 'Confirm your email address',
     'step_email_text' => 'We sent you a confirmation link. Without it we cannot send you any receipt.',
@@ -80,4 +80,5 @@ return [
     'promo_lede'   => 'Share this code to earn rewards. It stays the same for your whole account.',
     'promo_copy'   => 'Copy',
     'promo_copied' => 'Copied!',
+    'promo_support' => 'If you do not receive your promo code, please contact our support at the following email addresses: info@arabciia.org or info@iiamaroc.org',
 ];
