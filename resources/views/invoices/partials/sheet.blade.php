@@ -1,168 +1,162 @@
 {{--
-    Shared invoice sheet body (A4 artwork sheet, glass cards, gradient table
-    header and total pill, violet footer band) in the ARABCIA 2026 invoice
-    design. Used by the standalone print pages (pages/cart-print.blade.php) and
-    the in-app order page (pages/orders/show.blade.php) so a single payload and
-    a single markup produce the on-screen and printed document.
-
-    Expects:
-        $payload    array        see InvoiceService::orderPayload()/cartPayload()
-        $heading    string       document heading (proforma vs numbered invoice)
-        $badge      string|null  optional status pill
-        $isProforma bool         true for a pre-payment (provisional) document
+    Facture Acquittée / Facture Provisoire / Paid Invoice / فاتورة مسددة
 --}}
 @php
-    $locale = $payload['invoiceLocale'];
-    $edition = $payload['edition'];
+    $locale = $payload['invoiceLocale'] ?? 'fr';
+    $edition = $payload['edition'] ?? null;
     $organiser = $edition?->organiser ?? 'ARABCIA';
-    $fmt = fn ($value) => \App\Support\Money::format($value, $payload['currency'], $locale);
+    $currency = $payload['currency'] ?? 'MAD';
+    
+    $fmt = fn ($value) => \App\Support\Money::format($value, $currency, $locale);
 
-    $paths = [
-        'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
-        'bank' => '<path d="M3 10 12 4l9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 21h18"/>',
-        'doc' => '<path d="M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6"/>',
-        'card' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
-        'cal' => '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
-        'pin' => '<path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
-    ];
-    $icon = fn (string $key) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$paths[$key].'</svg>';
+    $reference = $payload['reference'] ?? '—';
+    $issuedOn = $payload['issuedOn'] ?? '—';
+    $participantName = $payload['participant_name'] ?? '—';
+    $paymentDate = $payload['payment_date'] ?? null;
+    $transactionRef = $payload['transaction_reference'] ?? '—';
+    
+    $dir = $locale === 'ar' ? 'rtl' : 'ltr';
+    $alignStart = $dir === 'rtl' ? 'right' : 'left';
+    $alignEnd = $dir === 'rtl' ? 'left' : 'right';
+
+    // Brand Colors
+    $colorPrimary = '#2b1a78'; // Dark Purple for titles
+    $colorAccent = '#5b36c4';  // Medium Purple for table headers
+    $colorTotal = '#3a2394';   // Solid Purple for total bar
 @endphp
 
-<article class="sheet" role="document">
+<article class="sheet" role="document" dir="{{ $dir }}" style="font-family: sans-serif; color: #333;">
 
-    <header class="brand">
-        <div>
-            <img src="{{ asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="{{ $organiser }}" width="200">
-        </div>
+    {{-- HEADER --}}
+    <header style="margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; text-align: {{ $alignStart }};">
+                    <h1 style="font-size: 26px; margin: 0 0 10px 0; color: {{ $colorPrimary }}; text-transform: uppercase;">
+                        {{ $isProforma ? __('order.invoice.proforma_title', [], $locale) : __('order.invoice.paid_title', [], $locale) }}
+                    </h1>
+                    <p style="margin: 0; font-size: 14px;">
+    <strong>{{ __('order.invoice.number', [], $locale) }} :</strong> 
+    <span class="ltr">
+        {{-- If it's a paid invoice, use the official number, otherwise use the order reference --}}
+        {{ $isProforma ? $payload['reference'] : ($order->invoice_number ?? $payload['reference']) }}
+    </span><br>
+    <strong>{{ __('order.invoice.issue_date', [], $locale) }} :</strong> <span class="ltr">{{ $issuedOn }}</span>
+</p>
+                </td>
+                <td style="width: 50%; text-align: {{ $alignEnd }}; vertical-align: top;">
+                    <img src="{{ asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="{{ $organiser }}" width="150">
+                </td>
+            </tr>
+        </table>
     </header>
 
-    <section class="top">
-        <div class="top__title">
-            <h1>{{ $heading }}</h1>
-            <div class="top__ref">
-                @if (filled($payload['reference']))
-                    <b class="ltr">{{ $payload['reference'] }}</b>
-                @endif
-            </div>
-            @if (filled($badge))
-                <span class="pill">{{ $badge }}</span>
-            @endif
-        </div>
+    <hr style="border: 1px solid #d6cdf2; margin-bottom: 20px;">
 
-        <div class="top__meta">
-            <div class="meta-item">
-                <span class="chip">{!! $icon('cal') !!}</span>
-                <div><b>@lang('order.invoice.issued_on')</b><span class="ltr">{{ $payload['issuedOn'] }}</span></div>
-            </div>
-            <div class="meta-item">
-                <span class="chip">{!! $icon('doc') !!}</span>
-                <div><b>@lang('order.invoice.method')</b><span>@lang('order.invoice.cmi')</span></div>
-            </div>
-        </div>
+    {{-- ISSUER & RECIPIENT --}}
+    <section style="margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; line-height: 1.6;">
+            <tr>
+                <td style="width: 48%; vertical-align: top; padding: 10px; background-color: rgba(238, 234, 252, 0.5); border-radius: 8px;">
+                    <strong style="font-size: 13px; color: {{ $colorPrimary }};">{{ __('order.invoice.issuer', [], $locale) }}</strong><br>
+                    <strong>IIA Maroc</strong><br>
+                    @if($locale === 'ar')
+                        شارع سيدي محمد بن عبد الله<br>
+                        إقامة بيل فيو، عمارة B<br>
+                        الطابق الثاني، المكتب 1 — الدار البيضاء<br>
+                    @elseif($locale === 'en')
+                        Bd Sidi Mohamed Ben Abdellah<br>
+                        Residence Belle vue, Imm. B Etage 2, Bureau 1 - Casablanca<br>
+                    @else
+                        Bd Sidi Mohamed Ben Abdellah<br>
+                        Résidence Belle vue, Imm. B Étage 2, Bureau 1 — Casablanca<br>
+                    @endif
+                    <span class="ltr">+212 6 13 32 32 93</span><br>
+                    <span class="ltr">info@iiamaroc.org</span>
+                </td>
+                <td style="width: 4%;"></td>
+                <td style="width: 48%; vertical-align: top; padding: 10px; background-color: rgba(238, 234, 252, 0.5); border-radius: 8px;">
+                    <strong style="font-size: 13px; color: {{ $colorPrimary }};">{{ __('order.invoice.bill_to', [], $locale) }}</strong><br>
+                    @foreach ($payload['billedTo'] ?? [] as $line)
+                        <span class="{{ $loop->first ? '' : 'ltr' }}">{{ $line }}</span><br>
+                    @endforeach
+                </td>
+            </tr>
+        </table>
     </section>
 
-    <section class="duo">
-        <div class="card">
-            <div class="card__head"><span class="card__ico">{!! $icon('user') !!}</span>@lang('order.invoice.billed_to')</div>
-            @foreach ($payload['billedTo'] as $line)
-                <p class="{{ $loop->first ? 'strong' : 'k ltr' }}">{{ $line }}</p>
-            @endforeach
-        </div>
-
-        <div class="card">
-            <div class="card__head"><span class="card__ico">{!! $icon('bank') !!}</span>@lang('order.invoice.details')</div>
-            <div class="issuer">
-                <div>
-                    <p class="strong">{{ $edition?->host_institute ?? 'IIA Maroc' }}</p>
-                    <p class="k">@lang('order.invoice.method')</p>
-                    <p>@lang('order.invoice.cmi')</p>
-                </div>
-                <img src="{{ asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="IIA Maroc">
-            </div>
-        </div>
+    {{-- CONFERENCE DETAILS --}}
+    <section style="margin-bottom: 20px; font-size: 13px; text-align: {{ $alignStart }};">
+        <strong style="color: {{ $colorPrimary }};">{{ __('order.invoice.conference_title', [], $locale) }}</strong><br>
+        {{ __('order.invoice.conference_venue', [], $locale) }}<br>
+        <strong>{{ __('order.invoice.participant', [], $locale) }} :</strong> {{ $participantName }}
     </section>
 
-    <section class="card card--white items-card">
-        <div class="card__head"><span class="card__ico">{!! $icon('doc') !!}</span>{{ $heading }}</div>
-        <table class="items">
+    {{-- ITEMS TABLE --}}
+    <section style="margin-bottom: 20px;">
+        <strong style="font-size: 13px; color: {{ $colorPrimary }};">{{ __('order.invoice.details', [], $locale) }}</strong>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
             <thead>
-                <tr>
-                    <th>@lang('order.ticket')</th>
-                    <th class="num">@lang('order.quantity')</th>
-                    <th class="num">@lang('order.amount')</th>
+                <tr style="background-color: {{ $colorAccent }}; color: #fff; text-align: {{ $alignStart }};">
+                    <th style="padding: 8px; border: 1px solid {{ $colorAccent }};">{{ __('order.invoice.description', [], $locale) }}</th>
+                    <th style="padding: 8px; border: 1px solid {{ $colorAccent }}; text-align: center;">{{ __('order.quantity', [], $locale) }}</th>
+                    <th style="padding: 8px; border: 1px solid {{ $colorAccent }}; text-align: {{ $alignEnd }};">{{ __('order.invoice.unit_price', [], $locale) }}</th>
+                    <th style="padding: 8px; border: 1px solid {{ $colorAccent }}; text-align: {{ $alignEnd }};">{{ __('order.amount', [], $locale) }}</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($payload['lines'] as $line)
-                    <tr>
-                        <td>{{ $line['label'] }}</td>
-                        <td class="num ltr">{{ $line['quantity'] }}</td>
-                        <td class="num ltr">{{ $line['total'] }}</td>
+                @foreach ($payload['lines'] ?? [] as $line)
+                    <tr style="background-color: #fbfaff;">
+                        <td style="padding: 8px; border: 1px solid #d6cdf2;">{{ $line['label'] }}</td>
+                        <td style="padding: 8px; border: 1px solid #d6cdf2; text-align: center;">{{ $line['quantity'] }}</td>
+                        <td style="padding: 8px; border: 1px solid #d6cdf2; text-align: {{ $alignEnd }};">
+                            {{ $line['unit_price'] ?? $line['total'] }} 
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #d6cdf2; text-align: {{ $alignEnd }};">{{ $line['total'] }}</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
     </section>
 
-    <section class="bottom">
-        @if ($isProforma)
-            <div class="card notes">
-                <div class="card__head"><span class="card__ico">{!! $icon('card') !!}</span>@lang('order.invoice.proforma_notes_title')</div>
-                <p>@lang('order.invoice.proforma_note_estimate')</p>
-                <p>@lang('order.invoice.proforma_note_issue')</p>
-            </div>
-        @else
-            <div class="card notes">
-                <div class="card__head"><span class="card__ico">{!! $icon('card') !!}</span>@lang('order.invoice.details')</div>
-                <p class="strong">{{ $edition?->host_institute ?? 'IIA Maroc' }}</p>
-                <p class="k">@lang('order.invoice.method')</p>
-                <p>@lang('order.invoice.cmi')</p>
-            </div>
-        @endif
-
-        <div class="totals">
-            <table>
-                <tbody>
-                    <tr>
-                        <th>@lang('order.invoice.subtotal')</th>
-                        <td class="ltr">{{ $fmt($payload['subtotal']) }}</td>
-                    </tr>
-                    @if (($payload['discount'] ?? 0) > 0)
-                        <tr>
-                            <th>@lang('order.invoice.discount')</th>
-                            <td class="ltr">&minus;{{ $fmt($payload['discount']) }}</td>
-                        </tr>
-                    @endif
-                    @if (($payload['tax'] ?? 0) > 0)
-                        <tr>
-                            <th>@lang('order.invoice.tax')</th>
-                            <td class="ltr">{{ $fmt($payload['tax']) }}</td>
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
-            <div class="grand">
-                <span>@lang('order.total')</span>
-                <span class="ltr">{{ $fmt($payload['total']) }}</span>
-            </div>
+    {{-- TOTAL BAR --}}
+    <section style="text-align: {{ $alignStart }}; margin-bottom: 20px;">
+        <div style="background-color: {{ $colorTotal }}; color: #fff; padding: 12px 15px; border-radius: 6px; display: inline-block; font-size: 16px; font-weight: bold; width: 100%; box-sizing: border-box;">
+            {{ $isProforma ? __('order.invoice.total_estimate', [], $locale) : __('order.invoice.total_paid', [], $locale) }} : {{ $fmt($payload['total'] ?? 0) }}
         </div>
     </section>
 
-    @if ($isProforma)
-        <p class="card banner notes">
-            <strong>@lang('order.invoice.proforma_banner_title')</strong>
-            @lang('order.invoice.proforma_banner_text')
+    {{-- HELP & PAYMENT INFO --}}
+    <section style="font-size: 11px; line-height: 1.6; margin-bottom: 20px; text-align: {{ $alignStart }};">
+        <strong style="color: {{ $colorPrimary }}; font-size: 13px;">{{ __('order.invoice.payment_method', [], $locale) }}</strong><br>
+        {{ __('order.invoice.payment_cmi', [], $locale) }}<br><br>
+
+        <div style="background-color: #fdf3ee; border: 1px solid #e39374; border-radius: 6px; padding: 10px;">
+            <strong style="color: #8a4622;">{{ __('order.invoice.questions_title', [], $locale) }}</strong><br>
+            <span style="color: #8a4622;">{{ __('order.invoice.questions_text', [], $locale) }}</span><br>
+            <span class="ltr" style="color: #8a4622; text-decoration: underline;">ARABCIA: info@arabcia.org | IIA Maroc: info@iiamaroc.org</span><br>
+            <span style="color: #8a4622;">{{ __('order.invoice.questions_note', [], $locale) }}</span>
+        </div>
+    </section>
+
+    {{-- PAYMENT DETAILS & BANNER --}}
+    @if (!$isProforma)
+        <section style="font-size: 11px; margin-bottom: 20px; text-align: {{ $alignStart }};">
+            <strong style="color: {{ $colorPrimary }}; font-size: 13px;">{{ __('order.invoice.payment_details', [], $locale) }}</strong><br>
+            {{ __('order.invoice.payment_date', [], $locale) }} : <span class="ltr">{{ $paymentDate ?? $issuedOn }}</span> — {{ __('order.invoice.transaction_ref', [], $locale) }} : <span class="ltr">{{ $transactionRef }}</span>
+        </section>
+
+        <div style="border: 2px solid {{ $colorPrimary }}; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 15px; color: {{ $colorPrimary }}; border-radius: 6px;">
+            {{ __('order.invoice.payment_received', [], $locale) }} : 0 {{ $currency }}
+        </div>
+        <p style="font-size: 11px; text-align: center; color: #6f6a96;">
+            {{ __('order.invoice.confirmation_text', [], $locale) }}
         </p>
     @endif
 
-    <footer class="foot">
-        <div class="foot__info">
-            {!! $icon('pin') !!}
-            <div>
-                {{ $edition?->venue_name }} — {{ $edition?->city }}<br>
-                @lang('order.invoice.footer', ['organiser' => $organiser])
-            </div>
-        </div>
+    {{-- FOOTER --}}
+    <footer style="margin-top: 40px; padding-top: 10px; font-size: 10px; text-align: center; color: #6f6a96;">
+        {{ __('order.invoice.footer_text', [], $locale) }}
     </footer>
 
 </article>
