@@ -13,6 +13,8 @@ use App\Support\Money;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceService
@@ -31,8 +33,7 @@ class InvoiceService
         
         $payload = $this->orderPayload($order);
 
-        // Note: invoices.pdf should just include invoices.partials.sheet
-        $pdf = Pdf::loadView('invoices.pdf', [
+        $output = $this->renderPdf('invoices.pdf', [
             'order' => $order,
             'payload' => $payload,
             'heading' => __('order.invoice.title', ['number' => $order->invoice_number], $locale),
@@ -40,14 +41,9 @@ class InvoiceService
             'isProforma' => false,
         ]);
 
-        $pdf->setPaper(
-            (string) config('pdf.paper', 'a4'),
-            (string) config('pdf.orientation', 'portrait'),
-        );
-
         $filename = $this->filename($order);
 
-        Storage::disk($this->disk())->put($filename, $pdf->output());
+        Storage::disk($this->disk())->put($filename, $output);
 
         $order->forceFill(['invoice_path' => $filename])->save();
 
@@ -77,21 +73,13 @@ class InvoiceService
         $payload = $this->orderPayload($order);
         $locale = $this->invoiceLocale($order);
 
-        // Note: invoices.proforma should just include invoices.partials.sheet
-        $pdf = Pdf::loadView('invoices.proforma', [
+        $output = $this->renderPdf('invoices.proforma', [
             'order' => $order,
             'payload' => $payload,
             'heading' => __('order.invoice.proforma_title', [], $locale),
             'badge' => $order->status->label($locale),
             'isProforma' => true,
         ]);
-
-        $pdf->setPaper(
-            (string) config('pdf.paper', 'a4'),
-            (string) config('pdf.orientation', 'portrait'),
-        );
-
-        $output = $pdf->output();
 
         return response()->streamDownload(
             static function () use ($output): void {
@@ -214,19 +202,12 @@ class InvoiceService
 
     private function streamProforma(array $payload, string $filename): StreamedResponse
     {
-        $pdf = Pdf::loadView('invoices.proforma', [
+        $output = $this->renderPdf('invoices.proforma', [
             'payload' => $payload,
             'heading' => __('order.invoice.proforma_title', [], $payload['invoiceLocale']),
             'badge' => null,
             'isProforma' => true,
         ]);
-
-        $pdf->setPaper(
-            (string) config('pdf.paper', 'a4'),
-            (string) config('pdf.orientation', 'portrait'),
-        );
-
-        $output = $pdf->output();
 
         return response()->streamDownload(
             static function () use ($output): void {
@@ -308,5 +289,44 @@ class InvoiceService
     {
         $userLocale = (string) ($order->user?->locale ?? 'fr');
         return in_array($userLocale, ['fr', 'en', 'ar'], true) ? $userLocale : 'fr';
+    }
+
+    /** @param array<string, mixed> $data */
+    private function renderPdf(string $view, array $data): string
+    {
+        $locale = (string) ($data['payload']['invoiceLocale'] ?? 'fr');
+
+        if ($locale !== 'ar') {
+            $pdf = Pdf::loadView($view, $data);
+            $pdf->setPaper(
+                (string) config('pdf.paper', 'a4'),
+                (string) config('pdf.orientation', 'portrait'),
+            );
+
+            return $pdf->output();
+        }
+
+        $html = view($view, $data + ['isPdf' => true])->render();
+        $pdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => (string) config('pdf.paper', 'A4'),
+            'orientation' => (string) config('pdf.orientation', 'portrait'),
+            'default_font' => 'dejavusans',
+            'margin_left' => 0,
+            'margin_right' => 0,
+            'margin_top' => 0,
+            'margin_bottom' => 0,
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
+            'tempDir' => storage_path('framework/cache/data'),
+        ]);
+
+        if (($data['payload']['invoiceLocale'] ?? null) === 'ar') {
+            $pdf->SetDirectionality('rtl');
+        }
+
+        $pdf->WriteHTML($html);
+
+        return $pdf->Output('', Destination::STRING_RETURN);
     }
 }

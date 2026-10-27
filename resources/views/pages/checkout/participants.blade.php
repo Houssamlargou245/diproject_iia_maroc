@@ -25,6 +25,7 @@
                            name="participants[{{ $i }}][full_name]"
                            id="participants-{{ $i }}-full_name"
                            value="{{ data_get($participantValues, $i.'.full_name') }}"
+                           @readonly(isset($resumeOrder) && $resumeOrder !== null)
                            class="form-control @error('participants.'.$i.'.full_name') is-invalid @enderror">
                     
                     {{-- MANUAL ERROR BLOCK DELETED FROM HERE --}}
@@ -38,6 +39,7 @@
                            name="participants[{{ $i }}][job_title]"
                            id="participants-{{ $i }}-job_title"
                            value="{{ data_get($participantValues, $i.'.job_title') }}"
+                           @readonly(isset($resumeOrder) && $resumeOrder !== null)
                            class="form-control @error('participants.'.$i.'.job_title') is-invalid @enderror">
                 </x-form.field>
             </div>
@@ -49,6 +51,7 @@
                            name="participants[{{ $i }}][email]"
                            id="participants-{{ $i }}-email"
                            value="{{ data_get($participantValues, $i.'.email') }}"
+                           @readonly(isset($resumeOrder) && $resumeOrder !== null)
                            class="form-control @error('participants.'.$i.'.email') is-invalid @enderror">
                 </x-form.field>
             </div>
@@ -60,6 +63,7 @@
                            name="participants[{{ $i }}][phone]"
                            id="participants-{{ $i }}-phone"
                            value="{{ data_get($participantValues, $i.'.phone') }}"
+                           @readonly(isset($resumeOrder) && $resumeOrder !== null)
                            class="form-control @error('participants.'.$i.'.phone') is-invalid @enderror">
                 </x-form.field>
             </div>

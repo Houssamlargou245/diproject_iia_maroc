@@ -70,5 +70,13 @@ class CartPrintPageTest extends TestCase
             ->assertSee('class="sheet"', false)
             ->assertSee('invoice-bg.png', false)
             ->assertSee(__('order.invoice.proforma_title'));
+
+        $pdfResponse = $this->get(route('cart.proforma'));
+        $pdfResponse->assertOk()->assertHeader('content-type', 'application/pdf');
+
+        $pdf = $pdfResponse->streamedContent();
+        $this->assertStringStartsWith('%PDF-', $pdf);
+        $this->assertSame(1, preg_match('/\/Count\s+(\d+)/', $pdf, $pageCount));
+        $this->assertSame('1', $pageCount[1], 'The Arabic proforma should fit on one page.');
     }
 }

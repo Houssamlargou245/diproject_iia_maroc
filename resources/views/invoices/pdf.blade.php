@@ -1,10 +1,25 @@
+@php
+    $isPdf = $payload['invoiceLocale'] === 'ar';
+    $art = null;
+
+    foreach (['invoice-bg-print.png', 'invoice-bg-print.jpg', 'invoice-bg.png'] as $candidate) {
+        $path = public_path('assets/images/invoice/'.$candidate);
+
+        if (is_file($path)) {
+            $art = $path;
+            break;
+        }
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="{{ $payload['invoiceLocale'] }}" dir="{{ $payload['invoiceLocale'] === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <title>{{ $heading }}</title>
     <style>
-        @page { margin: 0; size: A4 portrait; }
+        @if ($payload['invoiceLocale'] !== 'ar')
+            @page { margin: 0; size: A4 portrait; }
+        @endif
         body {
             font-family: 'DejaVu Sans', sans-serif;
             font-size: 11px;
@@ -13,6 +28,11 @@
             padding: 0;
             background-color: #fff;
         }
+        .ltr {
+            direction: ltr;
+            unicode-bidi: embed;
+            text-align: left;
+        }
         .page-container {
             padding: 15mm 15mm;
             position: relative;
@@ -20,17 +40,9 @@
         }
     </style>
 </head>
-<body>
-    @php
-        // Look for the background artwork in the public folder
-        $art = null;
-        foreach (['invoice-bg-print.png', 'invoice-bg-print.jpg', 'invoice-bg.png'] as $candidate) {
-            $path = public_path('assets/images/invoice/'.$candidate);
-            if (is_file($path)) { $art = $path; break; }
-        }
-    @endphp
+<body @if ($payload['invoiceLocale'] === 'ar' && $art) style="background-image: url('{{ str_replace('\\', '/', $art) }}'); background-repeat: no-repeat; background-size: 100% 100%;" @endif>
 
-    @if ($art)
+    @if ($art && $payload['invoiceLocale'] !== 'ar')
         {{-- The absolute positioned background image --}}
         <img src="{{ $art }}" style="position: absolute; left: 0; top: 0; width: 210mm; height: 297mm; z-index: -1;" alt="">
     @endif

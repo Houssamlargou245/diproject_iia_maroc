@@ -14,6 +14,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10",
         "league/csv": "^9.28",
+        "mpdf/mpdf": "^8.3",
         "pragmarx/google2fa-laravel": "^0.3.0"
     },
     "require-dev": {
@@ -84,6 +85,7 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
+        "platform-check": false,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,

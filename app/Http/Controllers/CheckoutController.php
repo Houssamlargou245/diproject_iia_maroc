@@ -12,6 +12,7 @@ use App\Models\CartItem;
 use App\Models\Country;
 use App\Models\Edition;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Services\Payment\PaymentGateway;
@@ -50,6 +51,8 @@ class CheckoutController extends Controller
      */
     private const MAX_PLACES_PER_LINE = 20;
 
+    private const PENDING_CHECKOUT_ORDER_SESSION_KEY = 'checkout.pending_order_id';
+
     public function __construct(
         private readonly CheckoutService $checkout,
     ) {}
@@ -59,14 +62,6 @@ class CheckoutController extends Controller
      */
     public function create(Request $request): View|RedirectResponse
     {
-        $cart = $this->currentCart($request);
-
-        if ($cart->items()->doesntExist()) {
-            return redirect()->route('pricing')->with('status', __('order.cart_empty'));
-        }
-
-        $cart->load(['items.ticketType']);
-
         // Not signed in, or not yet enrolled: the buyer is sent where they can
         // fix it, with a reason, rather than bounced to a bare 403.
         if ($request->user() === null) {
@@ -78,7 +73,71 @@ class CheckoutController extends Controller
                 ->with('status', __('order.enroll_to_checkout'));
         }
 
-        $quote = $this->quoteFor($request, $cart);
+        $cart = $this->currentCart($request);
+        $orderId = $request->session()->get(self::PENDING_CHECKOUT_ORDER_SESSION_KEY);
+        $pendingOrder = $orderId === null
+            ? null
+            : $request->user()->orders()
+                ->whereKey($orderId)
+                ->with(['items.ticketType', 'participants'])
+                ->first();
+        $resumeOrder = null;
+
+        if ($cart->items()->doesntExist()) {
+            if ($pendingOrder !== null && $pendingOrder->isPayable()) {
+                $restoredCartItems = collect();
+
+                foreach ($pendingOrder->items as $orderItem) {
+                    $cartItem = new CartItem([
+                        'cart_id' => $cart->getKey(),
+                        'ticket_type_id' => $orderItem->ticket_type_id,
+                        'quantity' => $orderItem->totalQuantity(),
+                        'member_quantity' => $orderItem->member_quantity,
+                    ]);
+
+                    $cartItem->setRelation('ticketType', $orderItem->ticketType);
+                    $restoredCartItems->push($cartItem);
+                }
+
+                $cart->setRelation('items', $restoredCartItems);
+                $resumeOrder = $pendingOrder;
+            } else {
+                $request->session()->forget(self::PENDING_CHECKOUT_ORDER_SESSION_KEY);
+
+                return redirect()->route('pricing')->with('status', __('order.cart_empty'));
+            }
+        }
+
+        if ($resumeOrder === null) {
+            $cart->load(['items.ticketType']);
+        }
+
+        $quote = $resumeOrder === null
+            ? $this->quoteFor($request, $cart)
+            : $this->quoteForOrder($resumeOrder);
+        $checkoutValues = $resumeOrder === null ? [] : [
+            ...($resumeOrder->billing ?? []),
+            'country_id' => Country::query()
+                ->where('iso2', $resumeOrder->billing['country_iso2'] ?? '')
+                ->value('id'),
+        ];
+        $participantValues = $resumeOrder === null
+            ? old('participants', [])
+            : $resumeOrder->participants->map(fn ($participant): array => [
+                'full_name' => $participant->full_name,
+                'job_title' => $participant->job_title,
+                'email' => $participant->email,
+                'phone' => $participant->phone,
+                'is_member' => $participant->is_member,
+            ])->all();
+        $seatRows = $this->seatRows($cart, $quote);
+
+        if ($resumeOrder !== null) {
+            $seatRows = array_map(fn (array $seat): array => array_replace($seat, [
+                'can_add' => false,
+                'can_remove' => false,
+            ]), $seatRows);
+        }
 
         return view('pages.checkout', [
             'cart' => $cart,
@@ -87,8 +146,10 @@ class CheckoutController extends Controller
             'currentRoute' => 'checkout',
             'user' => $request->user(),
             'maxPlacesPerLine' => self::MAX_PLACES_PER_LINE,
-            'seatRows' => $this->seatRows($cart, $quote),
-            'participantValues' => old('participants', []),
+            'seatRows' => $seatRows,
+            'participantValues' => $participantValues,
+            'checkoutValues' => $checkoutValues,
+            'resumeOrder' => $resumeOrder,
             // The billing country, which the issuing bank reads to judge the
             // payer. Eager loaded: the select renders every row's name, and a
             // lazy relation here is one query per country in the list.
@@ -275,6 +336,15 @@ class CheckoutController extends Controller
         $cart = $this->currentCart($request);
 
         if ($cart->items()->doesntExist()) {
+            $orderId = $request->session()->get(self::PENDING_CHECKOUT_ORDER_SESSION_KEY);
+            $pendingOrder = $orderId === null
+                ? null
+                : $request->user()?->orders()->whereKey($orderId)->first();
+
+            if ($pendingOrder !== null && $pendingOrder->isPayable()) {
+                return redirect()->route('checkout');
+            }
+
             return redirect()->route('pricing')->with('status', __('order.cart_empty'));
         }
 
@@ -322,16 +392,12 @@ class CheckoutController extends Controller
             return back()->withInput()->withErrors(['participants' => $e->getMessage()]);
         }
 
-        // The delegate is shown the invoice before any money moves.
-        //
-        // This used to redirect straight to `checkout.pay`, which handed the
-        // order to CMI immediately. That made the invoice unreachable before
-        // payment: there was no screen to look at what had just been bought,
-        // check the seats, or print. The order already exists and is unpaid at
-        // this point, so `orders.show` renders the full document — status "non
-        // payée", the priced seats, the total — with the gateway one click
-        // behind its own confirm button.
-        return redirect()->route('orders.show', ['order' => $order->getKey()]);
+        $request->session()->put(self::PENDING_CHECKOUT_ORDER_SESSION_KEY, $order->getKey());
+
+        // The order is now committed, so hand it to the existing ownership-
+        // checked payment action. That action builds the signed gateway form
+        // and remains the single path used for both first attempts and retries.
+        return redirect()->route('checkout.pay', ['order' => $order->getKey()]);
     }
 
     /**
@@ -529,6 +595,34 @@ class CheckoutController extends Controller
         } catch (RuntimeException $e) {
             throw ValidationException::withMessages(['cart' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Rebuild the checkout display from the order's frozen prices after the
+     * browser returns from the gateway.
+     */
+    private function quoteForOrder(Order $order): Quote
+    {
+        $lines = $order->items->map(fn (OrderItem $item): array => [
+            'ticket_type_id' => (int) $item->ticket_type_id,
+            'label' => $item->label,
+            'unit_price_member' => $item->unit_price_member,
+            'unit_price_standard' => $item->unit_price_standard,
+            'member_quantity' => $item->member_quantity,
+            'standard_quantity' => $item->standard_quantity,
+            'line_total' => $item->line_total,
+        ])->all();
+
+        return new Quote(
+            lines: $lines,
+            subtotal: $order->subtotal,
+            total: $order->total,
+            currency: $order->currency,
+            memberCount: $order->member_count,
+            standardCount: $order->standard_count,
+            participantCount: $order->participants->count(),
+            ticketType: $order->items->first()?->ticketType,
+        );
     }
 
     /**

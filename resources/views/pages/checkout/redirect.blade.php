@@ -58,10 +58,29 @@
 
     @stack('scripts')
     <script>
-        // Submitted as soon as the payload is in the DOM. Wrapped in a guard so
-        // a blocked script simply leaves the noscript button usable.
+        // Submit on the first visit. When the customer presses Back from CMI,
+        // return to the restored checkout instead of posting the payment form
+        // to CMI again.
         (function () {
             var form = document.getElementById('gateway-form');
+            var checkoutUrl = @json(route('checkout'));
+            var navigationEntries = window.performance && window.performance.getEntriesByType
+                ? window.performance.getEntriesByType('navigation')
+                : [];
+            var navigationType = navigationEntries.length > 0 ? navigationEntries[0].type : null;
+
+            if (navigationType === 'back_forward') {
+                window.location.replace(checkoutUrl);
+
+                return;
+            }
+
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted) {
+                    window.location.replace(checkoutUrl);
+                }
+            });
+
             if (form) {
                 form.submit();
             }

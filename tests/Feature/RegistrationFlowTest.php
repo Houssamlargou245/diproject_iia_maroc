@@ -606,9 +606,22 @@ class RegistrationFlowTest extends TestCase
             'quantity' => 1,
             'member_quantity' => 0,
         ]);
-        $this->actingAs($user)->post('/inscription', $this->checkoutPayload(participants: 1));
+        $response = $this->actingAs($user)->post('/inscription', $this->checkoutPayload(participants: 1));
 
         $order = Order::query()->firstOrFail();
+        $response->assertRedirect(route('checkout.pay', ['order' => $order->getKey()]));
+
+        $this->actingAs($user)
+            ->get('/inscription')
+            ->assertViewIs('pages.checkout')
+            ->assertSee('Ahmed')
+            ->assertSee('Participant 1')
+            ->assertSee('ahmed@example.test');
+
+        $this->actingAs($user)
+            ->post('/inscription', $this->checkoutPayload(participants: 1))
+            ->assertRedirect(route('checkout'));
+        $this->assertDatabaseCount('orders', 1);
 
         $response = $this->actingAs($user)->get(route('checkout.pay', ['order' => $order->getKey()]));
         $response->assertOk();

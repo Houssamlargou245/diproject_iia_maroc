@@ -45,7 +45,7 @@
 </p>
                 </td>
                 <td style="width: 50%; text-align: {{ $alignEnd }}; vertical-align: top;">
-                    <img src="{{ asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="{{ $organiser }}" width="260" style="max-width: 100%; height: auto;">
+                    <img src="{{ ($isPdf ?? false) ? public_path('assets/images/invoice/logo-iia-maroc.png') : asset('assets/images/invoice/logo-iia-maroc.png') }}" alt="{{ $organiser }}" width="260" style="max-width: 100%; height: auto;">
                 </td>
             </tr>
         </table>

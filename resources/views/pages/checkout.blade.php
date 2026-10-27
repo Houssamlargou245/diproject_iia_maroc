@@ -22,7 +22,8 @@
                         :level="2"
                         class="mb-4" />
 
-                    <form method="POST" action="{{ route('checkout.store') }}" novalidate>
+                    <form method="POST" action="{{ route('checkout.store') }}" novalidate
+                          @if ($resumeOrder !== null) onsubmit="return false;" @endif>
                         @csrf
 
                         <div class="row">
@@ -31,7 +32,8 @@
                                 <x-form.field name="first_name" :label="__('register.first_name')" required>
                                     {{-- REMOVED required FROM INPUT BELOW --}}
                                     <input type="text" name="first_name" id="first_name" 
-                                           value="{{ old('first_name', $user->first_name ?? '') }}"
+                                           value="{{ old('first_name', $checkoutValues['first_name'] ?? $user->first_name ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('first_name') is-invalid @enderror">
                                     
                                     <!-- @error('first_name')
@@ -45,7 +47,8 @@
                                 <x-form.field name="last_name" :label="__('register.last_name')" required>
                                     {{-- REMOVED required FROM INPUT BELOW --}}
                                     <input type="text" name="last_name" id="last_name" 
-                                           value="{{ old('last_name', $user->last_name ?? '') }}"
+                                           value="{{ old('last_name', $checkoutValues['last_name'] ?? $user->last_name ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('last_name') is-invalid @enderror">
                                     
 
@@ -56,7 +59,8 @@
                             <div class="col-md-6">
                                 <x-form.field name="organisation" :label="__('register.organisation')">
                                     <input type="text" name="organisation" id="organisation"
-                                           value="{{ old('organisation', $user->organisation ?? '') }}"
+                                           value="{{ old('organisation', $checkoutValues['organisation'] ?? $user->organisation ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('organisation') is-invalid @enderror">
                                     
  
@@ -68,7 +72,8 @@
                                 <x-form.field name="email" :label="__('register.email')" required>
                                     {{-- REMOVED required FROM INPUT BELOW --}}
                                     <input type="email" name="email" id="email" dir="ltr"
-                                           value="{{ old('email', $user->email ?? '') }}"
+                                           value="{{ old('email', $checkoutValues['email'] ?? $user->email ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('email') is-invalid @enderror">
                                     
                                     <!-- @error('email')
@@ -82,7 +87,8 @@
                                 <x-form.field name="phone" :label="__('register.phone')" :help="__('order.phone_international')" required>
                                     {{-- REMOVED required FROM INPUT BELOW --}}
                                     <input type="tel" name="phone" id="phone" dir="ltr"
-                                           value="{{ old('phone', $user->phone ?? '') }}"
+                                           value="{{ old('phone', $checkoutValues['phone'] ?? $user->phone ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('phone') is-invalid @enderror">
                                     
 
@@ -100,10 +106,11 @@
                                 <x-form.field name="country_id" :label="__('register.country')" required>
                                     {{-- REMOVED required FROM SELECT BELOW --}}
                                     <select name="country_id" id="country_id"
-                                            class="form-control @error('country_id') is-invalid @enderror">
+                                            class="form-control @error('country_id') is-invalid @enderror"
+                                            @disabled($resumeOrder !== null)>
                                         @foreach ($countries as $country)
                                             <option value="{{ $country->id }}"
-                                                @selected((int) old('country_id', $user->country_id ?? 0) === (int) $country->id)>
+                                                @selected((int) old('country_id', $checkoutValues['country_id'] ?? $user->country_id ?? 0) === (int) $country->id)>
                                                 {{ $country->name() }}
                                             </option>
                                         @endforeach
@@ -118,7 +125,8 @@
                                 <x-form.field name="address" :label="__('order.address')" required>
                                     {{-- REMOVED required FROM INPUT BELOW --}}
                                     <input type="text" name="address" id="address" 
-                                           value="{{ old('address') }}"
+                                           value="{{ old('address', $checkoutValues['address'] ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('address') is-invalid @enderror">
                                     
 
@@ -130,7 +138,8 @@
                                 <x-form.field name="city" :label="__('register.city')" required>
                                     {{-- REMOVED required FROM INPUT BELOW --}}
                                     <input type="text" name="city" id="city" 
-                                           value="{{ old('city') }}"
+                                           value="{{ old('city', $checkoutValues['city'] ?? '') }}"
+                                           @readonly($resumeOrder !== null)
                                            class="form-control @error('city') is-invalid @enderror">
                                     
                                 </x-form.field>
@@ -173,9 +182,16 @@
                             ])
                         </div>
 
-                        <button type="submit" class="btn-join btn-cirle mt-3">
-                            @lang('order.place_order')
-                        </button>
+                        @if ($resumeOrder !== null)
+                            <a href="{{ route('checkout.pay', ['order' => $resumeOrder->getKey()]) }}"
+                               class="btn-join btn-cirle mt-3">
+                                @lang('order.place_order')
+                            </a>
+                        @else
+                            <button type="submit" class="btn-join btn-cirle mt-3">
+                                @lang('order.place_order')
+                            </button>
+                        @endif
 
                     </form>
                 </div>
