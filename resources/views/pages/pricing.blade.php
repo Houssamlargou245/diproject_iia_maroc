@@ -84,7 +84,7 @@ $madPerUsd = (float) config('brand.mad_per_usd', 10); // 7 500 MAD -> 750 USD, 8
     </section>
 
     {{-- ================= 2. TARIFFS ================= --}}
-    <section class="reg-section reg-tariffs reg-bgimg" style="--reg-bg:url('{{ $imgTariffs }}')" aria-labelledby="pricing-heading">
+    <section id="tariffs" class="reg-section reg-tariffs reg-bgimg" style="--reg-bg:url('{{ $imgTariffs }}')" aria-labelledby="pricing-heading">
         <div class="container">
             <header class="reg-head">
                 <p class="reg-eyebrow">{{ __('pricing.tariffs.eyebrow') }}</p>

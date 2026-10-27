@@ -107,7 +107,8 @@ class TotpController extends Controller
         // store on disk, where they would outlive the page that should have been
         // their only appearance.
         return redirect()
-            ->route('totp.recovery-codes')
+            ->route('pricing')
+            ->withFragment('tariffs') 
             ->with('totp_recovery_codes', $recoveryCodes);
     }
 
