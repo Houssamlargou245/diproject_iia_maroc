@@ -217,7 +217,7 @@ return [
         // un avertissement qui interdit explicitement de s'en servir comme
         // preuve de règlement.
 
-        'proforma_title' => 'Facture provisoire',
+        // 'proforma_title' => 'Facture provisoire',
         'proforma_banner_title' => 'Document provisoire — commande non réglée',
         'proforma_banner_text' => 'Ce document n\'est pas une facture. Il récapitule votre commande à titre indicatif ; la facture numérotée et définitive n\'est émise qu\'après le règlement.',
         'proforma_notes_title' => 'À savoir',
@@ -225,7 +225,7 @@ return [
         'proforma_note_issue' => 'Aucun numéro de facture n\'a été attribué à ce document, qui ne tient pas lieu de facture.',
         'billed_to_pending' => 'À compléter lors de la commande.',
         'paid_title' => 'FACTURE ACQUITTÉE',
-    'proforma_title' => 'FACTURE PROVISOIRE',
+    'proforma_title' => 'PRO FORMA INVOICE',
     'number' => 'Numéro de facture',
     'issue_date' => 'Date d\'émission',
     'issuer' => 'Émetteur',

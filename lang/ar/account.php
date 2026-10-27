@@ -77,7 +77,7 @@ return [
     'order_no_places' => 'لا مقاعد',
     'actions_title' => 'اختصارات',
     'logout_confirm' => 'هل تريد تسجيل الخروج من هذا الجهاز؟',
-    'promo_title'  => 'رمز الخصم الخاص بك',
+    'promo_title'  => 'رمز الخصم',
     'promo_lede'   => 'شارك هذا الرمز لكسب المكافآت. يبقى كما هو طوال فترة حسابك.',
     'promo_copy'   => 'نسخ',
     'promo_copied' => 'تم النسخ!',
