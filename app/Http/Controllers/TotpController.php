@@ -45,7 +45,7 @@ class TotpController extends Controller
         $user = $request->user();
 
         if ($user->hasConfirmedTotp()) {
-            return redirect()->route('totp.done');
+            return redirect()->route('home');
         }
 
         // A pending secret is reused rather than reissued on every page view.
@@ -77,7 +77,7 @@ class TotpController extends Controller
         $user = $request->user();
 
         if ($user->hasConfirmedTotp()) {
-            return redirect()->route('totp.done');
+            return redirect()->route('home');
         }
 
         $recoveryCodes = $this->totp->confirm($user, $request->code());
