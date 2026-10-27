@@ -83,4 +83,5 @@ return [
     'promo_copy'   => 'Copier',
     'promo_copied' => 'Copié !',
     'promo_support' => "Si vous rencontrez des difficultés pour effectuer votre paiement sur la plateforme, nous vous invitons à nous contacter par e-mail :\n\nArab CIA : info@arabciia.org\nIia Maroc: Info@iiamaroc.org\n\nNous vous répondrons dans les plus brefs délais.",
+    'promo_banner' => "Bénéficiez d'un tarif préférentiel au Four Seasons Hotel Ksar Al Bah avec le code promo [CODE].",
 ];

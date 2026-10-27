@@ -81,4 +81,5 @@ return [
     'promo_copy'   => 'Copy',
     'promo_copied' => 'Copied!',
     'promo_support' => 'If you do not receive your promo code, please contact our support at the following email addresses: info@arabciia.org or info@iiamaroc.org',
+    'promo_banner' => "Enjoy a preferential rate at Four Seasons Hotel Ksar Al Bahr with promo code [CODE].",
 ];

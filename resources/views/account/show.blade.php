@@ -264,26 +264,33 @@
                             
                             <!-- <p class="d-form-panel__lede">@lang('account.promo_lede')</p> -->
                             
-                            <div class="d-flex align-items-center gap-2 mt-3">
-                                <code class="flex-grow-1 px-3 py-2 rounded border font-monospace text-center" 
-                                      style="font-size: 1.1rem; letter-spacing: 0.12em; background-color: var(--bs-tertiary-bg);">
-                                    {{ $user->promo_code }}
-                                </code>
-
-                                <button type="button" 
-                                        class="d-btn d-btn--quiet d-btn--sm" 
-                                        data-promo-code="{{ $user->promo_code }}"
-                                        onclick="
-                                            navigator.clipboard.writeText(this.dataset.promoCode);
-                                            const label = this.querySelector('span');
-                                            const original = label.textContent;
-                                            label.textContent = @js(__('account.promo_copied'));
-                                            setTimeout(() => { label.textContent = original; }, 1500);
-                                        ">
-                                    <i class="fas fa-copy" aria-hidden="true"></i>
-                                    <span>@lang('account.promo_copy')</span>
-                                </button>
-                            </div>
+                            <div class="mt-3">
+    {{-- La nouvelle phrase avec le code intégré --}}
+    <div class="p-3 rounded border text-center" style="background-color: var(--bs-tertiary-bg); font-size: 0.95rem; line-height: 1.6;">
+        {!! str_replace(
+            '[CODE]', 
+            '<strong style="font-size: 1.1rem; letter-spacing: 0.1em; white-space: nowrap;">' . $user->promo_code . '</strong>', 
+            __('account.promo_banner')
+        ) !!}
+    </div>
+    
+    {{-- Le bouton Copier juste en dessous --}}
+    <div class="text-center mt-3">
+        <button type="button" 
+                class="d-btn d-btn--quiet d-btn--sm" 
+                data-promo-code="{{ $user->promo_code }}"
+                onclick="
+                    navigator.clipboard.writeText(this.dataset.promoCode);
+                    const label = this.querySelector('span');
+                    const original = label.textContent;
+                    label.textContent = @js(__('account.promo_copied'));
+                    setTimeout(() => { label.textContent = original; }, 1500);
+                ">
+            <i class="fas fa-copy" aria-hidden="true"></i>
+            <span>@lang('account.promo_copy')</span>
+        </button>
+    </div>
+</div>
 
                                                         {{-- Modern Soft Info Box --}}
                                                         <div class="mt-4 p-3 bg-light border rounded d-flex align-items-start gap-2">
