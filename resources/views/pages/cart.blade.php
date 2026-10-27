@@ -318,18 +318,10 @@
                                 @lang('order.cart.invoice_lede')
                             </p>
 
-                            <div class="d-cart-invoice__actions">
-                                <a href="{{ route('cart.proforma') }}" class="d-btn d-btn--quiet">
+                                                        <div class="d-cart-invoice__actions" style="display: flex; justify-content: center; width: 100%;">
+                                <a href="{{ route('cart.proforma') }}" class="d-btn d-btn--quiet" style="width: 100%; text-align: center; justify-content: center;">
                                     <i class="fas fa-download" aria-hidden="true"></i>
                                     <span>@lang('order.cart.invoice_download')</span>
-                                </a>
-
-                                <a href="{{ route('cart.printable') }}"
-                                   class="d-btn d-btn--quiet"
-                                   target="_blank"
-                                   rel="noopener">
-                                    <i class="fas fa-print" aria-hidden="true"></i>
-                                    <span>@lang('order.cart.invoice_print')</span>
                                 </a>
                             </div>
 
