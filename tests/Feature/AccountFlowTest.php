@@ -14,9 +14,12 @@ use App\Models\Edition;
 use App\Models\Order;
 use App\Models\OtpCode;
 use App\Models\User;
+use App\Notifications\PromoCodeAssigned;
 use App\Support\Money;
 use Database\Seeders\EditionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Notification;
 use PragmaRX\Google2FAQRCode\Google2FA;
 use Tests\TestCase;
 
@@ -67,8 +70,9 @@ class AccountFlowTest extends TestCase
 
     // ---------------------------------------------------------------- register
 
-    public function test_registration_creates_the_account_and_starts_verification(): void
+    public function test_registration_is_only_persisted_after_totp_confirmation(): void
     {
+        Notification::fake();
         $country = $this->country();
 
         $response = $this->post('/register', [
@@ -87,6 +91,16 @@ class AccountFlowTest extends TestCase
 
         $response->assertRedirect(route('totp.setup'));
 
+        $this->assertDatabaseMissing('users', ['email' => 'amina@example.test']);
+        $this->assertGuest();
+        Notification::assertNothingSent();
+
+        $pending = json_decode(Crypt::decryptString(session('pending_registration')), true, flags: JSON_THROW_ON_ERROR);
+        $this->get(route('totp.setup'))->assertOk();
+        $this->post(route('totp.confirm'), [
+            'code' => app(Google2FA::class)->getCurrentOtp($pending['secret']),
+        ])->assertRedirect(route('pricing').'#tariffs');
+
         $user = User::query()->where('email', 'amina@example.test')->firstOrFail();
 
         // The phone is stored canonicalised, so the unique index and the sign-in
@@ -94,16 +108,33 @@ class AccountFlowTest extends TestCase
         $this->assertSame('+212612345678', $user->phone);
         $this->assertNotNull($user->terms_accepted_at);
 
-        // Signed in immediately so the flow is resumable, but not enrolled: the
-        // account exists and the visitor still has to prove they hold an
-        // authenticator before they can order.
         $this->assertAuthenticatedAs($user);
-        $this->assertFalse($user->hasConfirmedTotp());
-        $this->assertFalse($user->canRegister());
+        $this->assertTrue($user->hasConfirmedTotp());
+        $this->assertTrue($user->canRegister());
+        Notification::assertSentTo($user, PromoCodeAssigned::class);
 
-        // And nothing was sent anywhere: there is no SMS in this flow, so there
-        // is no code, no gateway call and nothing to deliver late or not at all.
         $this->assertSame(0, OtpCode::query()->count());
+    }
+
+    public function test_abandoning_registration_does_not_create_an_account(): void
+    {
+        $this->post('/register', $this->validRegistration())->assertRedirect(route('totp.setup'));
+
+        $this->get(route('totp.setup'))->assertOk();
+
+        $this->assertDatabaseMissing('users', ['email' => 'valid@example.test']);
+        $this->assertGuest();
+    }
+
+    public function test_a_wrong_registration_code_does_not_create_an_account(): void
+    {
+        $this->post('/register', $this->validRegistration());
+
+        $this->post(route('totp.confirm'), ['code' => '000000'])
+            ->assertSessionHasErrors('code');
+
+        $this->assertDatabaseMissing('users', ['email' => 'valid@example.test']);
+        $this->assertGuest();
     }
 
     /**
@@ -168,7 +199,7 @@ class AccountFlowTest extends TestCase
 
     public function test_the_correct_code_enrols_the_authenticator(): void
     {
-        $user = $this->register();
+        $user = User::factory()->unconfirmedTotp()->create();
 
         $this->actingAs($user)->get('/totp/setup');
 
@@ -181,7 +212,7 @@ class AccountFlowTest extends TestCase
 
     public function test_a_wrong_code_is_rejected_and_the_account_stays_unenrolled(): void
     {
-        $user = $this->register();
+        $user = User::factory()->unconfirmedTotp()->create();
 
         $this->actingAs($user)->get('/totp/setup');
 
@@ -201,7 +232,7 @@ class AccountFlowTest extends TestCase
      */
     public function test_the_confirm_endpoint_ignores_a_secret_supplied_in_the_body(): void
     {
-        $user = $this->register();
+        $user = User::factory()->unconfirmedTotp()->create();
 
         $this->actingAs($user)->get('/totp/setup');
 
@@ -384,6 +415,11 @@ class AccountFlowTest extends TestCase
     private function register(): User
     {
         $this->post('/register', $this->validRegistration())->assertRedirect();
+
+        $pending = json_decode(Crypt::decryptString(session('pending_registration')), true, flags: JSON_THROW_ON_ERROR);
+        $this->post('/totp/setup', [
+            'code' => app(Google2FA::class)->getCurrentOtp($pending['secret']),
+        ])->assertRedirect();
 
         return User::query()->where('email', 'valid@example.test')->firstOrFail();
     }

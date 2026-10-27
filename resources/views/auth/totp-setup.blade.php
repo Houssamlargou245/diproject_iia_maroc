@@ -34,10 +34,6 @@
         $apps = [
             ['name' => 'Google Authenticator',    'platforms' => 'iOS · Android', 'logo' => 'https://cdn.simpleicons.org/googleauthenticator',                  'glyph' => 'shield', 'from' => '#4f8bf5', 'to' => '#2f5fd0'],
             ['name' => 'Microsoft Authenticator', 'platforms' => 'iOS · Android', 'logo' => 'https://cdn.simpleicons.org/microsoftauthenticator',                'glyph' => 'lock',   'from' => '#2aa3e0', 'to' => '#0b6bb3'],
-            ['name' => 'Authy',                   'platforms' => 'iOS · Android', 'logo' => 'https://cdn.simpleicons.org/authy',                                'glyph' => 'ring',   'from' => '#ef5a5a', 'to' => '#c32f3f'],
-            ['name' => '2FAS',                    'platforms' => 'iOS · Android', 'logo' => 'https://cdn.simpleicons.org/2fas',                                 'glyph' => 'grid',   'from' => '#6d3bd6', 'to' => '#4f3cc9'],
-            ['name' => 'Aegis',                   'platforms' => 'Android',       'logo' => 'https://www.google.com/s2/favicons?domain=getaegis.app&sz=128',   'glyph' => 'key',    'from' => '#22b3a6', 'to' => '#0f857c'],
-            ['name' => 'FreeOTP',                 'platforms' => 'iOS · Android', 'logo' => 'https://www.google.com/s2/favicons?domain=freeotp.github.io&sz=128', 'glyph' => 'clock',  'from' => '#f39a3d', 'to' => '#d36f12'],
         ];
 
         $glyphs = [

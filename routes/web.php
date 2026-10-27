@@ -265,19 +265,19 @@ Route::middleware(['auth', 'totp.confirmed'])->group(function () use ($page): vo
 // mechanism — proving a phone number — that no longer exists anywhere in the
 // application, so keeping them would promise a page that proves nothing.
 
+// Setup and confirmation are also available to guests carrying an encrypted,
+// pending-registration payload. Recovery and completion remain account-only.
+$page('totp.setup', 'totp/setup', [TotpController::class, 'show']);
+Route::match(['POST'], '/totp/setup', [TotpController::class, 'confirm'])
+    ->middleware('throttle:10,1')
+    ->name('totp.confirm.ar');
+Route::post('/{locale?}/totp/setup', [TotpController::class, 'confirm'])
+    ->middleware('throttle:10,1')
+    ->name('totp.confirm');
+
 Route::middleware('auth')->group(function () use ($page): void {
-    $page('totp.setup', 'totp/setup', [TotpController::class, 'show']);
     $page('totp.recovery-codes', 'totp/setup/recovery-codes', [TotpController::class, 'recoveryCodes']);
     $page('totp.done', 'totp/setup/done', [TotpController::class, 'done']);
-
-    Route::match(['POST'], '/totp/setup', [TotpController::class, 'confirm'])
-        // Throttled because this is the one endpoint where guessing pays: six
-        // digits is a small space, and there is no resend to wait out.
-        ->middleware('throttle:10,1')
-        ->name('totp.confirm.ar');
-    Route::post('/{locale?}/totp/setup', [TotpController::class, 'confirm'])
-        ->middleware('throttle:10,1')
-        ->name('totp.confirm');
 });
 
 // --- The basket -------------------------------------------------------------

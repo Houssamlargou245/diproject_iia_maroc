@@ -169,7 +169,7 @@
     --lh-tight: 1.1;
 
     /* --- Layout ----------------------------------------------------------- */
-    --header-h: 72px;
+    --header-h: 90px;
     --container: 1240px;
 
     /* --- Motion -----------------------------------------------------------
@@ -597,9 +597,9 @@ background: #fff;
    height and the width follows from the intrinsic ratio. `min()` stops the
    Latin versions ballooning to the Arabic one's width. */
 .d-header__brand img {
-    height: auto;
-    height: 55px;
-    max-width: min(230px, 42vw);
+    height: auto; 
+    max-height: 60px;
+    max-width: min(500px, 50vw);
     transition: opacity var(--dur-1) var(--ease);
     width: auto;
 }

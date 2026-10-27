@@ -43,9 +43,7 @@ class TotpService
      */
     public function begin(User $user): string
     {
-        $secret = $this->engine->generateSecretKey(
-            (int) config('totp.secret_bytes', 32),
-        );
+        $secret = $this->generateSecret();
 
         // Confirmed is cleared here, not left alone: a pending secret must never
         // sit next to an old confirmation timestamp and read as usable.
@@ -55,6 +53,18 @@ class TotpService
         ])->save();
 
         return $secret;
+    }
+
+    /** Generate a secret without persisting it to an account. */
+    public function generateSecret(): string
+    {
+        return $this->engine->generateSecretKey((int) config('totp.secret_bytes', 32));
+    }
+
+    /** Check a code against a transient secret, such as a pending registration. */
+    public function verify(string $secret, string $code): bool
+    {
+        return $secret !== '' && $this->check($secret, $code);
     }
 
     /**

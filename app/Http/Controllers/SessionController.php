@@ -82,6 +82,11 @@ class SessionController extends Controller
         // cannot be replayed as the authenticated one.
         $request->session()->regenerate();
 
+        // ✅ ADD THIS CHECK:
+        if (! $user->hasConfirmedTotp()) {
+            return redirect()->route('totp.setup');
+        }
+
         return redirect()->intended(route('home'));
     }
 

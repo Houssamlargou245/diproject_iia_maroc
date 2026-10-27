@@ -170,6 +170,11 @@
                     <i class="fas fa-user-circle" aria-hidden="true"></i>
                     <span class="d-header__account-name">{{ auth()->user()->displayName() }}</span>
                 </a>
+            @elseif(auth()->check() || request()->session()->has('pending_registration'))
+                <a href="{{ route('totp.setup') }}" class="d-btn d-btn--outline d-btn--sm d-header__account">
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                    <span class="d-header__account-name">@lang('totp.title')</span>
+                </a>
             @else
                 {{-- The visible label is the accessible name here, so there is no
                      second copy of it for a screen reader to hear twice. --}}

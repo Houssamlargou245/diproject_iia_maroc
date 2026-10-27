@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\ConfirmTotpRequest;
+use App\Models\User;
+use App\Notifications\PromoCodeAssigned;
+use App\Services\Registration\PromoCodeGenerator;
 use App\Services\Security\SecurityEventLogger;
 use App\Services\Totp\TotpService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,14 +25,8 @@ use Illuminate\Validation\ValidationException;
  * describes — issue a secret, then prove the visitor kept it — but the proof is a
  * code their own phone computes rather than one a gateway sends.
  *
- * Reachable while authenticated but not yet enrolled, which is the whole point:
- * a half-finished registration has to be resumable. The page is behind `auth`,
- * never behind the enrolment gate, or it would be unreachable by exactly the
- * accounts that need it.
- *
- * Nothing here reads an identifier from the request. The account is whatever
- * `$request->user()` is, and the secret it is checked against is the one already
- * on that account.
+ * Existing accounts use their persisted pending secret; new registrations use
+ * an encrypted session payload until the first valid code is supplied.
  */
 class TotpController extends Controller
 {
@@ -44,6 +43,14 @@ class TotpController extends Controller
     {
         $user = $request->user();
 
+        if ($user === null) {
+            $pending = $this->pendingRegistration($request);
+            $user = new User($pending['attributes']);
+            $user->forceFill(['totp_secret' => $pending['secret']]);
+
+            return $this->setupView($user, $pending['secret']);
+        }
+
         if ($user->hasConfirmedTotp()) {
             return redirect()->route('home');
         }
@@ -56,6 +63,11 @@ class TotpController extends Controller
             ? (string) $user->totp_secret
             : $this->totp->begin($user);
 
+        return $this->setupView($user, $secret);
+    }
+
+    private function setupView(User $user, string $secret): View
+    {
         return view('auth.totp-setup', [
             'user' => $user,
             'secret' => $secret,
@@ -75,6 +87,10 @@ class TotpController extends Controller
     public function confirm(ConfirmTotpRequest $request): RedirectResponse
     {
         $user = $request->user();
+
+        if ($user === null) {
+            return $this->confirmRegistration($request);
+        }
 
         if ($user->hasConfirmedTotp()) {
             return redirect()->route('home');
@@ -110,6 +126,88 @@ class TotpController extends Controller
             ->route('pricing')
             ->withFragment('tariffs') 
             ->with('totp_recovery_codes', $recoveryCodes);
+    }
+
+    private function confirmRegistration(ConfirmTotpRequest $request): RedirectResponse
+    {
+        $pending = $this->pendingRegistration($request);
+
+        if (! $this->totp->verify($pending['secret'], $request->code())) {
+            throw ValidationException::withMessages(['code' => __('totp.invalid_code')]);
+        }
+
+        $attributes = $pending['attributes'];
+
+        if (User::query()->where('email', $attributes['email'])->exists()) {
+            throw ValidationException::withMessages(['email' => __('validation.email_taken')]);
+        }
+
+        if (User::query()->where('phone', $attributes['phone'])->exists()) {
+            throw ValidationException::withMessages(['phone' => __('validation.phone_taken')]);
+        }
+
+        [$user, $recoveryCodes] = DB::transaction(function () use ($attributes, $pending, $request): array {
+            $attributes['promo_code'] = app(PromoCodeGenerator::class)->generate(
+                (string) ($attributes['first_name'] ?? ''),
+            );
+
+            $user = User::create($attributes);
+            $user->forceFill([
+                'terms_accepted_at' => $pending['terms_accepted_at'],
+                'totp_secret' => $pending['secret'],
+            ])->save();
+
+            $recoveryCodes = $this->totp->confirm($user, $request->code());
+
+            if ($recoveryCodes === null) {
+                throw ValidationException::withMessages(['code' => __('totp.invalid_code')]);
+            }
+
+            return [$user, $recoveryCodes];
+        });
+
+        $request->session()->forget('pending_registration');
+        $request->session()->regenerate();
+        Auth::login($user, remember: true);
+        $user->notify(new PromoCodeAssigned($user->promo_code));
+
+        $this->events->log('auth.registered', [
+            'user_id' => $user->getKey(),
+            'ip' => $request->ip(),
+            'context' => ['locale' => $user->locale, 'country_id' => $user->country_id],
+        ]);
+        $this->events->log('totp.enrolled', [
+            'user_id' => $user->getKey(),
+            'ip' => $request->ip(),
+            'context' => ['issuer' => (string) config('totp.issuer')],
+        ]);
+
+        return redirect()->route('pricing')->withFragment('tariffs')->with('totp_recovery_codes', $recoveryCodes);
+    }
+
+    /** @return array{attributes: array<string, mixed>, secret: string, terms_accepted_at: string} */
+    private function pendingRegistration(Request $request): array
+    {
+        $payload = $request->session()->get('pending_registration');
+
+        abort_unless(is_string($payload), 403);
+
+        try {
+            $pending = json_decode(Crypt::decryptString($payload), true, flags: JSON_THROW_ON_ERROR);
+        } catch (\Throwable) {
+            $request->session()->forget('pending_registration');
+            abort(403);
+        }
+
+        abort_unless(
+            is_array($pending)
+                && is_array($pending['attributes'] ?? null)
+                && is_string($pending['secret'] ?? null)
+                && is_string($pending['terms_accepted_at'] ?? null),
+            403,
+        );
+
+        return $pending;
     }
 
     /**
