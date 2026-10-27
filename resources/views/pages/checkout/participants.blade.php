@@ -1,15 +1,5 @@
 {{--
     One entry per place, server-rendered.
-
-    `$participantValues` rather than `old()` so this can be rendered twice: from
-    a full page load, where the flashed input is the only copy of what the buyer
-    typed, and from the JSON that a "+" click replaces it with, where the values
-    arrived in the request itself. One template for both means the two cannot
-    drift into rendering different fields.
-
-    Not built in JavaScript. The 2024 form built its participant rows in JS, so a
-    visitor with scripting disabled — or a screenshot pasted into a message —
-    produced a silently empty registration.
 --}}
 @php
     $participantValues = $participantValues ?? [];
@@ -30,11 +20,14 @@
             <div class="col-md-12">
                 <x-form.field :name="'participants.'.$i.'.full_name'"
                               :label="__('order.participant_name')" required>
-                    <input type="text" required dir="auto"
+                    {{-- REMOVED 'required' FROM INPUT BELOW --}}
+                    <input type="text" dir="auto"
                            name="participants[{{ $i }}][full_name]"
                            id="participants-{{ $i }}-full_name"
                            value="{{ data_get($participantValues, $i.'.full_name') }}"
-                           class="form-control">
+                           class="form-control @error('participants.'.$i.'.full_name') is-invalid @enderror">
+                    
+                    {{-- MANUAL ERROR BLOCK DELETED FROM HERE --}}
                 </x-form.field>
             </div>
 
@@ -45,7 +38,7 @@
                            name="participants[{{ $i }}][job_title]"
                            id="participants-{{ $i }}-job_title"
                            value="{{ data_get($participantValues, $i.'.job_title') }}"
-                           class="form-control">
+                           class="form-control @error('participants.'.$i.'.job_title') is-invalid @enderror">
                 </x-form.field>
             </div>
 
@@ -56,7 +49,7 @@
                            name="participants[{{ $i }}][email]"
                            id="participants-{{ $i }}-email"
                            value="{{ data_get($participantValues, $i.'.email') }}"
-                           class="form-control">
+                           class="form-control @error('participants.'.$i.'.email') is-invalid @enderror">
                 </x-form.field>
             </div>
 
@@ -67,13 +60,9 @@
                            name="participants[{{ $i }}][phone]"
                            id="participants-{{ $i }}-phone"
                            value="{{ data_get($participantValues, $i.'.phone') }}"
-                           class="form-control">
+                           class="form-control @error('participants.'.$i.'.phone') is-invalid @enderror">
                 </x-form.field>
             </div>
         </div>
     </fieldset>
-
-    @error('participants.'.$i.'.full_name')
-        <p class="field-error" role="alert">{{ $message }}</p>
-    @enderror
 @endfor

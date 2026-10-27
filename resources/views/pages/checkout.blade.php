@@ -4,9 +4,7 @@
 
 @section('content')
 
-
     {{-- Checkout.
-
          The form and the summary are separated bands of the same rhythm as every
          other page rather than a bespoke two-column layout: the delegate reads
          this on a phone at 23:00 the night before, and the page they already know
@@ -24,50 +22,74 @@
                         :level="2"
                         class="mb-4" />
 
-                    <form method="POST" action="{{ route('checkout.store') }}">
+                    <form method="POST" action="{{ route('checkout.store') }}" novalidate>
                         @csrf
 
                         <div class="row">
+                            {{-- PRÉNOM --}}
                             <div class="col-md-6">
                                 <x-form.field name="first_name" :label="__('register.first_name')" required>
-                                    <input type="text" name="first_name" id="first_name" required
-                                           value="{{ old('first_name', $user->first_name) }}"
+                                    {{-- REMOVED required FROM INPUT BELOW --}}
+                                    <input type="text" name="first_name" id="first_name" 
+                                           value="{{ old('first_name', $user->first_name ?? '') }}"
                                            class="form-control @error('first_name') is-invalid @enderror">
+                                    
+                                    <!-- @error('first_name')
+                                        <span class="text-danger small d-block mt-1" style="color: #dc3545; font-size: 0.875em;">{{ $message }}</span>
+                                    @enderror -->
                                 </x-form.field>
                             </div>
 
+                            {{-- NOM --}}
                             <div class="col-md-6">
                                 <x-form.field name="last_name" :label="__('register.last_name')" required>
-                                    <input type="text" name="last_name" id="last_name" required
-                                           value="{{ old('last_name', $user->last_name) }}"
+                                    {{-- REMOVED required FROM INPUT BELOW --}}
+                                    <input type="text" name="last_name" id="last_name" 
+                                           value="{{ old('last_name', $user->last_name ?? '') }}"
                                            class="form-control @error('last_name') is-invalid @enderror">
+                                    
+
                                 </x-form.field>
                             </div>
 
+                            {{-- ORGANISATION --}}
                             <div class="col-md-6">
                                 <x-form.field name="organisation" :label="__('register.organisation')">
                                     <input type="text" name="organisation" id="organisation"
-                                           value="{{ old('organisation', $user->organisation) }}"
-                                           class="form-control">
+                                           value="{{ old('organisation', $user->organisation ?? '') }}"
+                                           class="form-control @error('organisation') is-invalid @enderror">
+                                    
+ 
                                 </x-form.field>
                             </div>
 
+                            {{-- EMAIL --}}
                             <div class="col-md-6">
                                 <x-form.field name="email" :label="__('register.email')" required>
-                                    <input type="email" name="email" id="email" required dir="ltr"
-                                           value="{{ old('email', $user->email) }}"
+                                    {{-- REMOVED required FROM INPUT BELOW --}}
+                                    <input type="email" name="email" id="email" dir="ltr"
+                                           value="{{ old('email', $user->email ?? '') }}"
                                            class="form-control @error('email') is-invalid @enderror">
+                                    
+                                    <!-- @error('email')
+                                        <span class="text-danger small d-block mt-1" style="color: #dc3545; font-size: 0.875em;">{{ $message }}</span>
+                                    @enderror -->
                                 </x-form.field>
                             </div>
 
+                            {{-- TÉLÉPHONE --}}
                             <div class="col-md-6">
                                 <x-form.field name="phone" :label="__('register.phone')" :help="__('order.phone_international')" required>
-                                    <input type="tel" name="phone" id="phone" required dir="ltr"
-                                           value="{{ old('phone', $user->phone) }}"
+                                    {{-- REMOVED required FROM INPUT BELOW --}}
+                                    <input type="tel" name="phone" id="phone" dir="ltr"
+                                           value="{{ old('phone', $user->phone ?? '') }}"
                                            class="form-control @error('phone') is-invalid @enderror">
+                                    
+
                                 </x-form.field>
                             </div>
 
+                            {{-- PAYS --}}
                             {{-- The country the payer is in. The issuing bank
                                  reads it to check the payer against the card,
                                  so it is asked for here rather than taken from
@@ -76,31 +98,41 @@
                                  to say where they actually are. --}}
                             <div class="col-md-6">
                                 <x-form.field name="country_id" :label="__('register.country')" required>
-                                    <select name="country_id" id="country_id" required
+                                    {{-- REMOVED required FROM SELECT BELOW --}}
+                                    <select name="country_id" id="country_id"
                                             class="form-control @error('country_id') is-invalid @enderror">
                                         @foreach ($countries as $country)
                                             <option value="{{ $country->id }}"
-                                                @selected((int) old('country_id', $user->country_id) === (int) $country->id)>
+                                                @selected((int) old('country_id', $user->country_id ?? 0) === (int) $country->id)>
                                                 {{ $country->name() }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    
+
                                 </x-form.field>
                             </div>
 
+                            {{-- ADRESSE --}}
                             <div class="col-md-6">
                                 <x-form.field name="address" :label="__('order.address')" required>
-                                    <input type="text" name="address" id="address" required
+                                    {{-- REMOVED required FROM INPUT BELOW --}}
+                                    <input type="text" name="address" id="address" 
                                            value="{{ old('address') }}"
                                            class="form-control @error('address') is-invalid @enderror">
+                                    
+
                                 </x-form.field>
                             </div>
 
+                            {{-- VILLE --}}
                             <div class="col-md-6">
                                 <x-form.field name="city" :label="__('register.city')" required>
-                                    <input type="text" name="city" id="city" required
+                                    {{-- REMOVED required FROM INPUT BELOW --}}
+                                    <input type="text" name="city" id="city" 
                                            value="{{ old('city') }}"
                                            class="form-control @error('city') is-invalid @enderror">
+                                    
                                 </x-form.field>
                             </div>
                         </div>
@@ -141,13 +173,13 @@
                             ])
                         </div>
 
-                        <button type="submit" class="btn-join btn-cirle mt-3" style="color: wheat !important;">
+                        <button type="submit" class="btn-join btn-cirle mt-3">
                             @lang('order.place_order')
                         </button>
 
-
                     </form>
                 </div>
+                
                 {{-- The summary keeps the table: it really is two columns of
                      numbers that line up, and that is what a table is for. What
                      changes is the frame — the legacy price-card is a Bootstrap
