@@ -271,4 +271,14 @@
 
 @stack('scripts')
 </body>
+
+<script>
+    window.addEventListener('pageshow', function (event) {
+        // If the page is loaded from the browser's back-forward cache
+        if (event.persisted) {
+            // Force the browser to reload the page from the server
+            window.location.reload();
+        }
+    });
+</script>
 </html>

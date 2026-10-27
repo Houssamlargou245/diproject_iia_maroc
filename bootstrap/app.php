@@ -92,6 +92,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(fn (Request $request) => route('login'));
+
+    $middleware->web(append: [
+        \App\Http\Middleware\PreventBackHistory::class,
+    ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

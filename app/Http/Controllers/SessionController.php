@@ -99,7 +99,8 @@ class SessionController extends Controller
         $request->session()->put('locale', $locale);
         app()->setLocale($locale);
 
-        return redirect()->back()->with('status', __('auth.logged_out'));
+        return redirect()->route('home')->with('status', __('auth.logged_out'));
+
     }
 
     /**
