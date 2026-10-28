@@ -196,7 +196,9 @@
                     </p>
 
                     <div class="d-cart__actions">
-                        <a href="{{ route('pricing') }}#tariffs" class="d-btn d-btn--ghost">
+                        <a href="{{ $payableOrder
+                            ? route('orders.show', ['order' => $payableOrder->getKey()])
+                            : route('pricing').'#tariffs' }}" class="d-btn d-btn--ghost">
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                             <span>@lang('order.cart.continue')</span>
                         </a>
@@ -231,9 +233,11 @@
 
                         <p class="d-cart-summary__label">@lang('order.cart.estimate')</p>
 
-                        {{-- Return to the rate cards; the existing basket remains
-                             available while the visitor chooses a ticket type. --}}
-                        <a href="{{ route('pricing') }}#tariffs"
+                        {{-- Resume an unpaid order when one exists. Otherwise,
+                             continue through the normal checkout flow. --}}
+                        <a href="{{ $payableOrder
+                            ? route('orders.show', ['order' => $payableOrder->getKey()])
+                            : (auth()->check() ? route('checkout') : route('login')) }}"
                            class="d-btn d-btn--primary d-btn--block">
                             <span>@lang('order.cart.checkout')</span>
                             <i class="fas fa-arrow-right d-btn__arrow" aria-hidden="true"></i>

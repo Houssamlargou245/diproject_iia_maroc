@@ -10,6 +10,7 @@ use App\Models\TicketType;
 use App\Services\Registration\CheckoutService;
 use App\Services\Registration\InvoiceService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -55,12 +56,20 @@ class CartController extends Controller
         // shown only to a signed-in buyer who already has something to look at,
         // so a first-time visitor is not sent to an empty order list.
         $user = $request->user();
+        $payableOrder = $user?->orders()
+            ->outstanding()
+            ->whereDoesntHave('payments', function (Builder $query): void {
+                $query->successful();
+            })
+            ->latest('id')
+            ->first();
 
         return view('pages.cart', [
             'cart' => $cart,
             'locale' => Locale::parse(app()->getLocale()),
             'currentRoute' => 'cart',
             'hasOrders' => $user !== null && $user->orders()->exists(),
+            'payableOrder' => $payableOrder,
             'estimatedTotal' => (int) $cart->items->sum(
                 fn ($item): int => $item->estimatedTotal()
             ),
