@@ -328,6 +328,15 @@
                                 <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 <span>@lang('order.cart.invoice_hint')</span>
                             </p>
+
+                            <div class="d-cart-payment-support" role="note">
+                                <i class="fas fa-circle-info d-cart-payment-support__icon" aria-hidden="true"></i>
+                                <div class="d-cart-payment-support__copy">
+                                    @foreach (explode("\n\n", __('order.cart.payment_support')) as $paragraph)
+                                        <p>{!! nl2br(e($paragraph)) !!}</p>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </aside>

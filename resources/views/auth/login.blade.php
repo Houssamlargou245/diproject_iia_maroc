@@ -54,8 +54,10 @@
                     </form>
                 </div>
 
+                <p class="app-note mt-4 text-center">@lang('login.member_notice')</p>
+
                 <p class="app-note mt-4 text-center">
-                    @lang('login.no_account')
+                    <span class="text-dark">@lang('login.no_account')</span>
                     <a href="{{ route('register') }}" class="app-link">@lang('login.register_link')</a>
                 </p>
             </div>

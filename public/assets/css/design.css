@@ -6355,6 +6355,38 @@ textarea.comment-form-input {
     margin-top: .2em;
 }
 
+.d-cart-payment-support {
+    align-items: flex-start;
+    background: var(--d-surface-alt);
+    border: 1px solid var(--d-line);
+    border-radius: 10px;
+    color: var(--d-muted);
+    display: flex;
+    font-size: var(--t-xs);
+    gap: var(--sp-2);
+    line-height: 1.55;
+    margin-block-start: var(--sp-4);
+    padding: var(--sp-3);
+}
+
+.d-cart-payment-support__icon {
+    color: var(--d-ink);
+    flex: 0 0 auto;
+    margin-top: .2em;
+}
+
+.d-cart-payment-support__copy {
+    min-width: 0;
+}
+
+.d-cart-payment-support__copy p {
+    margin: 0;
+}
+
+.d-cart-payment-support__copy p+p {
+    margin-block-start: var(--sp-2);
+}
+
 /* --------------------------------------------------------------------------
    20g. Profile: panel headers, state lines and the radio group
    -------------------------------------------------------------------------- */

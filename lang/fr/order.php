@@ -170,6 +170,7 @@ return [
         'invoice_download' => 'Télécharger le PDF',
         'invoice_print' => 'Imprimer le récapitulatif',
         'invoice_hint' => 'Document provisoire et non numéroté : il ne tient pas lieu de facture.',
+        'payment_support' => "Si vous rencontrez des difficultés pour effectuer votre paiement sur la plateforme, nous vous invitons à nous contacter par e-mail :\n\nArab CIA : info@arabciia.org\nIia Maroc: Info@iiamaroc.org\n\nNous vous répondrons dans les plus brefs délais.",
     ],
 
     // --- Payment ----------------------------------------------------------

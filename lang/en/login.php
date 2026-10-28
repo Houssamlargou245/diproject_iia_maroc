@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'failed'        => 'Those credentials do not match.',
     'identifier'    => 'Email or phone',
-    'member_notice' => 'Already an IIA Maroc member? Sign in with the same credentials you use on the IIA Maroc site.',
+    'member_notice' => 'Do you already have an account on iiamaroc.org? Use the same credentials to sign in to this website.',
     'no_account'    => 'No account yet?',
     'register_link' => 'Register',
     'remember'      => 'Stay signed in on this device',

@@ -163,6 +163,7 @@ return [
         'invoice_download' => 'Download the PDF',
         'invoice_print' => 'Print the summary',
         'invoice_hint' => 'A provisional, unnumbered document: this is not an invoice.',
+        'payment_support' => "If you experience any difficulties making your payment on the platform, please contact us by email:\n\nArab CIA: info@arabciia.org\nIIA Maroc: Info@iiamaroc.org\n\nWe will get back to you as soon as possible.",
     ],
 
     // --- Payment ----------------------------------------------------------
