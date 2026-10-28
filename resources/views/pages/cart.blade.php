@@ -196,7 +196,7 @@
                     </p>
 
                     <div class="d-cart__actions">
-                        <a href="{{ route('pricing') }}" class="d-btn d-btn--ghost">
+                        <a href="{{ route('pricing') }}#tariffs" class="d-btn d-btn--ghost">
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                             <span>@lang('order.cart.continue')</span>
                         </a>

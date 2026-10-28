@@ -41,11 +41,11 @@ return [
     ],
 
     'tariffs' => [
-        'eyebrow' => 'Tarifs d’inscription',
+        'eyebrow' => 'Frais de participation',
         'title_a' => 'Sélectionnez votre',
         'title_b' => 'catégorie',
         'member' => 'Adhérents IIA Maroc',
-        'member_badge' => 'Frais de participation',
+        'member_badge' => 'Tarif préférentiel réservé aux membres',
         'standard' => 'Non-adhérents',
         'or' => 'ou',
         'cta' => 'Réserver ma participation',

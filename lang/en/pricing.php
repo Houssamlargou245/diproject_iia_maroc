@@ -41,11 +41,11 @@ return [
     ],
 
     'tariffs' => [
-        'eyebrow' => 'Registration fees',
+        'eyebrow' => 'Participation fees',
         'title_a' => 'Select your',
         'title_b' => 'category',
         'member' => 'IIA Morocco members',
-        'member_badge' => 'Participation fees',
+        'member_badge' => 'Preferential rate reserved for members',
         'standard' => 'Non-members',
         'or' => 'or',
         'cta' => 'Book my place',
