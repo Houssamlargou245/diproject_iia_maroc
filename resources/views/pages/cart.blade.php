@@ -231,10 +231,9 @@
 
                         <p class="d-cart-summary__label">@lang('order.cart.estimate')</p>
 
-                        {{-- Both paths lead to the same place. Signed out, the checkout
-                             sends the visitor to sign in and keeps the basket, so they
-                             come back to it. --}}
-                        <a href="{{ auth()->check() ? route('checkout') : route('login') }}"
+                        {{-- Return to the rate cards; the existing basket remains
+                             available while the visitor chooses a ticket type. --}}
+                        <a href="{{ route('pricing') }}#tariffs"
                            class="d-btn d-btn--primary d-btn--block">
                             <span>@lang('order.cart.checkout')</span>
                             <i class="fas fa-arrow-right d-btn__arrow" aria-hidden="true"></i>
