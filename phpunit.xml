@@ -39,5 +39,14 @@
              against the real MariaDB separately, see tests/Integration. -->
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
+
+        <!-- The offline payment driver and no CMI credentials, so a live store
+             key or transaction type in .env never reaches a test. A test that
+             exercises the real driver sets its own throwaway values. -->
+        <env name="PAYMENT_DRIVER" value="test"/>
+        <env name="CMI_GATEWAY_URL" value="https://testpayment.cmi.co.ma/fim/est3Dgate"/>
+        <env name="CMI_MERCHANT_ID" value=""/>
+        <env name="CMI_STORE_KEY" value=""/>
+        <env name="CMI_TRANS_TYPE" value="PreAuth"/>
     </php>
 </phpunit>
